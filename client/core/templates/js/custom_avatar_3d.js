@@ -89,7 +89,6 @@ function applyPayloadToTexture() {
     const offsetY = safeNumber(p.OffsetY, 0.0);
     const scale = safeNumber(p.Scale, 1.0);
     const rotation = safeNumber(p.Rotation, 0.0);
-    // Update texture (for fallback) and shader uniforms (pixel-perfect)
     const effectiveScale = scale * CUSTOM_AVATAR_PREVIEW_BASE_ZOOM;
     const safeScale = Math.max(0.01, effectiveScale);
     texture.repeat.set(tilingX / safeScale, tilingY / safeScale);
@@ -97,19 +96,9 @@ function applyPayloadToTexture() {
     texture.rotation = rotation;
     texture.center.set(0.5, 0.5);
     texture.needsUpdate = true;
-    // Also update shader uniforms if present (planar projection)
-    if (mesh && mesh.material && mesh.material.uniforms) {
-        mesh.material.uniforms.tiling.value.set(tilingX, tilingY);
-        mesh.material.uniforms.offset.value.set(offsetX, offsetY);
-        mesh.material.uniforms.scale.value = scale;
-        mesh.material.uniforms.rotation.value = rotation;
-        mesh.material.uniforms.map.value = texture;
-    } else if (mesh && mesh.userData && mesh.userData.shaderMat) {
-        const m = mesh.userData.shaderMat;
-        m.uniforms.tiling.value.set(tilingX, tilingY);
-        m.uniforms.offset.value.set(offsetX, offsetY);
-        m.uniforms.scale.value = scale;
-        m.uniforms.rotation.value = rotation;
+    if (mesh && mesh.material) {
+        mesh.material.map = texture;
+        mesh.material.needsUpdate = true;
     }
 }
 
@@ -146,13 +135,8 @@ async function updateTexture() {
         texture = newTex;
         applyPayloadToTexture();
         if (mesh) {
-            if (mesh.material.uniforms) {
-                mesh.material.uniforms.map.value = texture;
-                mesh.material.needsUpdate = true;
-            } else {
-                mesh.material.map = texture;
-                mesh.material.needsUpdate = true;
-            }
+            mesh.material.map = texture;
+            mesh.material.needsUpdate = true;
         }
     } catch (e) {
         console.error('Failed to load avatar texture', e);
@@ -179,7 +163,7 @@ function ensureScene() {
     // Use transparent background; renderer alpha true will show modal CSS bg (theme --card)
     // Keep scene background null so CSS variables shine through.
 
-    camera = new THREE.PerspectiveCamera(DEFAULT_CAMERA_POSE.fov, 1, 0.1, 100);
+    camera = new THREE.PerspectiveCamera(DEFAULT_CAMERA_POSE.fov, 1, 0.001, 100);
     camera.position.copy(DEFAULT_CAMERA_POSE.position);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -318,65 +302,18 @@ function ensureScene() {
                 mesh = child;
                 // Ensure geometry has UVs (Body.obj already does)
                 // Use a simple material that respects map transform
-                // Use ShaderMaterial that does planar projection like Custom/AlbedoTiling
-                // Base UV = worldPos.xz * 31.25 + 0.5, then user transform: uv * Scale * Tiling + Offset, rotation about 0.5
-                const mat = new THREE.ShaderMaterial({
-                    uniforms: {
-                        map: { value: texture },
-                        tiling: { value: new THREE.Vector2(1, 1) },
-                        offset: { value: new THREE.Vector2(0, 0) },
-                        scale: { value: 1.0 },
-                        rotation: { value: 0.0 },
-                        baseZoom: { value: 31.25 },
-                        flipY: { value: TEXTURE_FLIP_Y ? 1 : 0 }
-                    },
-                    vertexShader: `
-                        varying vec3 vWorldPos;
-                        void main() {
-                            vec4 worldPos = modelMatrix * vec4(position, 1.0);
-                            vWorldPos = worldPos.xyz;
-                            gl_Position = projectionMatrix * viewMatrix * worldPos;
-                        }
-                    `,
-                    fragmentShader: `
-                        uniform sampler2D map;
-                        uniform vec2 tiling;
-                        uniform vec2 offset;
-                        uniform float scale;
-                        uniform float rotation;
-                        uniform float baseZoom;
-                        uniform float flipY;
-                        varying vec3 vWorldPos;
-                        void main() {
-                            // Planar projection: U~X, V~Z (world space), centered
-                            vec2 baseUV = vWorldPos.xz * baseZoom + vec2(0.5);
-                            // User scale (like flat preview 1.5)
-                            float effectiveScale = scale * 1.5;
-                            vec2 uv = baseUV;
-                            // Apply tiling and scale
-                            uv *= tiling / effectiveScale;
-                            // Apply offset (payload Offset is UV units)
-                            uv += offset;
-                            // Rotation about 0.5
-                            float c = cos(rotation);
-                            float s = sin(rotation);
-                            uv -= 0.5;
-                            uv = vec2(uv.x * c - uv.y * s, uv.x * s + uv.y * c);
-                            uv += 0.5;
-                            // Flip Y if needed (Unity vs Three)
-                            if (flipY < 0.5) uv.y = 1.0 - uv.y;
-                            // Sample
-                            vec4 col = texture2D(map, uv);
-                            if (col.a < 0.01) discard;
-                            gl_FragColor = col;
-                        }
-                    `,
+                const mat = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    roughness: 0.75,
+                    metalness: 0.02,
                     side: THREE.DoubleSide,
-                    transparent: true
                 });
-                // Store reference for live updates
-                child.userData.shaderMat = mat;
-                if (texture) mat.uniforms.map.value = texture;
+                if (texture) {
+                    texture.flipY = TEXTURE_FLIP_Y;
+                    texture.wrapS = THREE.RepeatWrapping;
+                    texture.wrapT = THREE.RepeatWrapping;
+                    mat.map = texture;
+                }
                 child.material = mat;
                 // Center and scale model to fit view
                 // Body.obj spans small units (~0.02), normalize
