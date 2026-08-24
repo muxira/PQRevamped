@@ -89,6 +89,7 @@ function applyPayloadToTexture() {
     const offsetY = safeNumber(p.OffsetY, 0.0);
     const scale = safeNumber(p.Scale, 1.0);
     const rotation = safeNumber(p.Rotation, 0.0);
+    // For standard texture fallback (if shader not used): keep flat consistency with 1.5 factor
     const effectiveScale = scale * CUSTOM_AVATAR_PREVIEW_BASE_ZOOM;
     const safeScale = Math.max(0.01, effectiveScale);
     texture.repeat.set(tilingX / safeScale, tilingY / safeScale);
@@ -96,8 +97,21 @@ function applyPayloadToTexture() {
     texture.rotation = rotation;
     texture.center.set(0.5, 0.5);
     texture.needsUpdate = true;
+    // Exact game shader uniforms (no 1.5, yx swap handled in shader)
+    if (mesh && mesh.material && mesh.material.uniforms) {
+        mesh.material.uniforms.tiling.value.set(tilingX, tilingY);
+        mesh.material.uniforms.offset.value.set(offsetX, offsetY);
+        mesh.material.uniforms.scale.value = Math.max(0.01, scale);
+        mesh.material.uniforms.rotation.value = rotation;
+        mesh.material.uniforms.map.value = texture;
+    } else if (mesh && mesh.userData && mesh.userData.shaderMat) {
+        const m = mesh.userData.shaderMat;
+        m.uniforms.tiling.value.set(tilingX, tilingY);
+        m.uniforms.offset.value.set(offsetX, offsetY);
+        m.uniforms.scale.value = Math.max(0.01, scale);
+        m.uniforms.rotation.value = rotation;
+    }
     if (mesh && mesh.material) {
-        mesh.material.map = texture;
         mesh.material.needsUpdate = true;
     }
 }
@@ -302,19 +316,58 @@ function ensureScene() {
                 mesh = child;
                 // Ensure geometry has UVs (Body.obj already does)
                 // Use a simple material that respects map transform
-                const mat = new THREE.MeshStandardMaterial({
-                    color: 0xffffff,
-                    roughness: 0.75,
-                    metalness: 0.02,
+                // Exact Custom/AlbedoTiling vertex logic from sharedassets0.assets:3481052 (vs_4_0 0x1C2):
+                // add r0.xy, v1.yxyy, cb0[5].wzww  -> uv = vUv.yx + offset.yx
+                // add -0.5, sincos rotation, mul/mad rotate, div /Scale, mad *Tiling +0.5
+                // So final: outUV = ( rotate((vUv.yx + offset.yx -0.5), rotation) / Scale ) * Tiling + 0.5
+                const mat = new THREE.ShaderMaterial({
+                    uniforms: {
+                        map: { value: texture },
+                        tiling: { value: new THREE.Vector2(1, 1) },
+                        offset: { value: new THREE.Vector2(0, 0) },
+                        scale: { value: 1.0 },
+                        rotation: { value: 0.0 },
+                    },
+                    vertexShader: `
+                        varying vec2 vUv;
+                        void main() {
+                            vUv = uv;
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform sampler2D map;
+                        uniform vec2 tiling;
+                        uniform vec2 offset;
+                        uniform float scale;
+                        uniform float rotation;
+                        varying vec2 vUv;
+                        void main() {
+                            // Exact game vertex shader: yx swap + offset
+                            vec2 uv = vec2(vUv.y + offset.y, vUv.x + offset.x) - 0.5;
+                            float s = sin(rotation);
+                            float c = cos(rotation);
+                            // rotate: x' = y*c - x*s, y' = x*c + y*s  (as disassembled)
+                            vec2 rotated = vec2(uv.y * c - uv.x * s, uv.x * c + uv.y * s);
+                            rotated /= scale; // div /Scale (game does not have 1.5 factor)
+                            vec2 outUV = rotated * tiling + 0.5;
+                            // Three.js flipY is handled via texture.flipY, not here
+                            vec4 col = texture2D(map, outUV);
+                            if (col.a < 0.01) discard;
+                            gl_FragColor = col;
+                        }
+                    `,
                     side: THREE.DoubleSide,
+                    transparent: true
                 });
                 if (texture) {
                     texture.flipY = TEXTURE_FLIP_Y;
                     texture.wrapS = THREE.RepeatWrapping;
                     texture.wrapT = THREE.RepeatWrapping;
-                    mat.map = texture;
+                    mat.uniforms.map.value = texture;
                 }
                 child.material = mat;
+                child.userData.shaderMat = mat;
                 // Center and scale model to fit view
                 // Body.obj spans small units (~0.02), normalize
                 // Body.obj uses Z as height (X=width, Z=height, Y=depth) — rotate to stand (Y-up)
