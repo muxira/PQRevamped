@@ -1,0 +1,63 @@
+
+/* custom_avatar_3d.css - 3D Try-On tab styles */
+.ca-view-tabs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 12px;
+    width: 100%;
+}
+.ca-tab {
+    flex: 1 1 0;
+    padding: 8px 12px;
+    border-radius: 0.75rem;
+    border: 2px solid hsl(var(--border));
+    background: hsl(var(--card));
+    color: hsl(var(--foreground));
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 150ms;
+    font-family: "partyquiz", sans-serif;
+}
+.ca-tab.active {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-color: hsl(var(--primary));
+    box-shadow: 0 4px 12px hsl(var(--primary) / 0.25);
+}
+.ca-tab:hover:not(.active) {
+    border-color: hsl(var(--primary) / 0.3);
+    background: hsl(var(--accent));
+}
+.ca-view.active { display: block; }
+.ca-view[hidden] { display: none !important; }
+.ca-3d-container {
+    width: 260px;
+    height: 260px;
+    max-width: 100%;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    background: hsl(var(--card));
+    border: 2px solid hsl(var(--border));
+    box-shadow: 0 4px 16px hsl(var(--primary) / 0.12);
+    margin: 0 auto;
+    position: relative;
+}
+.ca-3d-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+.ca-3d-status {
+    min-height: 14px;
+    font-size: 0.7rem;
+    color: hsl(var(--muted-foreground));
+    text-align: center;
+    margin-top: 6px;
+}
+.ca-hints--3d { margin-top: 8px; }
+@media (max-width: 440px) {
+    .ca-3d-container { width: 220px; height: 220px; }
+}
+/* theme-aware: ensure 3D canvas respects card variables */

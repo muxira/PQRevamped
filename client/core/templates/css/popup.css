@@ -1,0 +1,202 @@
+/* ===== Score Change Popup ===== */
+
+.popup-menu {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: hsl(var(--card));
+    padding: 2rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 1.5rem;
+    width: 400px;
+    height: 500px;
+    max-width: 90%;
+    z-index: 100;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
+    font-family: "partyquiz", sans-serif;
+}
+
+.popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99;
+}
+
+.table-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.table-wrapper table { width: 100%; }
+
+.popup-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.popup-menu ul li { padding: 5px; }
+
+body.partyquiz .button.close-popup-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.875rem;
+}
+
+body.no-scroll { overflow: hidden; }
+
+.centered-table { margin: 0 auto; }
+
+/* ===== QR Password Prompt ===== */
+
+.qr-password-modal {
+    max-width: min(420px, 90%);
+    text-align: center;
+}
+
+.qr-password-hint {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    opacity: 0.85;
+}
+
+.qr-password-game-id {
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+    color: hsl(var(--foreground));
+}
+
+.qr-password-game-id strong {
+    letter-spacing: 0.15em;
+    font-size: 1.3rem;
+}
+
+.qr-password-error {
+    display: block;
+    color: hsl(var(--destructive));
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-height: 1.3em;
+    margin-top: 0.5rem;
+}
+
+.qr-password-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.qr-password-actions .button,
+.qr-password-actions .game-block-button {
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* ===== Error Popup ===== */
+
+.error-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 250ms ease;
+    z-index: 150;
+}
+
+.error-popup-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.error-popup-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.error-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -45%);
+    min-width: 260px;
+    width: min(420px, 90%);
+    padding: 2rem 1.75rem 1.75rem;
+    border-radius: 2rem;
+    background: hsl(var(--card));
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+    color: hsl(var(--foreground));
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 250ms ease, transform 250ms ease;
+    z-index: 160;
+    font-family: "partyquiz", sans-serif;
+    border: 1px solid hsl(var(--border));
+}
+
+.error-popup.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%);
+}
+
+.error-popup.fade-out {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, calc(-50% - 10px));
+}
+
+.error-popup__icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: hsl(var(--destructive) / 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: hsl(var(--destructive));
+}
+
+.error-popup__message {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.error-popup__button {
+    width: 100%;
+    max-width: 220px;
+    margin: 0 auto;
+    padding: 0.75rem 1.5rem;
+    border-radius: 1rem;
+}

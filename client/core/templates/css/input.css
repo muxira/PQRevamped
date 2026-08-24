@@ -1,0 +1,101 @@
+/* ===== Shared Input / Textarea Style ===== */
+
+input,
+textarea.info-block-input {
+    box-sizing: border-box;
+    display: block;
+    border: 2px solid hsl(258 90% 66% / 0.15);
+    padding: 1rem 1.5rem;
+    width: 100%;
+    max-width: 28rem;
+    margin-bottom: 0;
+    font-size: 1rem;
+    font-family: "partyquiz", sans-serif;
+    font-weight: 600;
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: hsl(var(--foreground));
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px hsl(258 90% 66% / 0.08);
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input:focus,
+textarea.info-block-input:focus {
+    border-color: hsl(258 90% 66% / 0.5);
+    background-color: #fff;
+    box-shadow: 0 6px 20px hsl(258 90% 66% / 0.15);
+}
+
+#game_id {
+    text-transform: uppercase;
+}
+
+textarea.info-block-input {
+    line-height: 1.5;
+    resize: vertical;
+}
+
+/* ===== Placeholder ===== */
+
+input::placeholder,
+textarea.info-block-input::placeholder {
+    transition: all 0.2s ease-in-out;
+    color: hsl(var(--muted-foreground) / 0.6);
+    font-weight: 500;
+}
+
+input:focus::placeholder,
+input.populated::placeholder,
+textarea.info-block-input:focus::placeholder,
+textarea.info-block-input.populated::placeholder {
+    color: transparent;
+}
+
+/* Vendor-prefixed placeholder (kept for cross-browser) */
+input::-webkit-input-placeholder,
+textarea.info-block-input::-webkit-input-placeholder {
+    transition: all 0.2s ease-in-out;
+    color: hsl(var(--muted-foreground) / 0.6);
+}
+
+input:focus::-webkit-input-placeholder,
+input.populated::-webkit-input-placeholder,
+textarea.info-block-input:focus::-webkit-input-placeholder,
+textarea.info-block-input.populated::-webkit-input-placeholder {
+    color: transparent;
+}
+
+input:-ms-input-placeholder,
+textarea.info-block-input:-ms-input-placeholder {
+    transition: all 0.2s ease-in-out;
+    color: hsl(var(--muted-foreground) / 0.6);
+}
+
+input:focus:-ms-input-placeholder,
+input.populated:-ms-input-placeholder,
+textarea.info-block-input:focus:-ms-input-placeholder,
+textarea.info-block-input.populated:-ms-input-placeholder {
+    color: transparent;
+}
+
+/* ===== Blink Feedback ===== */
+
+.blink {
+    background-color: hsl(var(--primary) / 0.15) !important;
+    border-color: hsl(var(--primary) / 0.5) !important;
+}
+
+.blink-error {
+    background-color: hsl(0 84% 60% / 0.2) !important;
+    border-color: hsl(0 84% 60% / 0.8) !important;
+}
+
+/* ===== Helper span reveal ===== */
+
+input:focus + span,
+input.populated + span,
+textarea.info-block-input:focus + span,
+textarea.info-block-input.populated + span {
+    opacity: 1;
+}

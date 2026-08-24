@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html dir="ltr"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+
+    <title>PARTY QUIZ</title>
+
+    <link rel="stylesheet" type="text/css" href="css/reset.css">
+    <link rel="stylesheet" type="text/css" href="css/pwa.css">
+    <link rel="stylesheet" type="text/css" href="css/input.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+    <link rel="stylesheet" type="text/css" href="css/styles.css">
+    <link rel="stylesheet" type="text/css" href="css/popup.css">
+    <link rel="stylesheet" type="text/css" href="css/mobile-ux.css">
+
+    <link rel="stylesheet" type="text/css" href="css/custom_avatar_3d.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body class="partyquiz locked" ontouchstart="">
+
+<div class="orb orb-1" aria-hidden="true"></div>
+<div class="orb orb-2" aria-hidden="true"></div>
+
+<bb class="column hack-limit-btn-height" id="d220806">
+
+    <header>
+        <icon></icon>
+        <div class="connection-dot connected" id="connection_dot"></div>
+    </header>
+
+    <button class="refresh-button active" id="refreshButton" onclick="handleRefresh()">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: var(--darkreader-text-ffffff, #e8e6e3);">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+        </svg>
+        <span class="refresh-tooltip dismissed" id="refreshTooltip">Нажмите эту кнопку, если вы застряли или клиент не синхронизирован</span>
+    </button>
+
+    <section class="topic-block">
+        <span id="title">Присоединиться к игре</span>
+        <span id="undertitle"></span>
+    </section>
+
+    <div id="team_toast" class="team-toast" hidden=""></div>
+
+    <section class="game-block glass-card screen-enter" id="enter_id_group">
+        <div class="card-header">
+            <div class="card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                    <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
+                    <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <div class="form-fields">
+            <div class="field-group">
+                <label class="field-label" for="game_id">ID игры</label>
+                <div class="input-icon-wrap">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <input class="game-input has-icon" id="game_id" type="text" placeholder="ID игры">
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="field-label" for="game_password">Пароль игры</label>
+                <div class="input-icon-wrap">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                            <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
+                            <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                        </svg>
+                    </div>
+                    <input class="game-input has-icon" id="game_password" type="text" placeholder="Пароль игры">
+                </div>
+            </div>
+        </div>
+
+        <div class="game-block-button-wrapper">
+            <button id="join_game_button" type="button" class="button color-green game-block-button" onclick="TryJoinGame()">
+                Присоединиться
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                    <path d="m9 18 6-6-6-6"></path>
+                </svg>
+            </button>
+        </div>
+        <label id="error_label"></label>
+    </section>
+
+    <section id="resume_game_group" class="resume-game-block glass-card" hidden="">
+        <p class="resume-game-block-message">Игра найдена, но сервер не отвечает. Повторное подключение невозможно. Нажмите кнопку, чтобы выйти из игры</p>
+        <button class="button color-red resume-game-block-button" onclick="LeaveGame()">Покинуть игру</button>
+    </section>
+
+    <section class="role-block glass-card" id="role_selection_group" hidden="">
+        <div class="role-card" onclick="SetHostRole()">
+            <div class="role-card-icon role-card-icon--host">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                    <path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.809a1 1 0 0 1-.956-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path>
+                    <path d="M5.5 21h13"></path>
+                </svg>
+            </div>
+            <div class="role-card-body">
+                <span class="role-card-title">Ведущий</span>
+                <span class="role-card-desc">Если вы хотите вести игру и решать, кто прав, а кто неправ нажмите эту кнопку</span>
+            </div>
+            <div class="role-card-arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                    <path d="m9 18 6-6-6-6"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div class="role-card" onclick="SetPlayerRole()">
+            <div class="role-card-icon role-card-icon--player">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                    <line x1="6" x2="10" y1="11" y2="11"></line>
+                    <line x1="8" x2="8" y1="9" y2="13"></line>
+                    <line x1="15" x2="15.01" y1="12" y2="12"></line>
+                    <line x1="18" x2="18.01" y1="10" y2="10"></line>
+                    <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"></path>
+                </svg>
+            </div>
+            <div class="role-card-body">
+                <span class="role-card-title">Игрок</span>
+                <span class="role-card-desc">Если вы хотите участвовать в игре и отвечать на вопросы нажмите эту кнопку</span>
+            </div>
+            <div class="role-card-arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                    <path d="m9 18 6-6-6-6"></path>
+                </svg>
+            </div>
+        </div>
+
+        <label class="all_here_name" id="role_set_error"></label>
+    </section>
+
+    <!-- avatar_group → shared carousel (top-level so goTo can show it on Set-Info and Create-Team) -->
+    <div id="avatar_group" class="avatar-carousel" hidden="">
+        <!-- previous -->
+        <div class="avatar-item avatar-prev">
+            <img id="avatar_prev_img" alt="previous avatar">
+            <button id="avatar_prev_btn" class="avatar-nav" onclick="PrevAvatar()">&lt;</button>
+        </div>
+
+        <!-- current (focused) -->
+        <div class="avatar-item avatar-current">
+            <img id="avatar_current_img" alt="current avatar">
+        </div>
+
+        <!-- next -->
+        <div class="avatar-item avatar-next">
+            <img id="avatar_next_img" alt="next avatar">
+            <button id="avatar_next_btn" class="avatar-nav" onclick="NextAvatar()">&gt;</button>
+        </div>
+
+        <!-- keeps track of index for back-compat with the rest of the code -->
+        <input type="hidden" id="img_no" value="0">
+    </div>
+
+    <section class="info-block glass-card" id="set_info_group" hidden="">
+        <!-- custom avatar open-modal button (visible only when custom avatar selected) -->
+        <button id="custom_avatar_open_btn" type="button" class="button color-blue custom-avatar-open-btn" hidden="" onclick="OpenCustomAvatarModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path>
+            </svg>
+            Кастомизировать
+        </button>
+
+        <!-- name -->
+        <input class="info-block-input name-input" id="player_name" type="text" placeholder="Введите ваше имя" maxlength="20">
+
+        <!-- self-introduction (single-line, but larger) -->
+        <textarea class="info-block-input intro-input" id="player_intro" rows="4" placeholder="Введите ваше представление. Что бы вы хотели сказать зрителям и остальным игрокам?"></textarea>
+
+        <!-- ▴▴--------------------------------▴▴ -->
+        
+        <p class="empty_space"></p>
+        <label id="info_set_error"></label>
+        <button id="set_info_button" class="button color-green primary-button disabled" onclick="SetInfo()">Установить инфо</button>
+    </section>
+
+    <section class="game-block glass-card" id="enter_member_name_group" hidden="">
+        <p class="card-title">Ваше имя</p>
+        <p class="card-sub">Введите ваше имя</p>
+        <input class="info-block-input name-input" id="member_name_input" type="text" placeholder="Ваше имя" maxlength="24" oninput="OnMemberNameInput(this.value)">
+        <button class="button color-green" onclick="ConfirmMemberName()">Продолжить</button>
+    </section>
+
+    <section class="game-block glass-card" id="team_lobby_group" hidden="">
+        <p class="card-title">Команды</p>
+        <p class="card-sub" id="team_lobby_sub">Присоединитесь к команде или создайте свою</p>
+        <div id="team_list"></div>
+        <button class="button color-purple" id="team_create_btn" onclick="StartTeamCreate()">Создать команду</button>
+    </section>
+
+    <section class="game-block glass-card" id="team_create_group" hidden="">
+        <p class="card-title">Новая команда</p>
+        <input class="info-block-input name-input" id="team_name_input" type="text" placeholder="Название команды" maxlength="24">
+        <div class="team-create-actions">
+            <button class="button color-green" onclick="ConfirmCreateTeam()">Создать команду</button>
+            <button class="button color-red" onclick="goTo('TEAM_LOBBY')">Назад</button>
+        </div>
+        <p class="note">Вы станете капитаном. Имя и аватар общие для команды</p>
+    </section>
+
+    <!-- Toast notification for feedback -->
+    <div id="toast" class="toast">Ваше инфо установлено</div>
+
+    <!-- Persistent role badge (team mode): captain or member + team name -->
+    <div id="captain_badge" class="captain-badge" hidden=""><span id="captain_badge_text"></span></div>
+
+    <div id="sugg_strip" class="sugg-strip" hidden="">
+        <p class="sugg-strip-title">Ждём подсказки…</p>
+        <div id="sugg_list"></div>
+    </div>
+
+    <section id="teammate_suggest_group" class="info-block glass-card" hidden="">
+        <p class="card-sub teammate-note">Финальный ответ за капитаном. Можно сказать вслух</p>
+        <button type="button" class="select-button" id="teammate_buzzer" onmousedown="AnswerButtonPressed()"></button>
+        <entry class="column" id="teammate_suggest_entry">
+            <label id="teammate_suggest_label">Ваша подсказка</label>
+            <input class="info-block-input" type="text" id="teammate_suggest_input" placeholder="Ваша подсказка" onkeydown="if(event.key==='Enter'){event.preventDefault();SubmitTeammateSuggestion();}">
+            <button type="button" class="button color-purple" onclick="SubmitTeammateSuggestion()">Отправить капитану</button>
+        </entry>
+    </section>
+
+    <section id="teammate_readonly_group" class="info-block glass-card" hidden="">
+        <p class="card-title" id="teammate_readonly_title">Решает капитан</p>
+        <p class="card-sub teammate-note" id="teammate_readonly_note">Финальный ответ за капитаном. Можно сказать вслух</p>
+    </section>
+
+    <section class="players-ready-block glass-card" id="all_here_host_group" hidden="">
+        <button class="button color-green primary-button" onclick="CallAllHere()">
+            Все здесь
+        </button>
+    </section>
+
+    <section class="player-block glass-card" id="all_here_player_group" hidden="">
+        <span>Вы:</span>
+        <span id="all_here_player_name">UnnamedPlayer</span>
+    </section>
+
+    <div class="glass-card" id="select_question_player_group" hidden="">
+        <entry class="column">
+            <label id="select_question_player_group_name">UnnamedPlayer</label>
+            <label id="select_question_player_group_score">000</label>
+        </entry>
+    </div>
+
+    <div class="center glass-card" id="can_answer_player_group" hidden="">
+        <p class="empty_space_5"></p>
+        <button type="button" class="select-button" id="answer_button" onmousedown="AnswerButtonPressed()"></button>
+    </div>
+
+    <div class="center glass-card" id="get_ready_player_group" hidden="">
+        <p class="empty_space_5"></p>
+        <button type="button" class="select-button-blocked" onmousedown="AnswerButtonPressed()"></button>
+    </div>
+
+    <div class="glass-card" id="question_selected_group" hidden="">
+        <entry class="column">
+            <label class="explanatory_label">Выбранная категория:</label>
+            <label id="question_selected_theme">Unnamed Theme</label>
+
+            <p class="empty_space"></p>
+
+            <label class="explanatory_label">Цена вопроса:</label>
+            <label id="question_selected_price">000</label>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="everyone_bids_group" hidden="">
+        <entry class="column">
+            <button type="button" class="button color-red" onclick="StopFinalBidding()">Прекратить ставки</button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="everyone_answers_group" hidden="">
+        <entry class="column">
+            <button type="button" class="button color-red" onclick="StopFinalAnswering()">Прекратить ответы
+            </button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="right_answer_group" hidden="">
+        <entry class="column">
+            <label class="explanatory_label">Верный ответ:</label>
+            <label id="right_answer">No answer</label>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="dismiss_question_group" hidden="">
+        <entry class="column">
+            <button type="button" class="button color-red" onclick="DismissQuestion()">Пропустить вопрос</button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="replay_question_audio_group" hidden="">
+        <entry class="column">
+            <button type="button" class="button color-blue" onclick="ReplayAudio()">Сыграть аудио</button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="player_answers_host_group" hidden="">
+        <entry class="column">
+            <label class="explanatory_label">Отвечает игрок:</label>
+            <label id="answering_player">UnnamedPlayer</label>
+
+            <p class="empty_space"></p>
+
+            <div class="answer-decision-row">
+                <button type="button" class="button color-blue answer-decision-multiplier" onclick="ReportAnswerDecision(true, 0.5)">×0.5</button>
+                <button type="button" class="button color-green answer-decision-correct" onclick="ReportAnswerDecision(true)">Верно</button>
+                <button type="button" class="button color-blue answer-decision-multiplier" onclick="ReportAnswerDecision(true, 2)">×2</button>
+                <button type="button" class="button color-red answer-decision-incorrect" onclick="ReportAnswerDecision(false)">Неверно</button>
+            </div>
+        </entry>
+    </div>
+
+    <section id="you_answer_group" class="info-block glass-card" hidden="">
+        <span class="answer-submitted-label" id="answer_submitted_label">Ответ отправлен</span>
+
+        <entry class="column">
+            <label>Введите ответ или скажите его вслух</label>
+            <input class="info-block-input" type="text" id="player_answer_input" placeholder="Ваш ответ">
+            <button id="player_answer_input_button" type="button" class="button color-green" onclick="PlayerAnswer(document.getElementById('player_answer_input').value)">
+                Ответ
+            </button>
+        </entry>
+    </section>
+
+    <div class="glass-card" id="cat_in_poke_player_group" hidden="">
+        <p class="empty_space"></p>
+        <label>Выбираем, кто получит кота в мешке</label>
+    </div>
+
+    <div class="glass-card" id="all_questions_answered_host_group" hidden="">
+        <p class="empty_space"></p>
+        <button type="button" class="button color-green" onclick="CallNextRound()">Следующий раунд</button>
+    </div>
+
+    <div class="glass-card" id="all_questions_answered_player_group" hidden="">
+        <p class="empty_space"></p>
+        <label>Следующий раунд вот-вот начнется</label>
+    </div>
+
+    <div class="glass-card" id="skip_sequence_group" hidden="">
+        <p class="empty_space"></p>
+        <button type="button" class="button color-blue" onclick="FastForward()">Перемотать вперед</button>
+    </div>
+
+    <div class="glass-card" id="skip_displaying_group" hidden="">
+        <p class="empty_space"></p>
+        <button type="button" class="button color-blue" onclick="SkipDisplaying()">Перемотать вперед</button>
+    </div>
+
+    <div class="glass-card" id="final_round_answer_group" hidden="">
+        <entry class="column">
+            <label>Ваш финальный ответ</label>
+            <input class="info-block-input" type="text" id="final_answer_input" placeholder="Ваш ответ">
+            <button class="button color-green" onclick="FinalRoundAnswer(document.getElementById('final_answer_input').value)">Ответ
+            </button>
+        </entry>
+    </div>
+
+    <div class="glass-card column" id="applause_group" hidden="">
+        <p class="empty_space"></p>
+        <div class="applause-emoji" id="applause_emoji" role="button" tabindex="0" onclick="PlayClap()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PlayClap();}">👏</div>
+        <button type="button" class="button color-pink clap-button" onclick="PlayClap()">Аплодисменты!</button>
+    </div>
+
+    <div id="reconnection_screen" hidden="">
+        <p class="empty_space"></p>
+        <label>Потеря связи. Подключаемся заново...</label>
+        <label id="reconnect_countdown"></label>
+    </div>
+
+    <div class="glass-card" id="final_round_decide_answer_group" hidden="">
+        <entry class="column">
+            <label class="explanatory_label">Отвечает игрок:</label>
+            <label id="final_round_answering_player">UnnamedPlayer</label>
+
+            <label class="explanatory_label">Ответ игрока:</label>
+            <label id="final_round_player_answer">LEGIT</label>
+
+            <label class="explanatory_label">Верный ответ:</label>
+            <label id="final_round_answer">No answer</label>
+
+            <p class="empty_space"></p>
+
+            <button type="button" class="button color-green" onclick="ReportFinalAnswerDecision(true)">Верно
+            </button>
+            <button type="button" class="button color-red" onclick="ReportFinalAnswerDecision(false)">Неверно
+            </button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="curiosity_or_end_group" hidden="">
+        <entry class="column">
+            <button type="button" class="button color-blue" onclick="ReportCuriosityOrEndGame('curious')">
+                Ответ другого вопроса
+            </button>
+            <button type="button" class="button color-red" onclick="ReportCuriosityOrEndGame('end')">Закончить игру
+            </button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="curiosity_answer_group" hidden="">
+        <entry class="column">
+            <button type="button" class="button color-blue" onclick="CuriosityRevealAnswer()">Показать ответ</button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="auction_player_group" hidden="">
+        <entry class="column">
+            <label id="highest_bidder"></label>
+            <label id="highest_bid"></label>
+            <input class="info-block-input" type="number" id="your_bid" placeholder="Ставка">
+            <button id="button_bid" type="button" class="button color-green" onclick="window.auctionPage.onBidClicked(window.auction)">Ставка
+            </button>
+            <button id="button_pass" type="button" class="button color-red" onclick="window.auctionPage.onPassClicked()">Пас
+            </button>
+
+            <label id="not_enough_points">Недостаточно очков</label>
+            <label id="you_are_highest_bidder">Ваша ставка лидирует</label>
+            <label id="passing">Пасуем...</label>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="final_bid_player_group" hidden="">
+        <entry class="column">
+            <label id="final_bid_label">Mister T</label>
+            <input type="number" min="0" class="info-block-input" id="final_bid_input" placeholder="Ваша ставка">
+            <button id="final_bid_button" type="button" class="button color-green" onclick="FinalRoundBid(document.getElementById('final_bid_input').value)">Ставка
+            </button>
+        </entry>
+    </div>
+
+    <section class="glass-card questions-board" id="select_question_host_group" hidden="">
+        <div id="questions_table" class="questions-block-table"></div>
+    </section>
+
+    <div class="glass-card" id="cat_in_poke_host_group" hidden="">
+        <p class="empty_space"></p>
+        <table id="cat_in_poke_table" cellspacing="0" cellpadding="0"></table>
+    </div>
+
+    <div class="glass-card" id="players_list_host_group" hidden="">
+        <p class="empty_space"></p>
+        <table cellspacing="0" cellpadding="0"></table>
+    </div>
+
+    <div class="glass-card" id="multiple_choice_host_group" hidden="">
+        <entry class="column">
+            <button type="button" class="button color-red" onclick="EndMultipleChoice()">Закончить голосование</button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="multiple_choice_options_group" hidden="">
+        <p class="empty_space"></p>
+        <table cellspacing="0" cellpadding="0"></table>
+    </div>
+
+    <div class="glass-card" id="number_guess_host_group" hidden="">
+        <entry class="column">
+            <button type="button" class="button color-red" onclick="EndNumberGuess()">Закончить угадывание</button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="number_guess_player_group" hidden="">
+        <entry class="column">
+            <input type="number" min="0" class="info-block-input" id="number_guess_input" placeholder="Ваш ответ">
+            <button id="number_guess_button" type="button" class="button color-green primary-button" onclick="NumberGuessMade(document.getElementById('number_guess_input').value)">Предположить
+            </button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="final_round_themes_group" hidden="">
+        <p class="empty_space"></p>
+        <table id="final_round_themes_table" cellspacing="0" cellpadding="0"></table>
+    </div>
+
+    <div class="glass-card" id="themes_to_introduce_group" hidden="">
+        <p class="empty_space"></p>
+        <table id="themes_to_introduce_table" cellspacing="0" cellpadding="0"></table>
+    </div>
+
+    <div class="glass-card" id="stop_guessing_or_end_question_group" hidden="">
+        <entry class="column">
+            <button type="button" class="button color-red" onclick="RevealingCluesStopGuessing()">Закончить раунд
+            </button>
+            <button type="button" class="button color-red" onclick="RevealingCluesEndQuestion()">Завершить вопрос
+            </button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="guess_or_pass_player_group" hidden="">
+        <entry class="column">
+            <input class="info-block-input" id="revealing_clues_input" type="text" placeholder="Ваш ответ">
+            <button id="revealing_clues_button" type="button" class="button color-green" onclick="RevealingCluesGuessMade(document.getElementById('revealing_clues_input').value)">
+                Предположить
+            </button>
+
+            <p class="empty_space"></p>
+
+            <button type="button" class="button color-red" onclick="RevealingCluesPlayerPass()">Пропустить
+            </button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="revealing_clues_decide_answer_group" hidden="">
+        <entry class="column">
+            <label class="explanatory_label">Отвечает игрок:</label>
+            <label id="revealing_clues_answering_player">UnnamedPlayer</label>
+
+            <label class="explanatory_label">Ответ игрока:</label>
+            <label id="revealing_clues_player_answer">LEGIT</label>
+
+            <label class="explanatory_label">Верный ответ:</label>
+            <label id="revealing_clues_right_answer">No answer</label>
+
+            <p class="empty_space"></p>
+
+            <button type="button" class="button color-green" onclick="ReportRevealingCluesDecision(true)">Верно
+            </button>
+            <button type="button" class="button color-red" onclick="ReportRevealingCluesDecision(false)">Неверно
+            </button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="decide_final_players_group" hidden="">
+        <entry class="column">
+            <span class="explanatory_label role-block-text">Все участвуют в финальном раунде. У всех игроков будет не менее 100 очков</span>
+            <button type="button" class="button color-blue" onclick="EveryoneParticipates()">
+                Все
+            </button>
+
+            <span class="explanatory_label role-block-text">В финальном 
+раунде участвуют только игроки, имеющие право на участие. Игроки, 
+набравшие 0 или менее очков, больше не участвуют в игре</span>
+            <button type="button" class="button color-blue" onclick="EligibleParticipate()">
+                У кого &gt; 0
+            </button>
+        </entry>
+    </div>
+
+    <section class="glass-card" id="auction_host_group" hidden="">
+        <p class="empty_space"></p>
+        <button id="button_end_auction" class="button color-red primary-button" onclick="window.auctionHostPage.onEndAuction()">
+            Закончить аукцион
+        </button>
+    </section>
+
+    <overlay class="collapsed emojis-block" id="emoji_layer" style="display: none;">
+        <button class="button color-white emojis-block-button" id="controls" style="font-size: 8.9219px;"></button>
+        <button class="button color-white emojis-block-button" id="cool" onclick="PlayEmoji('Cool')" style="font-size: 8.9219px;">
+            <sprite class="sprite-img-sd img-sd-cool"></sprite>
+        </button>
+        <button class="button color-white emojis-block-button" id="bigsmile" onclick="PlayEmoji('Happy')" style="font-size: 8.9219px;">
+            <sprite class="sprite-img-sd img-sd-bigsmile"></sprite>
+        </button>
+        <button class="button color-white emojis-block-button" id="sad" onclick="PlayEmoji('Sad')" style="font-size: 8.9219px;">
+            <sprite class="sprite-img-sd img-sd-sad"></sprite>
+        </button>
+        <button class="button color-white emojis-block-button" id="sleep" onclick="PlayEmoji('Tired')" style="font-size: 8.9219px;">
+            <sprite class="sprite-img-sd img-sd-sleep"></sprite>
+        </button>
+        <button class="button color-white emojis-block-button" id="sick" onclick="PlayEmoji('Puke')" style="font-size: 8.9219px;">
+            <sprite class="sprite-img-sd img-sd-sick3"></sprite>
+        </button>
+        <button class="button color-white emojis-block-button" id="poop" onclick="PlayEmoji('Poop')" style="font-size: 8.9219px;">
+            <sprite class="sprite-img-sd img-sd-poop"></sprite>
+        </button>
+    </overlay>
+
+    <!-- QR Code Password Prompt -->
+    <div id="qr_password_overlay" class="modal-overlay" hidden="" onclick="cancelQrPassword()"></div>
+    <div id="qr_password_modal" class="modal-panel glass-card qr-password-modal" hidden="">
+        <div class="card-header">
+            <div class="card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                    <rect width="5" height="5" x="3" y="3" rx="1"></rect><rect width="5" height="5" x="16" y="3" rx="1"></rect>
+                    <rect width="5" height="5" x="3" y="16" rx="1"></rect><path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
+                    <path d="M21 21v.01"></path><path d="M12 7v3a2 2 0 0 1-2 2H7"></path><path d="M3 12h.01"></path>
+                    <path d="M12 3h.01"></path><path d="M12 16v.01"></path><path d="M16 12h1"></path>
+                    <path d="M21 12v.01"></path><path d="M12 21v-1"></path>
+                </svg>
+            </div>
+        </div>
+
+        <p class="qr-password-hint">Эта игра требует пароль</p>
+        <p class="qr-password-game-id">ID игры: <strong id="qr_password_game_id"></strong></p>
+
+        <div class="form-fields">
+            <div class="field-group">
+                <label class="field-label" for="qr_password_input">Пароль игры</label>
+                <div class="input-icon-wrap">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                            <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
+                            <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                        </svg>
+                    </div>
+                    <input class="game-input has-icon" id="qr_password_input" type="text" placeholder="Пароль игры">
+                </div>
+            </div>
+        </div>
+
+        <label id="qr_password_error" class="qr-password-error"></label>
+
+        <div class="qr-password-actions">
+            <button type="button" class="button color-green game-block-button" onclick="submitQrPassword()">
+                Присоединиться
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                    <path d="m9 18 6-6-6-6"></path>
+                </svg>
+            </button>
+            <button type="button" class="button color-red game-block-button" onclick="cancelQrPassword()">
+                Ввести ID вручную
+            </button>
+        </div>
+    </div>
+
+    <!-- Custom Avatar Modal -->
+    <div id="custom_avatar_modal_overlay" class="modal-overlay" hidden="" onclick="CloseCustomAvatarModal()"></div>
+    <div id="custom_avatar_modal" class="modal-panel glass-card" hidden="">
+        <button type="button" class="modal-close modal-close--corner" onclick="CloseCustomAvatarModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                <path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>
+            </svg>
+        </button>
+
+        <div class="card-header">
+            <div class="card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+            <span class="card-title">Установить аватар</span>
+        </div>
+
+        <div id="custom_avatar_view_tabs" class="ca-view-tabs" role="tablist">
+            <button type="button" id="ca_tab_flat" class="ca-tab active" role="tab" aria-selected="true" onclick="switchCustomAvatarView('flat')">Flat</button>
+            <button type="button" id="ca_tab_3d" class="ca-tab" role="tab" aria-selected="false" onclick="switchCustomAvatarView('3d')">3D Try-On</button>
+        </div>
+
+        <div id="custom_avatar_panel" class="custom-avatar-panel-v2">
+            <input id="custom_avatar_file" type="file" accept="image/png,image/jpeg,image/jpg" hidden="">
+
+            <div id="ca_flat_view" class="ca-view active">
+                <div class="ca-preview-center">
+                    <canvas id="custom_avatar_preview" width="256" height="256"></canvas>
+                </div>
+                <div class="ca-hints">
+                    <div class="ca-hint">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" x2="22" y1="12" y2="12"></line><line x1="12" x2="12" y1="2" y2="22"></line></svg>
+                        <span>Drag to pan</span>
+                    </div>
+                    <div class="ca-hint">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line><line x1="8" x2="14" y1="11" y2="11"></line><line x1="11" x2="11" y1="8" y2="14"></line></svg>
+                        <span>Scroll to zoom</span>
+                    </div>
+                    <div class="ca-hint">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
+                        <span>Ctrl+drag to rotate</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ca_3d_view" class="ca-view" hidden>
+                <div id="ca_3d_container" class="ca-3d-container"></div>
+                <div class="ca-hints ca-hints--3d">
+                    <div class="ca-hint">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" x2="22" y1="12" y2="12"></line><line x1="12" x2="12" y1="2" y2="22"></line></svg>
+                        <span>Drag to orbit</span>
+                    </div>
+                    <div class="ca-hint">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line><line x1="8" x2="14" y1="11" y2="11"></line><line x1="11" x2="11" y1="8" y2="14"></line></svg>
+                        <span>Wheel / pinch to zoom</span>
+                    </div>
+                </div>
+                <div id="ca_3d_status" class="ca-3d-status" aria-live="polite"></div>
+            </div>
+            <label id="custom_avatar_error" class="custom-avatar-error" role="alert"></label>
+
+            <button id="custom_avatar_upload_button_big" type="button" class="button color-blue ca-upload-big">
+                Загрузить свой аватар
+            </button>
+
+            <div class="ca-actions-row" id="custom_avatar_actions_row" hidden="">
+                <button id="custom_avatar_upload_button" type="button" class="button color-blue ca-action-btn">
+                    Сменить изображение
+                </button>
+                <button id="custom_avatar_reset_button" type="button" class="button color-red ca-action-btn">
+                    Сбросить
+                </button>
+            </div>
+
+            <button type="button" class="button color-green ca-confirm-btn" onclick="ConfirmCustomAvatar()">
+                Подтвердить
+            </button>
+
+        </div>
+    </div>
+
+    <div class="camera-block camera_control">
+        <button id="button_main" type="button" class="button color-green button-main video-camera-image-wrapper">
+            <img src="video-camera.png" alt="video_camera" class="video-camera-image">
+        </button>
+        <div id="buttons" class="camera_roster">
+        </div>
+    </div>
+
+    <button hidden="" type="button" class="button color-blue bottom game-block-button" onclick="ToggleChangeScoreListPopup()">
+        change points
+    </button>
+
+    <div id="central_information_overlay" class="central-info-overlay" aria-hidden="true">
+        <div class="central-info-content">
+            <div class="central-info-spinner" aria-hidden="true"></div>
+            <p id="central_information_message" class="central-info-message"></p>
+        </div>
+    </div>
+
+    <div id="error_popup_overlay" class="error-popup-overlay" aria-hidden="true"></div>
+
+    <section id="error_popup" class="error-popup" role="alertdialog" aria-live="assertive" aria-modal="true" aria-hidden="true">
+        <div class="error-popup__icon" aria-hidden="true">!</div>
+        <p id="error_popup_message" class="error-popup__message">Something went wrong. Please try again.</p>
+        <button id="error_popup_button" type="button" class="button color-pink error-popup__button">OK</button>
+    </section>
+
+    <div id="popup-overlay"></div>
+
+    <div id="change-score-list-popup" class="popup-menu">
+        <button type="button" class="button color-red close-popup-button" onclick="CloseChangeScoreListPopup()">X
+        </button>
+
+        <div id="change-score-group" class="popup-content">
+            <p class="empty_space"></p>
+            <table id="change-score-table" class="centered-table"></table>
+        </div>
+    </div>
+
+    <entry id="log" class="log-block"></entry>
+</bb>
+<script type="text/javascript" src="js/i18n.js"></script>
+<script type="text/javascript" src="js/avatars_list.js"></script>
+<script type="text/javascript" src="js/avatars.js"></script>
+<script type="text/javascript" src="js/commands.js"></script>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/main.js"></script>
+<script type="text/javascript" src="js/selection.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script src="js/emoji.js"></script>
+<script type="module" src="js/custom_avatar_3d.js"></script>
+
+</body></html>
