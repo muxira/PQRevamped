@@ -472,7 +472,7 @@ window.onload = () => runWhenI18nReady(() => {
         var img = document.createElement('img');
         img.className = 'avatar avatar-sm';
         if (avatarFile && avatarFile !== 'custom_avatar')
-            img.src = '../../avatars/' + avatarFile;
+            img.src = (window.PQ_ORIGIN || PQ_ORIGIN) + '/avatars/' + avatarFile;
         return img;
     }
 
@@ -936,7 +936,7 @@ window.onload = () => runWhenI18nReady(() => {
     function botReport(text) {
         if (!window.pqBot) return;
         try {
-            fetch('/pqlog?bot=' + encodeURIComponent(getQueryParam('name') || '?')
+            fetch((window.PQ_ORIGIN || PQ_ORIGIN) + '/pqlog?bot=' + encodeURIComponent(getQueryParam('name') || '?')
                 + '&m=' + encodeURIComponent(text));
         } catch (e) { /* ignore */ }
     }
@@ -1097,10 +1097,8 @@ window.onload = () => runWhenI18nReady(() => {
         connecting = true;
 
         let serverOverride = getQueryParam('server');
-        let host = serverOverride || window.location.hostname;
-
-        if (!serverOverride && host == 'localhost')
-            host = "partyquiz.club";
+        // Intentional deviation from upstream: this fork is hosted on a different domain than the game's matchmaker, so always default to the real origin instead of window.location.hostname.
+        let host = serverOverride || 'partyquiz.club';
 
         let port = 3012;
 

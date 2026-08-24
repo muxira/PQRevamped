@@ -61,6 +61,7 @@ let customAvatarMaskImg = null;
 function loadCustomAvatarMask() {
     if (customAvatarMaskImg) return;
     var img = new Image();
+    img.crossOrigin = 'anonymous';
     img.src = '../../assets/custom_avatar_background.png';
     img.onload = function () {
         customAvatarMaskImg = img;
@@ -127,7 +128,7 @@ function setImg(id, file) {
         return;
     }
 
-    img.src = "../../avatars/" + file;
+    img.src = (window.PQ_ORIGIN || PQ_ORIGIN) + "/avatars/" + file;
 }
 
 // Update only the carousel slots that show the custom avatar, without re-triggering updateCarousel

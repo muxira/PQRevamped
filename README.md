@@ -46,6 +46,21 @@ Import map (in `game.html`):
 - If that confirmation is **not** in hand: keep the repo **private**, or deploy without the real mesh — the code falls back to `client/assets/models/Body.placeholder.obj` (a generic non-game placeholder) until cleared. A `TODO` in `custom_avatar_3d.js` marks where to drop the real mesh.
 - No other game binaries, DLLs, Unity AssetBundles, meshes, materials, or textures were read, referenced, or embedded — only the explicitly provided `Body.obj`.
 
+## Assets — live from origin
+This fork hosts **only** the HTML/CSS/JS we wrote or modified. Fonts, images, avatar art, and i18n JSON are fetched **live from `https://partyquiz.club`** via a single origin constant `PQ_ORIGIN` (`client/core/templates/js/config.js:2`). No local copies are kept (except one documented exception below).
+
+- `client/core/templates/js/avatars.js:64` mask now sets `img.crossOrigin = 'anonymous'` and keeps a local fallback (see CORS).
+- `client/core/templates/js/avatars.js:130` avatar `img.src = PQ_ORIGIN + "/avatars/" + file`
+- `client/core/templates/js/i18n.js:48` `PQ_ORIGIN + "/localized/<lang>/lang.json"`
+- `client/core/templates/js/main.js:939` `PQ_ORIGIN + "/pqlog?bot="`
+- `client/core/templates/css/index.css:50,178,336...` all `url("../../../assets/...")` → `url("https://partyquiz.club/assets/...")` (font `play.regular.ttf`, logo, spritesheets `img-usd.png`/`img-sd.png`)
+- `client/core/templates/js/main.js:1099` WebSocket default is now `partyquiz.club` (see Local testing).
+
+**CORS verification (`curl -I`):** `https://partyquiz.club/assets/custom_avatar_background.png` (and `play.regular.ttf`, `party_quiz_logo.png`, spritesheets, avatars, `lang.json`) currently **do not** send `Access-Control-Allow-Origin`. Verified 2026-08-24 via `curl -I https://partyquiz.club/assets/custom_avatar_background.png` and with `Origin: http://127.0.0.1:8080` — no `Access-Control-Allow-Origin` header. Plain `<img>`/CSS `url()` loads are unaffected, but **canvas readback** (`canvas.toDataURL()` in `captureCustomAvatarThumbnail` and Three.js texture upload) would taint the canvas if the mask were loaded cross-origin. Therefore **one exception** is kept: `client/assets/custom_avatar_background.png` (20714 bytes, fetched 2026-08-24 from `https://partyquiz.club/assets/custom_avatar_background.png`) remains as a **local same-origin copy** so `canvas.toDataURL()` stays untainted. All other assets (fonts, logo, spritesheets, avatars, i18n) stay live from origin and require no local copy — no licensing question for `play.regular.ttf` (not shipped, just loaded live).
+
+## Courtesy note
+This fork's asset requests, WebSocket joins, and `/pqlog` bot pings all land on the real `partyquiz.club` infrastructure. Fine for personal/friend use — don't stress-test or automate mass traffic, and consider mentioning the fork to the developer (who already cooperated on `Body.obj`) so it doesn't look like unexplained traffic.
+
 ## Calibration (manual one-time check)
 Two details cannot be verified without a live in-game comparison; they are left as **named constants** at the top of `client/core/templates/js/custom_avatar_3d.js`:
 
@@ -62,17 +77,14 @@ python -m http.server 8000
 ```
 
 ## Local testing
-**WebSocket fails locally (`wss://127.0.0.1:3012` -> code 1006) is expected.** `createSocket()` in `client/core/templates/js/main.js:1099` connects to `window.location.hostname` on port `3012` and only falls back to the public matchmaker `partyquiz.club` when `hostname === "localhost"` exactly — `127.0.0.1` does not match, so testing over `127.0.0.1` tries a non-existent local matchmaker.
+**WebSocket:** `createSocket()` in `client/core/templates/js/main.js:1099` now **defaults to `partyquiz.club`** (intentional deviation: `let host = serverOverride || 'partyquiz.club'`), so the page connects to `wss://partyquiz.club:3012` from any hosting domain (GitHub Pages, `127.0.0.1`, etc.) without the old `localhost`-only fallback. Still overridable via `?server=` for anyone who explicitly wants to point elsewhere (e.g. `stage.partyquiz.club`):
 
-- **Do not modify `createSocket()`** — out of scope.
 - Open the page with `?server=partyquiz.club` (already supported via `getQueryParam('server')` in `main.js:1099`), e.g.:
   ```
   http://127.0.0.1:8080/client/core/templates/game.html?server=partyquiz.club
   ```
   or simply use `http://localhost:8080/...?server=partyquiz.club` (where `localhost` would also trigger the fallback, but the explicit `?server=` is reliable for both).
 - This only lets the *website* reach the real matchmaker — actually joining a live game still requires the real Party Quiz host (.exe) running with a matching game ID; the WebSocket alone will not produce a joinable lobby without a real host session.
-
-TODO: client/assets/play.regular.ttf — real font still needed from the developer (same channel Body.obj was requested through) or recovered from a live DevTools -> Network -> Font capture of the original site while it is still reachable; until then the site intentionally renders with the sans-serif fallback (the @font-face rule at client/core/templates/css/index.css:18 is left intact pointing at the absent file).
 
 ## Confirm no game binaries
 This repo contains **no** `.dll`, no Unity `AssetBundle`, no meshes/materials pulled from the actual game build beyond `Body.obj` explicitly provided. All other preview logic is derived from that mesh plus the shader parameters this site already computed.

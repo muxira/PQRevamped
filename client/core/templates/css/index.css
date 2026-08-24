@@ -47,7 +47,7 @@ body.partyquiz {
 
 @font-face {
     font-family: "partyquiz";
-    src: url("../../../assets/play.regular.ttf");
+    src: url("https://partyquiz.club/assets/play.regular.ttf");
     font-display: swap;
 }
 
@@ -175,7 +175,7 @@ body.partyquiz header {
 }
 
 body.partyquiz header icon {
-    background-image: url("../../../assets/party_quiz_logo.png");
+    background-image: url("https://partyquiz.club/assets/party_quiz_logo.png");
     height: var(--size-header);
     width: min(var(--size-header) * 5.5, 80vw);
     background-size: contain;
@@ -333,7 +333,7 @@ body.partyquiz .button.icon-elements::after {
     content: "";
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     width: 26px;
     height: 26px;
     background-position: -89px -2px;
@@ -345,7 +345,7 @@ body.partyquiz .button.icon-arrow_down::after {
     background-position: -346px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -355,7 +355,7 @@ body.partyquiz .button.icon-bigsmile::after {
     background-position: -2px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -365,7 +365,7 @@ body.partyquiz .button.icon-cloud_download::after {
     background-position: -369px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -375,7 +375,7 @@ body.partyquiz .button.icon-cloud_upload::after {
     background-position: -398px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -385,7 +385,7 @@ body.partyquiz .button.icon-cool::after {
     background-position: -31px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -395,7 +395,7 @@ body.partyquiz .button.icon-cross::after {
     background-position: -60px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -405,7 +405,7 @@ body.partyquiz .button.icon-exit::after {
     background-position: -118px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -415,7 +415,7 @@ body.partyquiz .button.icon-file::after {
     background-position: -292px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -425,7 +425,7 @@ body.partyquiz .button.icon-plus::after {
     background-position: -147px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -435,7 +435,7 @@ body.partyquiz .button.icon-poop::after {
     background-position: -176px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -445,7 +445,7 @@ body.partyquiz .button.icon-sad::after {
     background-position: -205px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -455,7 +455,7 @@ body.partyquiz .button.icon-sick3::after {
     background-position: -234px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -465,7 +465,7 @@ body.partyquiz .button.icon-sleep::after {
     background-position: -263px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -475,7 +475,7 @@ body.partyquiz .button.icon-trash::after {
     background-position: -319px -2px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
     content: "";
 }
 
@@ -492,7 +492,7 @@ body.partyquiz .button.row sprite {
 .sprite-img-usd {
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-usd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-usd.png");
 }
 
 .img-usd-arrow_down { width: 20px; height: 26px; background-position: -346px -2px; }
@@ -514,7 +514,7 @@ body.partyquiz .button.row sprite {
 .sprite-img-sd {
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-sd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-sd.png");
 }
 
 .img-sd-arrow_down { width: 48px; height: 62px; background-position: -203px -2px; }
@@ -570,7 +570,7 @@ overlay#emoji_layer.collapsed #controls::after {
     background-position: -2px -69px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-sd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-sd.png");
     filter: brightness(1);
 }
 
@@ -581,7 +581,7 @@ overlay#emoji_layer #controls::after {
     background-position: -136px -193px;
     display: inline-block;
     background-repeat: no-repeat;
-    background-image: url("../../../assets/spritesheets/img-sd.png");
+    background-image: url("https://partyquiz.club/assets/spritesheets/img-sd.png");
     filter: brightness(0);
 }
 
