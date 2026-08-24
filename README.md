@@ -61,6 +61,17 @@ python -m http.server 8000
 # open http://localhost:8000/client/core/templates/game.html
 ```
 
+## Local testing
+**WebSocket fails locally (`wss://127.0.0.1:3012` -> code 1006) is expected.** `createSocket()` in `client/core/templates/js/main.js:1099` connects to `window.location.hostname` on port `3012` and only falls back to the public matchmaker `partyquiz.club` when `hostname === "localhost"` exactly — `127.0.0.1` does not match, so testing over `127.0.0.1` tries a non-existent local matchmaker.
+
+- **Do not modify `createSocket()`** — out of scope.
+- Open the page with `?server=partyquiz.club` (already supported via `getQueryParam('server')` in `main.js:1099`), e.g.:
+  ```
+  http://127.0.0.1:8080/client/core/templates/game.html?server=partyquiz.club
+  ```
+  or simply use `http://localhost:8080/...?server=partyquiz.club` (where `localhost` would also trigger the fallback, but the explicit `?server=` is reliable for both).
+- This only lets the *website* reach the real matchmaker — actually joining a live game still requires the real Party Quiz host (.exe) running with a matching game ID; the WebSocket alone will not produce a joinable lobby without a real host session.
+
 ## Confirm no game binaries
 This repo contains **no** `.dll`, no Unity `AssetBundle`, no meshes/materials pulled from the actual game build beyond `Body.obj` explicitly provided. All other preview logic is derived from that mesh plus the shader parameters this site already computed.
 
