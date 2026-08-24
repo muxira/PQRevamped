@@ -47,7 +47,7 @@ body.partyquiz {
 
 @font-face {
     font-family: "partyquiz";
-    src: url("https://partyquiz.club/assets/play.regular.ttf");
+    src: local("Arial"), local("Helvetica"), local("sans-serif"); /* original https://partyquiz.club/assets/play.regular.ttf blocked by CORS (no Access-Control-Allow-Origin); fallback to system sans-serif until font is obtained via developer channel */
     font-display: swap;
 }
 

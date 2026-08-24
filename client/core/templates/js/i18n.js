@@ -45,7 +45,7 @@
     function buildLangUrl(lang) {
         // game.html is served from Client/core/templates/game.html
         // so ../../localized/... points to Client/localized/...
-        const u = new URL((window.PQ_ORIGIN || PQ_ORIGIN) + `/localized/${encodeURIComponent(lang)}/lang.json`);
+        const u = new URL(`../../localized/${encodeURIComponent(lang)}/lang.json`, window.location.href);
         // Very lightweight cache-bust (allows Unity to overwrite the file).
         u.searchParams.set('v', String(Date.now()));
         return u.toString();

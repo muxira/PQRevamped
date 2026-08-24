@@ -18,8 +18,8 @@ const TEXTURE_FLIP_Y = true; // <- easy-to-flip constant
 //   Body.obj) unless told otherwise. So we frame front of figure (torso+head),
 //   slightly above center, with moderate distance.
 const DEFAULT_CAMERA_POSE = {
-    position: new THREE.Vector3(0, 0.05, 1.2),
-    target: new THREE.Vector3(0, 0.02, 0),
+    position: new THREE.Vector3(0, 0.35, 0.85),
+    target: new THREE.Vector3(0, 0.30, 0),
     fov: 45,
 };
 
@@ -27,8 +27,8 @@ const DEFAULT_CAMERA_POSE = {
 const CUSTOM_AVATAR_PREVIEW_BASE_ZOOM = 1.5;
 
 // Clamp helpers for OrbitControls
-const MIN_DISTANCE = 0.4;
-const MAX_DISTANCE = 3.5;
+const MIN_DISTANCE = 0.15;
+const MAX_DISTANCE = 4.0;
 const MIN_POLAR = 0.1;
 const MAX_POLAR = Math.PI * 0.48;
 
@@ -236,9 +236,18 @@ function ensureScene() {
                 // Body.obj spans small units (~0.02), normalize
                 const box = new THREE.Box3().setFromObject(object);
                 const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                // Body.obj is tiny (~0.02 units); normalize to ~1.5m height so preview is usable
+                const targetHeight = 1.6;
+                const scale = maxDim > 0 ? targetHeight / maxDim : 80;
+                object.scale.setScalar(scale);
+                // Recompute after scale
+                box.setFromObject(object);
+                box.getCenter(center);
                 object.position.sub(center);
-                // Move so feet near bottom, head near top
-                object.position.y += 0.02;
+                // Lift so feet sit near bottom of view
+                object.position.y += 0.05;
                 // Ensure front faces camera (+Z)
                 // Model is already front-facing; no rotation needed
             }
