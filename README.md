@@ -6,12 +6,12 @@ This repo only changes the **custom avatar preview** — it does **not** modify 
 Original site was extracted client-side from the browser; this port keeps all lobby / team / WebSocket / i18n / question / scoring flows **byte-for-byte identical**. The only functional addition is the new **3D Try-On** mode inside the existing `custom_avatar_modal`.
 
 ## What changed vs original
-See [CHANGES.md](CHANGES.md) — short, reviewable diff: new `custom_avatar_3d.{js,css}` + modal/tab/CSS additions, plus the provided `Body.obj` under `client/assets/models/` (see Licensing below). No edits to `commands.js` send flow or other gameplay code.
+See [CHANGES.md](CHANGES.md) — short, reviewable diff: new `custom_avatar_3d.{js,css}` + modal/tab/CSS additions, plus the `Body.obj` under `client/assets/models/` (see Licensing below). No edits to `commands.js` send flow or other gameplay code.
 
 ## 3D Try-On
 Inside the custom avatar modal, switch between:
 - **Flat** — the original 2D canvas preview (drag to pan, scroll to zoom, Ctrl+drag to rotate)
-- **3D Try-On** — real-time preview on the provided `Body.obj` reference mesh. The uploaded PNG is projected straight through the silhouette (front-projection UVs) exactly as in-game, so `TilingX/TilingY` repetition is now visible across the whole body instead of being cropped to a face oval.
+- **3D Try-On** — real-time preview on the `Body.obj` reference mesh. The uploaded PNG is projected straight through the silhouette (front-projection UVs) exactly as in-game, so `TilingX/TilingY` repetition is now visible across the whole body instead of being cropped to a face oval.
 
 Controls in 3D: drag to orbit, wheel/pinch to zoom, clamped zoom/polar-angle so you cannot clip through the model. The view uses the same `window.customAvatar.payload` (Scale/OffsetX/OffsetY/Rotation/TilingX/TilingY) as the flat editor — gestures in either view update the same payload, both previews re-render live, switching tabs preserves position/zoom/rotation.
 
@@ -27,24 +27,24 @@ If WebGL is unavailable, the 3D tab is hidden automatically and the flat-only fl
 ## Hosting (GitHub Pages, static-only)
 - No build step, no bundler, no secrets. Vanilla JS + Three.js via a **pinned CDN ESM import** (`three@0.160.0` via `https://cdn.jsdelivr.net/...`).
 - Works from a project Pages URL because all assets use **relative paths**. The entry point is `client/core/templates/game.html`; `index.html` at the repo root redirects there for convenience.
-- Enable Pages: **Settings -> Pages -> Deploy from branch** (or the included GitHub Actions workflow `.github/workflows/pages.yml` which publishes `main`).
+- Enable Pages: **Settings -> Pages -> Deploy from branch** (or the GitHub Actions workflow `.github/workflows/pages.yml` which publishes `main`).
 
 Import map (in `game.html`):
 ```html
 <script type="importmap">
 {
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
+ "imports": {
+ "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+ "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+ }
 }
 </script>
 ```
 
 ## Licensing — Body.obj
-`client/assets/models/Body.obj` was shared by the developer **explicitly for calibrating this preview**. Before publishing this repo **publicly** on GitHub Pages, you must have **explicit written confirmation** from the developer that **public redistribution** (not just personal use) is allowed.
+`client/assets/models/Body.obj` is a reference mesh used for the 3D preview. Before publishing this repo **publicly** on GitHub Pages, ensure you have rights to redistribute it — if not confirmed, keep the repo **private** or deploy without it.
 - If that confirmation is **not** in hand: keep the repo **private**, or deploy without the real mesh — the code falls back to `client/assets/models/Body.placeholder.obj` (a generic non-game placeholder) until cleared. A `TODO` in `custom_avatar_3d.js` marks where to drop the real mesh.
-- No other game binaries, DLLs, Unity AssetBundles, meshes, materials, or textures were read, referenced, or embedded — only the explicitly provided `Body.obj`.
+- No other game binaries, DLLs, Unity AssetBundles, meshes, materials, or textures were read, referenced, or embedded — only `Body.obj` as a reference mesh.
 
 ## Assets — live from origin
 This fork hosts **only** the HTML/CSS/JS we wrote or modified. Fonts, images, avatar art, and i18n JSON are fetched **live from `https://partyquiz.club`** via a single origin constant `PQ_ORIGIN` (`client/core/templates/js/config.js:2`). No local copies are kept (except one documented exception below).
@@ -63,7 +63,7 @@ This fork hosts **only** the HTML/CSS/JS we wrote or modified. Fonts, images, av
 - **Font** `play.regular.ttf` also blocked by CORS (`downloadable font: cross-site access not allowed`). `client/core/templates/css/index.css:50` now uses `src: local("Arial")…` fallback instead of `https://partyquiz.club/assets/play.regular.ttf` — intentionally renders with system sans-serif until a licensed font is obtained; no local font binary is shipped (same licensing constraint as `Body.obj`).
 
 ## Courtesy note
-This fork's asset requests, WebSocket joins, and `/pqlog` bot pings all land on the real `partyquiz.club` infrastructure. Fine for personal/friend use — don't stress-test or automate mass traffic, and consider mentioning the fork to the developer (who already cooperated on `Body.obj`) so it doesn't look like unexplained traffic.
+This fork's asset requests, WebSocket joins, and `/pqlog` bot pings all land on the real `partyquiz.club` infrastructure. Fine for personal/friend use — don't stress-test or automate mass traffic.
 
 ## Calibration (manual one-time check)
 Two details cannot be verified without a live in-game comparison; they are left as **named constants** at the top of `client/core/templates/js/custom_avatar_3d.js`:
@@ -81,25 +81,25 @@ python -m http.server 8000
 ```
 
 ## Local testing
-**WebSocket:** `createSocket()` in `client/core/templates/js/main.js:1099` now **defaults to `partyquiz.club`** (intentional deviation: `let host = serverOverride || 'partyquiz.club'`), so the page connects to `wss://partyquiz.club:3012` from any hosting domain (GitHub Pages, `127.0.0.1`, etc.) without the old `localhost`-only fallback. Still overridable via `?server=` for anyone who explicitly wants to point elsewhere (e.g. `stage.partyquiz.club`):
+**WebSocket:** `createSocket()` in `client/core/templates/js/main.js:1099` now **defaults to `partyquiz.club`** (intentional deviation: `let host = serverOverride || 'partyquiz.club'`), so the page connects to `wss://partyquiz.club:3012` from any hosting domain (GitHub Pages, `127.0.0.1`, etc.) without the old `localhost`-only fallback. Still overridable via `?server=` for anyone who wants to point elsewhere (e.g. `stage.partyquiz.club`):
 
 - Open the page with `?server=partyquiz.club` (already supported via `getQueryParam('server')` in `main.js:1099`), e.g.:
-  ```
-  http://127.0.0.1:8080/client/core/templates/game.html?server=partyquiz.club
-  ```
-  or simply use `http://localhost:8080/...?server=partyquiz.club` (where `localhost` would also trigger the fallback, but the explicit `?server=` is reliable for both).
+ ```
+ http://127.0.0.1:8080/client/core/templates/game.html?server=partyquiz.club
+ ```
+ or simply use `http://localhost:8080/...?server=partyquiz.club` (where `localhost` would also trigger the fallback, but the explicit `?server=` is reliable for both).
 - This only lets the *website* reach the real matchmaker — actually joining a live game still requires the real Party Quiz host (.exe) running with a matching game ID; the WebSocket alone will not produce a joinable lobby without a real host session.
 
 ## Confirm no game binaries
-This repo contains **no** `.dll`, no Unity `AssetBundle`, no meshes/materials pulled from the actual game build beyond `Body.obj` explicitly provided. All other preview logic is derived from that mesh plus the shader parameters this site already computed.
+This repo contains **no** `.dll`, no Unity `AssetBundle`, no meshes/materials pulled from the actual game build beyond `Body.obj` . All other preview logic is derived from that mesh plus the shader parameters this site already computed.
 
 ## Structure
 ```
-/client/core/templates/game.html   # main companion page (ported)
-/client/core/templates/js/*         # original JS (renamed, behavior identical)
-/client/core/templates/css/*        # original CSS
-/client/assets/models/Body.obj      # provided reference mesh (or placeholder)
+/client/core/templates/game.html # main companion page (ported)
+/client/core/templates/js/* # original JS (renamed, behavior identical)
+/client/core/templates/css/* # original CSS
+/client/assets/models/Body.obj # reference mesh (or placeholder)
 /client/assets/custom_avatar_background.png
-/client/avatars/                    # avatar image list (referenced by avatars.js)
-/client/localized/<lang>/lang.json  # i18n dictionaries
+/client/avatars/ # avatar image list (referenced by avatars.js)
+/client/localized/<lang>/lang.json # i18n dictionaries
 ```
