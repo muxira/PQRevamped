@@ -263,7 +263,10 @@ function initCustomAvatarUIOnce() {
     // Gestures captured on the whole modal panel so user can drag from anywhere,
     // not only over the preview canvas itself.
     var previewCanvas = document.getElementById('custom_avatar_preview');
-    var gestureSurface = document.getElementById('custom_avatar_modal') || previewCanvas;
+    var flatView = document.getElementById('ca_flat_view');
+    var flatPreviewCenter = document.querySelector('#ca_flat_view .ca-preview-center');
+    // Only flat preview gestures: scoped to flat view container, not whole modal
+    var gestureSurface = flatPreviewCenter || previewCanvas;
     if (previewCanvas && gestureSurface) {
         var isDragging = false;
         var lastX = 0;
@@ -296,6 +299,11 @@ function initCustomAvatarUIOnce() {
 
         // Mouse: drag to pan
         gestureSurface.addEventListener('mousedown', function (e) {
+            if (e.button !== 0) return; // only left button
+            if (window.currentView === '3d') return;
+            var flatEl = document.getElementById('ca_flat_view');
+            if (flatEl && flatEl.hidden) return;
+            if (flatView && !flatView.contains(e.target)) return;
             if (isInteractiveTarget(e.target)) return;
             var payload = window.customAvatar && window.customAvatar.payload;
             if (!payload || !payload.Data) return;
@@ -309,6 +317,7 @@ function initCustomAvatarUIOnce() {
 
         window.addEventListener('mousemove', function (e) {
             if (!isDragging) return;
+            if (window.currentView === '3d') return;
             var payload = window.customAvatar && window.customAvatar.payload;
             if (!payload) return;
 
@@ -341,6 +350,10 @@ function initCustomAvatarUIOnce() {
 
         // Mouse: scroll to zoom
         gestureSurface.addEventListener('wheel', function (e) {
+            if (window.currentView === '3d') return;
+            var flatEl = document.getElementById('ca_flat_view');
+            if (flatEl && flatEl.hidden) return;
+            if (flatView && !flatView.contains(e.target)) return;
             if (isInteractiveTarget(e.target)) return;
             var payload = window.customAvatar && window.customAvatar.payload;
             if (!payload || !payload.Data) return;
@@ -353,6 +366,10 @@ function initCustomAvatarUIOnce() {
 
         // Touch: 1-finger drag to pan, 2-finger pinch to zoom
         gestureSurface.addEventListener('touchstart', function (e) {
+            if (window.currentView === '3d') return;
+            var flatEl = document.getElementById('ca_flat_view');
+            if (flatEl && flatEl.hidden) return;
+            if (flatView && !flatView.contains(e.target)) return;
             if (isInteractiveTarget(e.target)) return;
             var payload = window.customAvatar && window.customAvatar.payload;
             if (!payload || !payload.Data) return;
@@ -372,6 +389,9 @@ function initCustomAvatarUIOnce() {
         }, { passive: false });
 
         gestureSurface.addEventListener('touchmove', function (e) {
+            if (window.currentView === '3d') return;
+            var flatEl = document.getElementById('ca_flat_view');
+            if (flatEl && flatEl.hidden) return;
             var payload = window.customAvatar && window.customAvatar.payload;
             if (!payload) return;
 

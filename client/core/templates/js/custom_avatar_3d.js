@@ -41,7 +41,8 @@ let texture = null;
 let animId = null;
 let isInitialized = false;
 let isVisible = false;
-let currentView = 'flat'; // 'flat' | '3d'
+window.currentView = 'flat';
+let currentView = window.currentView; // 'flat' | '3d'
 let hasWebGL = true;
 
 // ---------------------------------------------------------------------------
@@ -193,7 +194,14 @@ function ensureScene() {
     controls.minPolarAngle = MIN_POLAR;
     controls.maxPolarAngle = MAX_POLAR;
     controls.enablePan = false;
+    controls.enableZoom = true;
+    // Only left button rotates (spec: left-drag to orbit), right does nothing
+    controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.NONE };
+    controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     controls.update();
+
+    // Prevent page scroll when wheeling over 3D viewport
+    renderer.domElement.addEventListener('wheel', (e) => e.stopPropagation(), { passive: false });
 
     // Handle size
     const resize = () => {
@@ -234,20 +242,23 @@ function ensureScene() {
                 child.material = mat;
                 // Center and scale model to fit view
                 // Body.obj spans small units (~0.02), normalize
+                // Body.obj uses Z as height (X=width, Z=height, Y=depth) — rotate to stand (Y-up)
+                object.rotation.x = -Math.PI / 2;
+                object.updateMatrixWorld(true);
                 const box = new THREE.Box3().setFromObject(object);
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
-                // Body.obj is tiny (~0.02 units); normalize to ~1.5m height so preview is usable
-                const targetHeight = 1.6;
+                // Body.obj is tiny (~0.03 units); normalize so it fills viewport
+                const targetHeight = 1.7;
                 const scale = maxDim > 0 ? targetHeight / maxDim : 80;
                 object.scale.setScalar(scale);
-                // Recompute after scale
+                // Recompute after scale + rotation
                 box.setFromObject(object);
                 box.getCenter(center);
                 object.position.sub(center);
-                // Lift so feet sit near bottom of view
-                object.position.y += 0.05;
+                // Lift so feet sit near bottom, head visible
+                object.position.y += 0.1;
                 // Ensure front faces camera (+Z)
                 // Model is already front-facing; no rotation needed
             }
@@ -302,7 +313,7 @@ function stopRenderLoop() {
 
 // Global tab switcher (called from inline onclick)
 window.switchCustomAvatarView = function(view) {
-    currentView = view;
+    window.currentView = currentView = view;
     const tabFlat = document.getElementById('ca_tab_flat');
     const tab3d = document.getElementById('ca_tab_3d');
     const flat = document.getElementById('ca_flat_view');
