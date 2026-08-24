@@ -18,8 +18,8 @@ const TEXTURE_FLIP_Y = true; // <- easy-to-flip constant
 //   Body.obj) unless told otherwise. So we frame front of figure (torso+head),
 //   slightly above center, with moderate distance.
 const DEFAULT_CAMERA_POSE = {
-    position: new THREE.Vector3(0, 0.35, 0.85),
-    target: new THREE.Vector3(0, 0.30, 0),
+    position: new THREE.Vector3(0, 0.008, 0.08),
+    target: new THREE.Vector3(0, 0.008, 0),
     fov: 45,
 };
 
@@ -27,8 +27,8 @@ const DEFAULT_CAMERA_POSE = {
 const CUSTOM_AVATAR_PREVIEW_BASE_ZOOM = 1.5;
 
 // Clamp helpers for OrbitControls
-const MIN_DISTANCE = 0.15;
-const MAX_DISTANCE = 4.0;
+const MIN_DISTANCE = 0.01;
+const MAX_DISTANCE = 0.5;
 const MIN_POLAR = 0.1;
 const MAX_POLAR = Math.PI * 0.48;
 
@@ -89,16 +89,28 @@ function applyPayloadToTexture() {
     const offsetY = safeNumber(p.OffsetY, 0.0);
     const scale = safeNumber(p.Scale, 1.0);
     const rotation = safeNumber(p.Rotation, 0.0);
-
+    // Update texture (for fallback) and shader uniforms (pixel-perfect)
     const effectiveScale = scale * CUSTOM_AVATAR_PREVIEW_BASE_ZOOM;
-    // Avoid division by zero
     const safeScale = Math.max(0.01, effectiveScale);
-    // Fold Scale into repeat so flat and 3D zoom in sync
     texture.repeat.set(tilingX / safeScale, tilingY / safeScale);
     texture.offset.set(offsetX, offsetY);
     texture.rotation = rotation;
     texture.center.set(0.5, 0.5);
     texture.needsUpdate = true;
+    // Also update shader uniforms if present (planar projection)
+    if (mesh && mesh.material && mesh.material.uniforms) {
+        mesh.material.uniforms.tiling.value.set(tilingX, tilingY);
+        mesh.material.uniforms.offset.value.set(offsetX, offsetY);
+        mesh.material.uniforms.scale.value = scale;
+        mesh.material.uniforms.rotation.value = rotation;
+        mesh.material.uniforms.map.value = texture;
+    } else if (mesh && mesh.userData && mesh.userData.shaderMat) {
+        const m = mesh.userData.shaderMat;
+        m.uniforms.tiling.value.set(tilingX, tilingY);
+        m.uniforms.offset.value.set(offsetX, offsetY);
+        m.uniforms.scale.value = scale;
+        m.uniforms.rotation.value = rotation;
+    }
 }
 
 async function loadTextureFromDataUrl(dataUrl) {
@@ -134,8 +146,13 @@ async function updateTexture() {
         texture = newTex;
         applyPayloadToTexture();
         if (mesh) {
-            mesh.material.map = texture;
-            mesh.material.needsUpdate = true;
+            if (mesh.material.uniforms) {
+                mesh.material.uniforms.map.value = texture;
+                mesh.material.needsUpdate = true;
+            } else {
+                mesh.material.map = texture;
+                mesh.material.needsUpdate = true;
+            }
         }
     } catch (e) {
         console.error('Failed to load avatar texture', e);
@@ -196,9 +213,79 @@ function ensureScene() {
     controls.enablePan = false;
     controls.enableZoom = true;
     // Only left button rotates (spec: left-drag to orbit), right does nothing
-    controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.NONE };
+    controls.mouseButtons = { LEFT: THREE.MOUSE.NONE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
     controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     controls.update();
+
+    // --- 3D texture pan: left-drag moves OffsetX/Y (same payload as flat), right-drag orbits ---
+    let isPanningTexture = false;
+    let panStart = { x: 0, y: 0, offX: 0, offY: 0 };
+    const TEX_PAN_SPEED = 0.8;
+    renderer.domElement.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // left only for texture pan
+        if (window.currentView !== '3d') return;
+        const payload = window.customAvatar && window.customAvatar.payload;
+        if (!payload || !payload.Data) return;
+        // Only if inside 3D container and not on controls' right button
+        isPanningTexture = true;
+        panStart.x = e.clientX;
+        panStart.y = e.clientY;
+        panStart.offX = payload.OffsetX;
+        panStart.offY = payload.OffsetY;
+        e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (!isPanningTexture) return;
+        if (window.currentView !== '3d') return;
+        const payload = window.customAvatar && window.customAvatar.payload;
+        if (!payload) return;
+        const rect = container.getBoundingClientRect();
+        const w = rect.width || 260;
+        const h = rect.height || 260;
+        const dx = (e.clientX - panStart.x) / w;
+        const dy = (e.clientY - panStart.y) / h;
+        // Match flat logic: drag moves offset, scaled by 1/Scale
+        const scale = Math.max(0.1, (payload.Scale || 1) * 1.5);
+        payload.OffsetX = panStart.offX - dx * TEX_PAN_SPEED / scale;
+        payload.OffsetY = panStart.offY + dy * TEX_PAN_SPEED / scale;
+        if (typeof window.renderCustomAvatarPreview === 'function') window.renderCustomAvatarPreview();
+        applyPayloadToTexture();
+        if (typeof updateSetInfoButtonState === 'function') updateSetInfoButtonState();
+    });
+    window.addEventListener('mouseup', (e) => {
+        if (e.button === 0) isPanningTexture = false;
+    });
+    // Touch: one finger pan texture, two fingers pinch handled by OrbitControls already
+    renderer.domElement.addEventListener('touchstart', (e) => {
+        if (window.currentView !== '3d') return;
+        if (e.touches.length !== 1) return;
+        const payload = window.customAvatar && window.customAvatar.payload;
+        if (!payload || !payload.Data) return;
+        isPanningTexture = true;
+        panStart.x = e.touches[0].clientX;
+        panStart.y = e.touches[0].clientY;
+        panStart.offX = payload.OffsetX;
+        panStart.offY = payload.OffsetY;
+    }, { passive: false });
+    renderer.domElement.addEventListener('touchmove', (e) => {
+        if (!isPanningTexture || e.touches.length !== 1) return;
+        if (window.currentView !== '3d') return;
+        const payload = window.customAvatar && window.customAvatar.payload;
+        if (!payload) return;
+        const rect = container.getBoundingClientRect();
+        const w = rect.width || 260;
+        const dx = (e.touches[0].clientX - panStart.x) / w;
+        const dy = (e.touches[0].clientY - panStart.y) / (rect.height || 260);
+        const scale = Math.max(0.1, (payload.Scale || 1) * 1.5);
+        payload.OffsetX = panStart.offX - dx * TEX_PAN_SPEED / scale;
+        payload.OffsetY = panStart.offY + dy * TEX_PAN_SPEED / scale;
+        if (typeof window.renderCustomAvatarPreview === 'function') window.renderCustomAvatarPreview();
+        applyPayloadToTexture();
+        e.preventDefault();
+    }, { passive: false });
+    renderer.domElement.addEventListener('touchend', (e) => {
+        if (e.touches.length === 0) isPanningTexture = false;
+    });
 
     // Prevent page scroll when wheeling over 3D viewport
     renderer.domElement.addEventListener('wheel', (e) => e.stopPropagation(), { passive: false });
@@ -231,34 +318,78 @@ function ensureScene() {
                 mesh = child;
                 // Ensure geometry has UVs (Body.obj already does)
                 // Use a simple material that respects map transform
-                const mat = new THREE.MeshStandardMaterial({
-                    color: 0xffffff,
-                    roughness: 0.75,
-                    metalness: 0.02,
+                // Use ShaderMaterial that does planar projection like Custom/AlbedoTiling
+                // Base UV = worldPos.xz * 31.25 + 0.5, then user transform: uv * Scale * Tiling + Offset, rotation about 0.5
+                const mat = new THREE.ShaderMaterial({
+                    uniforms: {
+                        map: { value: texture },
+                        tiling: { value: new THREE.Vector2(1, 1) },
+                        offset: { value: new THREE.Vector2(0, 0) },
+                        scale: { value: 1.0 },
+                        rotation: { value: 0.0 },
+                        baseZoom: { value: 31.25 },
+                        flipY: { value: TEXTURE_FLIP_Y ? 1 : 0 }
+                    },
+                    vertexShader: `
+                        varying vec3 vWorldPos;
+                        void main() {
+                            vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                            vWorldPos = worldPos.xyz;
+                            gl_Position = projectionMatrix * viewMatrix * worldPos;
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform sampler2D map;
+                        uniform vec2 tiling;
+                        uniform vec2 offset;
+                        uniform float scale;
+                        uniform float rotation;
+                        uniform float baseZoom;
+                        uniform float flipY;
+                        varying vec3 vWorldPos;
+                        void main() {
+                            // Planar projection: U~X, V~Z (world space), centered
+                            vec2 baseUV = vWorldPos.xz * baseZoom + vec2(0.5);
+                            // User scale (like flat preview 1.5)
+                            float effectiveScale = scale * 1.5;
+                            vec2 uv = baseUV;
+                            // Apply tiling and scale
+                            uv *= tiling / effectiveScale;
+                            // Apply offset (payload Offset is UV units)
+                            uv += offset;
+                            // Rotation about 0.5
+                            float c = cos(rotation);
+                            float s = sin(rotation);
+                            uv -= 0.5;
+                            uv = vec2(uv.x * c - uv.y * s, uv.x * s + uv.y * c);
+                            uv += 0.5;
+                            // Flip Y if needed (Unity vs Three)
+                            if (flipY < 0.5) uv.y = 1.0 - uv.y;
+                            // Sample
+                            vec4 col = texture2D(map, uv);
+                            if (col.a < 0.01) discard;
+                            gl_FragColor = col;
+                        }
+                    `,
                     side: THREE.DoubleSide,
+                    transparent: true
                 });
-                // Theme border awareness: keep neutral
-                if (texture) mat.map = texture;
+                // Store reference for live updates
+                child.userData.shaderMat = mat;
+                if (texture) mat.uniforms.map.value = texture;
                 child.material = mat;
                 // Center and scale model to fit view
                 // Body.obj spans small units (~0.02), normalize
                 // Body.obj uses Z as height (X=width, Z=height, Y=depth) — rotate to stand (Y-up)
+                // Keep original world size (0.032) for correct planar projection: shader does baseUV = worldPos.xz * 31.25
+                // Do not scale via object.scale (would distort UV); instead keep world size and adjust camera distance
                 object.rotation.x = -Math.PI / 2;
                 object.updateMatrixWorld(true);
                 const box = new THREE.Box3().setFromObject(object);
                 const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                // Body.obj is tiny (~0.03 units); normalize so it fills viewport
-                const targetHeight = 1.7;
-                const scale = maxDim > 0 ? targetHeight / maxDim : 80;
-                object.scale.setScalar(scale);
-                // Recompute after scale + rotation
-                box.setFromObject(object);
-                box.getCenter(center);
                 object.position.sub(center);
-                // Lift so feet sit near bottom, head visible
-                object.position.y += 0.1;
+                // Centered, keep original size — camera is very close (see DEFAULT_CAMERA_POSE)
+                object.position.y += 0.008; // slight lift so feet not clipped
                 // Ensure front faces camera (+Z)
                 // Model is already front-facing; no rotation needed
             }
