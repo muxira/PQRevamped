@@ -72,6 +72,8 @@ python -m http.server 8000
   or simply use `http://localhost:8080/...?server=partyquiz.club` (where `localhost` would also trigger the fallback, but the explicit `?server=` is reliable for both).
 - This only lets the *website* reach the real matchmaker — actually joining a live game still requires the real Party Quiz host (.exe) running with a matching game ID; the WebSocket alone will not produce a joinable lobby without a real host session.
 
+TODO: client/assets/play.regular.ttf — real font still needed from the developer (same channel Body.obj was requested through) or recovered from a live DevTools -> Network -> Font capture of the original site while it is still reachable; until then the site intentionally renders with the sans-serif fallback (the @font-face rule at client/core/templates/css/index.css:18 is left intact pointing at the absent file).
+
 ## Confirm no game binaries
 This repo contains **no** `.dll`, no Unity `AssetBundle`, no meshes/materials pulled from the actual game build beyond `Body.obj` explicitly provided. All other preview logic is derived from that mesh plus the shader parameters this site already computed.
 
