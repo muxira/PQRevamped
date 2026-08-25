@@ -1,105 +1,183 @@
-# Party Quiz — Companion Site (Unofficial Fork)
+# PQRevamped — Party Quiz Companion (QOL Edition)
 
-Unofficial, personal fork of the **Party Quiz** browser companion (Jackbox-style, phone join via browser).
-This repo only changes the **custom avatar preview** — it does **not** modify or redistribute the game itself.
+> Unofficial browser companion for [Party Quiz](https://partyquiz.club) — Jackbox-style party game where phones join via browser. This is a static fork focused on quality-of-life improvements without touching core gameplay logic.
 
-Original site was extracted client-side from the browser; this port keeps all lobby / team / WebSocket / i18n / question / scoring flows **byte-for-byte identical**. The only functional addition is the new **3D Try-On** mode inside the existing `custom_avatar_modal`.
+**Live:** `https://muxira.github.io/PQRevamped/client/core/templates/game.html` (root `index.html` redirects there)  
+**Upstream:** `https://partyquiz.club`
 
-## What changed vs original
-See [CHANGES.md](CHANGES.md) — short, reviewable diff: new `custom_avatar_3d.{js,css}` + modal/tab/CSS additions, plus the `Body.obj` under `client/assets/models/` (see Licensing below). No edits to `commands.js` send flow or other gameplay code.
+---
 
-## 3D Try-On
-Inside the custom avatar modal, switch between:
-- **Flat** — the original 2D canvas preview (drag to pan, scroll to zoom, Ctrl+drag to rotate)
-- **3D Try-On** — real-time preview on the `Body.obj` reference mesh. The uploaded PNG is projected straight through the silhouette (front-projection UVs) exactly as in-game, so `TilingX/TilingY` repetition is now visible across the whole body instead of being cropped to a face oval.
+## What is this?
 
-Controls in 3D: drag to orbit, wheel/pinch to zoom, clamped zoom/polar-angle so you cannot clip through the model. The view uses the same `window.customAvatar.payload` (Scale/OffsetX/OffsetY/Rotation/TilingX/TilingY) as the flat editor — gestures in either view update the same payload, both previews re-render live, switching tabs preserves position/zoom/rotation.
+Party Quiz is a multiplayer quiz game where the host runs the game on PC and players join from their phones through a web companion. This repo is a **port of the browser companion** with QOL enhancements — most notably a live **3D Try-On** preview for custom avatars.
 
-Texture mapping:
-- `texture.wrapS/T = THREE.RepeatWrapping`
-- `texture.repeat = Tiling / (Scale * PREVIEW_BASE_ZOOM)` — Scale folded the same way as the flat canvas (`effectiveScale = Scale * 1.5`)
-- `texture.offset = (OffsetX, OffsetY)`
-- `texture.rotation = Rotation`, `texture.center = (0.5,0.5)`
-- `texture.flipY = TEXTURE_FLIP_Y` (default `true`; see Calibration below)
+No game binaries, no Unity AssetBundles, no server code — just the HTML/CSS/JS companion made hostable anywhere (GitHub Pages, any static host).
 
-If WebGL is unavailable, the 3D tab is hidden automatically and the flat-only flow remains.
+## Features / QOL Changes
 
-## Hosting (GitHub Pages, static-only)
-- No build step, no bundler, no secrets. Vanilla JS + Three.js via a **pinned CDN ESM import** (`three@0.160.0` via `https://cdn.jsdelivr.net/...`).
-- Works from a project Pages URL because all assets use **relative paths**. The entry point is `client/core/templates/game.html`; `index.html` at the repo root redirects there for convenience.
-- Enable Pages: **Settings -> Pages -> Deploy from branch** (or the GitHub Actions workflow `.github/workflows/pages.yml` which publishes `main`).
+### 3D Try-On for Custom Avatars
+The main addition. Inside the custom avatar modal you get two tabs:
 
-Import map (in `game.html`):
-```html
-<script type="importmap">
-{
- "imports": {
- "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
- "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
- }
-}
-</script>
+- **Flat** — original 2D canvas preview (drag to pan, scroll to zoom, Ctrl+drag to rotate)
+- **3D Try-On** — real-time preview on the `Body.obj` reference mesh with the uploaded PNG projected exactly as in-game
+
+Why it matters: `TilingX / TilingY` repetition was previously invisible (cropped to a face oval). Now you see how the texture wraps across the whole body silhouette.
+
+- Drag to orbit, wheel/pinch to zoom (clamped distance + polar angle, no clipping)
+- Both views share the same payload — `Scale / OffsetX / OffsetY / Rotation / TilingX / TilingY` — gestures in either view update both previews live, tab switching preserves state
+- WebGL check: if unavailable, the 3D tab auto-hides and flat-only flow remains
+
+Texture mapping (mirrors `avatars.js`):
+```
+texture.wrapS/T = RepeatWrapping
+effectiveScale  = Scale * 1.5  // PREVIEW_BASE_ZOOM
+texture.repeat  = Tiling / effectiveScale
+texture.offset  = (OffsetX, OffsetY)
+texture.rotation = Rotation (center 0.5, 0.5)
+texture.flipY   = TEXTURE_FLIP_Y  // default true, see Calibration
 ```
 
-## Licensing — Body.obj
-`client/assets/models/Body.obj` is a reference mesh used for the 3D preview. Before publishing this repo **publicly** on GitHub Pages, ensure you have rights to redistribute it — if not confirmed, keep the repo **private** or deploy without it.
-- If that confirmation is **not** in hand: keep the repo **private**, or deploy without the real mesh — the code falls back to `client/assets/models/Body.placeholder.obj` (a generic non-game placeholder) until cleared. A `TODO` in `custom_avatar_3d.js` marks where to drop the real mesh.
-- No other game binaries, DLLs, Unity AssetBundles, meshes, materials, or textures were read, referenced, or embedded — only `Body.obj` as a reference mesh.
+### Everything else stays identical
+Lobby, team management, WebSocket flow (`wss://partyquiz.club:3012`), i18n, question/answer, bidding, scoring — **byte-for-byte behavior** is preserved. The diff is intentionally small and reviewable, see [`CHANGES.md`](CHANGES.md).
 
-## Assets — live from origin
-This fork hosts **only** the HTML/CSS/JS we wrote or modified. Fonts, images, avatar art, and i18n JSON are fetched **live from `https://partyquiz.club`** via a single origin constant `PQ_ORIGIN` (`client/core/templates/js/config.js:2`). No local copies are kept (except one documented exception below).
+### Static-hosting ready
+- No build step, no bundler, no secrets
+- Vanilla JS + Three.js via pinned CDN ESM (`three@0.160.0`)
+- All assets use relative paths, works from a project Pages URL (`/<repo>/...`)
+- Config lives in one place: `client/core/templates/js/config.js` → `PQ_ORIGIN = 'https://partyquiz.club'`
 
-- `client/core/templates/js/avatars.js:64` mask now sets `img.crossOrigin = 'anonymous'` and keeps a local fallback (see CORS).
-- `client/core/templates/js/avatars.js:130` avatar `img.src = PQ_ORIGIN + "/avatars/" + file`
-- `client/core/templates/js/i18n.js:48` `PQ_ORIGIN + "/localized/<lang>/lang.json"`
-- `client/core/templates/js/main.js:939` `PQ_ORIGIN + "/pqlog?bot="`
-- `client/core/templates/css/index.css:50,178,336...` all `url("../../../assets/...")` → `url("https://partyquiz.club/assets/...")` (font `play.regular.ttf`, logo, spritesheets `img-usd.png`/`img-sd.png`)
-- `client/core/templates/js/main.js:1099` WebSocket default is now `partyquiz.club` (see Local testing).
+## Tech Stack
 
-**CORS verification (`curl -I`):** `https://partyquiz.club/assets/custom_avatar_background.png` (and `play.regular.ttf`, `party_quiz_logo.png`, spritesheets, avatars, `lang.json`) currently **do not** send `Access-Control-Allow-Origin`. Verified 2026-08-24/25 via `curl -I https://partyquiz.club/assets/custom_avatar_background.png` and with `Origin: http://127.0.0.1:8080` — no `Access-Control-Allow-Origin` header. Plain `<img>`/CSS `url()` loads (logo, spritesheets, avatars) are unaffected, but **two cases require same-origin**:
+- Vanilla JS / HTML / CSS (ported from original companion)
+- Three.js `0.160.0` via importmap (`three` + `three/addons/`)
+- `OBJLoader` + `OrbitControls` for the 3D preview
+- GitHub Pages (static deploy via `.github/workflows/pages.yml`)
 
-- **Canvas readback** (`canvas.toDataURL()` in `captureCustomAvatarThumbnail` and Three.js texture upload) would taint if `custom_avatar_background.png` were cross-origin — therefore **kept as local same-origin copy** `client/assets/custom_avatar_background.png` (20714 bytes, fetched 2026-08-24 from `https://partyquiz.club/assets/custom_avatar_background.png`).
-- **`fetch` for i18n JSON** (`fetch(https://partyquiz.club/localized/english/lang.json)`) is blocked by CORS (console: `CORS «Access-Control-Allow-Origin»`). Therefore `client/localized/{english,russian}/lang.json` (7316/10136 bytes, fetched 2026-08-25) are **kept locally** and `client/core/templates/js/i18n.js:48` reverted to relative `../../localized/...` to stay same-origin.
-- **Font** `play.regular.ttf` also blocked by CORS (`downloadable font: cross-site access not allowed`). `client/core/templates/css/index.css:50` now uses `src: local("Arial")…` fallback instead of `https://partyquiz.club/assets/play.regular.ttf` — intentionally renders with system sans-serif until a licensed font is obtained; no local font binary is shipped (same licensing constraint as `Body.obj`).
+## Project Structure
 
-## Courtesy note
-This fork's asset requests, WebSocket joins, and `/pqlog` bot pings all land on the real `partyquiz.club` infrastructure. Fine for personal/friend use — don't stress-test or automate mass traffic.
+```
+/
+├── index.html                              # redirect → game.html
+├── favicon.ico
+├── client/
+│   ├── assets/
+│   │   ├── custom_avatar_background.png    # local copy (canvas CORS, see below)
+│   │   └── models/
+│   │       ├── Body.obj                    # reference mesh for 3D preview
+│   │       └── Body.placeholder.obj        # fallback if Body.obj not cleared
+│   ├── localized/
+│   │   ├── english/lang.json
+│   │   └── russian/lang.json               # local copies (fetch CORS, see below)
+│   └── core/templates/
+│       ├── game.html                       # main companion page
+│       ├── css/
+│       │   ├── index.css / styles.css / ...
+│       │   └── custom_avatar_3d.css        # tabs + 3D container
+│       ├── js/
+│       │   ├── config.js                   # PQ_ORIGIN constant
+│       │   ├── avatars.js                  # avatar + custom avatar logic
+│       │   ├── custom_avatar_3d.js         # 3D Try-On module (~300 lines)
+│       │   ├── commands.js / main.js / ...
+│       │   └── jquery.min.js
+│       ├── favicon.ico
+│       └── video-camera.png
+├── .github/workflows/pages.yml
+├── CHANGES.md
+└── LICENSE
+```
 
-## Calibration (manual one-time check)
-Two details cannot be verified without a live in-game comparison; they are left as **named constants** at the top of `client/core/templates/js/custom_avatar_3d.js`:
+## Quick Start
 
-- `TEXTURE_FLIP_Y` (bool, default `true`) — Unity vs this OBJ's V-axis convention. Upload an asymmetric test image (e.g. text reading "TOP") and compare the 3D preview vs a real in-game screenshot; flip to `false` if upside-down.
-- `DEFAULT_CAMERA_POSE` (`position`, `target`, `fov`) — the mesh is a T-pose, but the in-game pose may be arms-down. The default camera frames the frontal torso+head to flatter that assumption; adjust after comparing a real screenshot. This affects only framing, not the underlying UV math.
-
-Document any correction in `CHANGES.md` after the smoke test.
-
-## Local preview
+### Local preview
 ```bash
 # from repo root
 python -m http.server 8000
 # open http://localhost:8000/client/core/templates/game.html
+# or http://localhost:8000/ (redirects automatically)
 ```
 
-## Local testing
-**WebSocket:** `createSocket()` in `client/core/templates/js/main.js:1099` now **defaults to `partyquiz.club`** (intentional deviation: `let host = serverOverride || 'partyquiz.club'`), so the page connects to `wss://partyquiz.club:3012` from any hosting domain (GitHub Pages, `127.0.0.1`, etc.) without the old `localhost`-only fallback. Still overridable via `?server=` for anyone who wants to point elsewhere (e.g. `stage.partyquiz.club`):
+Any static server works — `npx serve`, `php -S`, VS Code Live Server, etc.
 
-- Open the page with `?server=partyquiz.club` (already supported via `getQueryParam('server')` in `main.js:1099`), e.g.:
- ```
- http://127.0.0.1:8080/client/core/templates/game.html?server=partyquiz.club
- ```
- or simply use `http://localhost:8080/...?server=partyquiz.club` (where `localhost` would also trigger the fallback, but the explicit `?server=` is reliable for both).
-- This only lets the *website* reach the real matchmaker — actually joining a live game still requires the real Party Quiz host (.exe) running with a matching game ID; the WebSocket alone will not produce a joinable lobby without a real host session.
+### Joining a real game
+1. Host starts a Party Quiz session on PC (gives you a Game ID + optional password)
+2. Open the companion URL above, enter Game ID / password, pick role (Host / Player)
+3. Pick avatar → for custom avatar click **Кастомизировать** → upload PNG/JPG → tweak with pan/zoom/rotate, check 3D tab → **Подтвердить**
 
-## Confirm no game binaries
-This repo contains **no** `.dll`, no Unity `AssetBundle`, no meshes/materials pulled from the actual game build beyond `Body.obj` . All other preview logic is derived from that mesh plus the shader parameters this site already computed.
+> **WebSocket override:** `main.js` defaults to `partyquiz.club` (`wss://partyquiz.club:3012`) from any domain. To point elsewhere add `?server=partyquiz.club` (or `stage.partyquiz.club`) to the URL. Still requires a real host `.exe` with a matching game ID — the WebSocket alone doesn't create a lobby.
 
-## Structure
+## Configuration
+
+Single constant in `client/core/templates/js/config.js:2`:
+
+```js
+const PQ_ORIGIN = 'https://partyquiz.club';
+window.PQ_ORIGIN = PQ_ORIGIN;
 ```
-/client/core/templates/game.html # main companion page (ported)
-/client/core/templates/js/* # original JS (renamed, behavior identical)
-/client/core/templates/css/* # original CSS
-/client/assets/models/Body.obj # reference mesh (or placeholder)
-/client/assets/custom_avatar_background.png
-/client/avatars/ # avatar image list (referenced by avatars.js)
-/client/localized/<lang>/lang.json # i18n dictionaries
-```
+
+This fork hosts only HTML/CSS/JS we wrote. Fonts, sprites, avatar art and i18n are fetched live from `PQ_ORIGIN`:
+
+- `avatars.js:130` → `PQ_ORIGIN + "/avatars/" + file`
+- `i18n.js:48` → `PQ_ORIGIN + "/localized/<lang>/lang.json"` (falls back to local, see CORS)
+- `main.js:939` → `PQ_ORIGIN + "/pqlog?bot="`
+- `index.css` → `PQ_ORIGIN + "/assets/..."` (logo, spritesheets)
+- `main.js:1099` → WebSocket host `partyquiz.club`
+
+## Assets & CORS Notes
+
+Verified `2026-08-24/25` via `curl -I` — most `partyquiz.club` static assets **don't send** `Access-Control-Allow-Origin`:
+
+- Plain `<img>` / CSS `url()` loads are fine (logo, sprites, avatars)
+- Two cases need same-origin, so local copies are kept:
+
+| Asset | Why local |
+|-------|-----------|
+| `client/assets/custom_avatar_background.png` (20714 bytes) | `canvas.toDataURL()` + Three.js texture upload would taint canvas if cross-origin |
+| `client/localized/{english,russian}/lang.json` (7316 / 10136 bytes) | `fetch()` for i18n JSON is blocked by CORS |
+| `play.regular.ttf` (font) | blocked by CORS (`downloadable font: cross-site access not allowed`) — now `local("Arial")` fallback in `index.css:50`, no binary shipped |
+
+## Calibration (one-time manual check)
+
+Two constants at the top of `custom_avatar_3d.js` need a live in-game comparison:
+
+- **`TEXTURE_FLIP_Y`** (`true` by default) — Unity vs Three.js V-axis. Upload an asymmetric image with text "TOP" and compare preview vs in-game screenshot. Flip to `false` if upside-down.
+- **`DEFAULT_CAMERA_POSE`** (`position`, `target`, `fov`) — the mesh is a T-pose, but in-game may be arms-down. Default frames torso+head. Tweak framing after one real screenshot if needed.
+
+Document any fix in `CHANGES.md`.
+
+## Hosting on GitHub Pages
+
+**Option A — Actions (included):**
+Push to `main` → workflow `.github/workflows/pages.yml` publishes the repo root.
+
+**Option B — Branch deploy:**
+`Settings → Pages → Deploy from branch → Branch: main / root`
+
+No build step — the site works from `https://<user>.github.io/<repo>/client/core/templates/game.html` thanks to relative paths.
+
+## What changed vs original?
+
+See [`CHANGES.md`](CHANGES.md) for the full, reviewable diff:
+
+- **New:** `custom_avatar_3d.js`, `custom_avatar_3d.css`, `Body.obj` (+ placeholder), `index.html` redirect, `pages.yml`
+- **Modified:** `game.html` — tab bar (`Flat` / `3D Try-On`), `#ca_flat_view` / `#ca_3d_view` wrappers, importmap + module script
+- **Untouched:** `avatars.js` gestures/payload, `commands.js` upload/send, `main.js` lobby/WebSocket/scoring, all other CSS/JS
+
+Hard constraint verified: **no `.dll`, no Unity AssetBundles** — only `Body.obj` as a reference mesh.
+
+## Courtesy Note
+
+This companion hits the real `partyquiz.club` infrastructure (assets, WebSocket, `/pqlog`). Fine for personal / friends use — please don't stress-test or automate mass traffic.
+
+## License
+
+[MIT](LICENSE) — Copyright (c) 2026 muxira (Artem Muzyra). See `LICENSE` for details.
+
+> `client/assets/models/Body.obj` — ensure you have rights to redistribute before making the repo public. If not confirmed, keep private or deploy with `Body.placeholder.obj`. See `CHANGES.md` / old README notes for context.
+
+## Disclaimer
+
+Unofficial, personal fork. Not affiliated with or endorsed by Party Quiz. No game code or paid assets are redistributed beyond the documented `Body.obj` reference mesh and the local copies noted above.
+
+---
+
+**QOL wins in this fork:** see-it-before-you-send 3D preview, live Flat ↔ 3D sync, zero-build static hosting, and a tiny, auditable diff.
