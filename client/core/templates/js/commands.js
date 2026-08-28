@@ -42,10 +42,42 @@ function PlayClap() {
 
 function LeaveGame() {
     window.pqStore.removeItem('state');
-    socket.send(JSON.stringify({'Leave': null}));
+    try { socket.send(JSON.stringify({'Leave': null})); } catch (e) { /* ignore if socket closed */ }
     // Reload so the fresh (stateless) page renders immediately. Small delay lets the Leave frame flush.
     setTimeout(() => location.reload(), 200);
 }
+
+function RequestLeaveGame() {
+    var overlay = document.getElementById('leave_confirm_overlay');
+    var modal = document.getElementById('leave_confirm_modal');
+    if (!overlay || !modal) { LeaveGame(); return; }
+    overlay.hidden = false;
+    modal.hidden = false;
+    if (window.i18n && typeof window.i18n.apply === 'function') {
+        try { window.i18n.apply(modal); } catch (e) { /* ignore */ }
+    }
+}
+function CancelLeaveGame() {
+    var overlay = document.getElementById('leave_confirm_overlay');
+    var modal = document.getElementById('leave_confirm_modal');
+    if (overlay) overlay.hidden = true;
+    if (modal) modal.hidden = true;
+}
+function ConfirmLeaveGame() {
+    CancelLeaveGame();
+    LeaveGame();
+}
+
+// ESC closes leave confirmation
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var modal = document.getElementById('leave_confirm_modal');
+        if (modal && !modal.hidden) {
+            e.preventDefault();
+            CancelLeaveGame();
+        }
+    }
+});
 
 function SetHostRole() {
     SendMessage({'SetRole': 'host'});

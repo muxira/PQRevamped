@@ -166,11 +166,13 @@
   "you_are_member": "Участник",
   "you_cant_answer_now": "Вы не можете отвечать сейчас",
   "you_highest_bidder": "Ваша ставка лидирует",
-  "all_in": "ВА-БАНК",
   "your_answer": "Ваш ответ",
   "your_bid": "Ваша ставка",
   "your_final_answer": "Ваш финальный ответ",
   "your_guess": "Ваш ответ",
   "your_name": "Ваше имя",
-  "your_suggestion": "Ваша подсказка"
+  "your_suggestion": "Ваша подсказка",
+  "all_in": "ВА-БАНК",
+  "cancel": "Отмена",
+  "leave_confirm_text": "Вы уверены, что хотите покинуть игру?"
 }

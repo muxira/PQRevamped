@@ -166,11 +166,13 @@
   "you_are_member": "Member",
   "you_cant_answer_now": "You can't answer now",
   "you_highest_bidder": "You are the highest bidder",
-  "all_in": "ALL IN",
   "your_answer": "Your answer",
   "your_bid": "Your bid",
   "your_final_answer": "Your final answer",
   "your_guess": "Your guess",
   "your_name": "Your name",
-  "your_suggestion": "Your suggestion"
+  "your_suggestion": "Your suggestion",
+  "all_in": "ALL IN",
+  "cancel": "Cancel",
+  "leave_confirm_text": "Are you sure you want to leave the game?"
 }

@@ -149,6 +149,28 @@
         }
     }
 
+    function applyDataI18n(t) {
+        const els = document.querySelectorAll('[data-i18n]');
+        for (let i = 0; i < els.length; i++) {
+            const el = els[i];
+            const key = el.getAttribute('data-i18n');
+            if (!key) continue;
+            const txt = t(key);
+            // Use setTextWithBr for proper <br> handling; it will replace content
+            // For elements that originally had only text, we replace textContent
+            // For spans wrapping text inside buttons, this correctly updates just the span
+            setTextWithBr(el, txt);
+        }
+        const phEls = document.querySelectorAll('[data-i18n-placeholder]');
+        for (let i = 0; i < phEls.length; i++) {
+            const el = phEls[i];
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (!key) continue;
+            const txt = t(key);
+            el.setAttribute('placeholder', txt.replace(BR_SPLIT_RE, '\n'));
+        }
+    }
+
     const langFromQuery = getLangFromQuery();
     let currentLang = (langFromQuery || safeGetStoredLang() || DEFAULT_LANG).toLowerCase();
     safeStoreLang(currentLang);
@@ -190,6 +212,7 @@
         whenDomReady(() => {
             try {
                 applyTemplates(document, t);
+                applyDataI18n(t);
             } catch (e) {
                 // ignore
             }
@@ -238,13 +261,7 @@
                 currentLang = next;
                 try { document.documentElement.dir = isRtlLang(next) ? 'rtl' : 'ltr'; } catch (e) { /* ignore */ }
                 applyTemplates(document, t);
-                try {
-                    const allInBtn = document.getElementById('final_bid_allin_button');
-                    if (allInBtn) {
-                        const txt = t('all_in');
-                        allInBtn.textContent = (txt === 'all_in') ? 'ALL IN' : txt;
-                    }
-                } catch (e) { /* ignore */ }
+                applyDataI18n(t);
                 try { window.dispatchEvent(new CustomEvent('pq:languageChanged', {detail: {lang: next}})); } catch (e) { /* ignore */ }
             } catch (e) {
                 console.error('Failed to switch language', e);
