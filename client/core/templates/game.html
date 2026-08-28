@@ -31,6 +31,13 @@
 <div class="orb orb-1" aria-hidden="true"></div>
 <div class="orb orb-2" aria-hidden="true"></div>
 
+<div id="lang_switcher" class="lang-switcher">
+    <select id="lang_select" aria-label="Language" onchange="window.i18n && window.i18n.setLanguage(this.value)">
+        <option value="russian">🇷🇺 Русский</option>
+        <option value="english">🇬🇧 English</option>
+    </select>
+</div>
+
 <bb class="column hack-limit-btn-height" id="d220806">
 
     <header>
@@ -42,11 +49,11 @@
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: var(--darkreader-text-ffffff, #e8e6e3);">
             <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
         </svg>
-        <span class="refresh-tooltip dismissed" id="refreshTooltip">Нажмите эту кнопку, если вы застряли или клиент не синхронизирован</span>
+        <span class="refresh-tooltip dismissed" id="refreshTooltip">{{Press this button if you're stuck}}</span>
     </button>
 
     <section class="topic-block">
-        <span id="title">Присоединиться к игре</span>
+        <span id="title">{{join_game}}</span>
         <span id="undertitle"></span>
     </section>
 
@@ -64,19 +71,19 @@
 
         <div class="form-fields">
             <div class="field-group">
-                <label class="field-label" for="game_id">ID игры</label>
+                <label class="field-label" for="game_id">{{game_id}}</label>
                 <div class="input-icon-wrap">
                     <div class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
                             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
                         </svg>
                     </div>
-                    <input class="game-input has-icon" id="game_id" type="text" placeholder="ID игры">
+                    <input class="game-input has-icon" id="game_id" type="text" placeholder="{{game_id}}">
                 </div>
             </div>
 
             <div class="field-group">
-                <label class="field-label" for="game_password">Пароль игры</label>
+                <label class="field-label" for="game_password">{{game_password}}</label>
                 <div class="input-icon-wrap">
                     <div class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
@@ -84,14 +91,14 @@
                             <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
                         </svg>
                     </div>
-                    <input class="game-input has-icon" id="game_password" type="text" placeholder="Пароль игры">
+                    <input class="game-input has-icon" id="game_password" type="text" placeholder="{{game_password}}"}>
                 </div>
             </div>
         </div>
 
         <div class="game-block-button-wrapper">
             <button id="join_game_button" type="button" class="button color-green game-block-button" onclick="TryJoinGame()">
-                Присоединиться
+                {{join}}
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
                     <path d="m9 18 6-6-6-6"></path>
                 </svg>
@@ -101,8 +108,8 @@
     </section>
 
     <section id="resume_game_group" class="resume-game-block glass-card" hidden="">
-        <p class="resume-game-block-message">Игра найдена, но сервер не отвечает. Повторное подключение невозможно. Нажмите кнопку, чтобы выйти из игры</p>
-        <button class="button color-red resume-game-block-button" onclick="LeaveGame()">Покинуть игру</button>
+        <p class="resume-game-block-message">{{resume_server_unreachable}}</p>
+        <button class="button color-red resume-game-block-button" onclick="LeaveGame()">{{leave_game}}</button>
     </section>
 
     <section class="role-block glass-card" id="role_selection_group" hidden="">
@@ -114,8 +121,8 @@
                 </svg>
             </div>
             <div class="role-card-body">
-                <span class="role-card-title">Ведущий</span>
-                <span class="role-card-desc">Если вы хотите вести игру и решать, кто прав, а кто неправ нажмите эту кнопку</span>
+                <span class="role-card-title">{{role_host}}</span>
+                <span class="role-card-desc">{{host_role_selection_description}}</span>
             </div>
             <div class="role-card-arrow">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
@@ -135,8 +142,8 @@
                 </svg>
             </div>
             <div class="role-card-body">
-                <span class="role-card-title">Игрок</span>
-                <span class="role-card-desc">Если вы хотите участвовать в игре и отвечать на вопросы нажмите эту кнопку</span>
+                <span class="role-card-title">{{role_player}}</span>
+                <span class="role-card-desc">{{player_role_selection_description}}</span>
             </div>
             <div class="role-card-arrow">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
@@ -178,80 +185,80 @@
                 <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path>
             </svg>
-            Кастомизировать
+            {{customize_avatar}}
         </button>
 
         <!-- name -->
-        <input class="info-block-input name-input" id="player_name" type="text" placeholder="Введите ваше имя" maxlength="20">
+        <input class="info-block-input name-input" id="player_name" type="text" placeholder="{{type_in_your_name}}"} maxlength="20">
 
         <!-- self-introduction (single-line, but larger) -->
-        <textarea class="info-block-input intro-input" id="player_intro" rows="4" placeholder="Введите ваше представление. Что бы вы хотели сказать зрителям и остальным игрокам?"></textarea>
+        <textarea class="info-block-input intro-input" id="player_intro" rows="4" placeholder="{{type_in_your_intro}}"}></textarea>
 
         <!-- ▴▴--------------------------------▴▴ -->
         
         <p class="empty_space"></p>
         <label id="info_set_error"></label>
-        <button id="set_info_button" class="button color-green primary-button disabled" onclick="SetInfo()">Установить инфо</button>
+        <button id="set_info_button" class="button color-green primary-button disabled" onclick="SetInfo()">{{set_info}}</button>
     </section>
 
     <section class="game-block glass-card" id="enter_member_name_group" hidden="">
-        <p class="card-title">Ваше имя</p>
-        <p class="card-sub">Введите ваше имя</p>
-        <input class="info-block-input name-input" id="member_name_input" type="text" placeholder="Ваше имя" maxlength="24" oninput="OnMemberNameInput(this.value)">
-        <button class="button color-green" onclick="ConfirmMemberName()">Продолжить</button>
+        <p class="card-title">{{your_name}}</p>
+        <p class="card-sub">{{type_in_your_name}}</p>
+        <input class="info-block-input name-input" id="member_name_input" type="text" placeholder="{{your_name}}"} maxlength="24" oninput="OnMemberNameInput(this.value)">
+        <button class="button color-green" onclick="ConfirmMemberName()">{{continue}}</button>
     </section>
 
     <section class="game-block glass-card" id="team_lobby_group" hidden="">
-        <p class="card-title">Команды</p>
-        <p class="card-sub" id="team_lobby_sub">Присоединитесь к команде или создайте свою</p>
+        <p class="card-title">{{teams}}</p>
+        <p class="card-sub" id="team_lobby_sub">{{join_or_create_team}}</p>
         <div id="team_list"></div>
-        <button class="button color-purple" id="team_create_btn" onclick="StartTeamCreate()">Создать команду</button>
+        <button class="button color-purple" id="team_create_btn" onclick="StartTeamCreate()">{{create_team}}</button>
     </section>
 
     <section class="game-block glass-card" id="team_create_group" hidden="">
-        <p class="card-title">Новая команда</p>
-        <input class="info-block-input name-input" id="team_name_input" type="text" placeholder="Название команды" maxlength="24">
+        <p class="card-title">{{new_team}}</p>
+        <input class="info-block-input name-input" id="team_name_input" type="text" placeholder="{{team_name}}"} maxlength="24">
         <div class="team-create-actions">
-            <button class="button color-green" onclick="ConfirmCreateTeam()">Создать команду</button>
-            <button class="button color-red" onclick="goTo('TEAM_LOBBY')">Назад</button>
+            <button class="button color-green" onclick="ConfirmCreateTeam()">{{create_team}}</button>
+            <button class="button color-red" onclick="goTo('TEAM_LOBBY')">{{back}}</button>
         </div>
-        <p class="note">Вы станете капитаном. Имя и аватар общие для команды</p>
+        <p class="note">{{create_team_hint}}</p>
     </section>
 
     <!-- Toast notification for feedback -->
-    <div id="toast" class="toast">Ваше инфо установлено</div>
+    <div id="toast" class="toast">{{info_set_success}}</div>
 
     <!-- Persistent role badge (team mode): captain or member + team name -->
     <div id="captain_badge" class="captain-badge" hidden=""><span id="captain_badge_text"></span></div>
 
     <div id="sugg_strip" class="sugg-strip" hidden="">
-        <p class="sugg-strip-title">Ждём подсказки…</p>
+        <p class="sugg-strip-title">{{waiting_suggestions}}</p>
         <div id="sugg_list"></div>
     </div>
 
     <section id="teammate_suggest_group" class="info-block glass-card" hidden="">
-        <p class="card-sub teammate-note">Финальный ответ за капитаном. Можно сказать вслух</p>
+        <p class="card-sub teammate-note">{{captain_decides}}</p>
         <button type="button" class="select-button" id="teammate_buzzer" onmousedown="AnswerButtonPressed()"></button>
         <entry class="column" id="teammate_suggest_entry">
-            <label id="teammate_suggest_label">Ваша подсказка</label>
-            <input class="info-block-input" type="text" id="teammate_suggest_input" placeholder="Ваша подсказка" onkeydown="if(event.key==='Enter'){event.preventDefault();SubmitTeammateSuggestion();}">
-            <button type="button" class="button color-purple" onclick="SubmitTeammateSuggestion()">Отправить капитану</button>
+            <label id="teammate_suggest_label">{{your_suggestion}}</label>
+            <input class="info-block-input" type="text" id="teammate_suggest_input" placeholder="{{your_suggestion}}"} onkeydown="if(event.key==='Enter'){event.preventDefault();SubmitTeammateSuggestion();}">
+            <button type="button" class="button color-purple" onclick="SubmitTeammateSuggestion()">{{send_to_captain}}</button>
         </entry>
     </section>
 
     <section id="teammate_readonly_group" class="info-block glass-card" hidden="">
-        <p class="card-title" id="teammate_readonly_title">Решает капитан</p>
-        <p class="card-sub teammate-note" id="teammate_readonly_note">Финальный ответ за капитаном. Можно сказать вслух</p>
+        <p class="card-title" id="teammate_readonly_title">{{captain_decides_short}}</p>
+        <p class="card-sub teammate-note" id="teammate_readonly_note">{{captain_decides}}</p>
     </section>
 
     <section class="players-ready-block glass-card" id="all_here_host_group" hidden="">
         <button class="button color-green primary-button" onclick="CallAllHere()">
-            Все здесь
+            {{all_here}}
         </button>
     </section>
 
     <section class="player-block glass-card" id="all_here_player_group" hidden="">
-        <span>Вы:</span>
+        <span>{{you_are}}</span>
         <span id="all_here_player_name">UnnamedPlayer</span>
     </section>
 
@@ -274,106 +281,106 @@
 
     <div class="glass-card" id="question_selected_group" hidden="">
         <entry class="column">
-            <label class="explanatory_label">Выбранная категория:</label>
+            <label class="explanatory_label">{{selected_category}}</label>
             <label id="question_selected_theme">Unnamed Theme</label>
 
             <p class="empty_space"></p>
 
-            <label class="explanatory_label">Цена вопроса:</label>
+            <label class="explanatory_label">{{question_price}}</label>
             <label id="question_selected_price">000</label>
         </entry>
     </div>
 
     <div class="glass-card" id="everyone_bids_group" hidden="">
         <entry class="column">
-            <button type="button" class="button color-red" onclick="StopFinalBidding()">Прекратить ставки</button>
+            <button type="button" class="button color-red" onclick="StopFinalBidding()">{{stop_final_bidding}}</button>
         </entry>
     </div>
 
     <div class="glass-card" id="everyone_answers_group" hidden="">
         <entry class="column">
-            <button type="button" class="button color-red" onclick="StopFinalAnswering()">Прекратить ответы
+            <button type="button" class="button color-red" onclick="StopFinalAnswering()">{{stop_final_answering}}
             </button>
         </entry>
     </div>
 
     <div class="glass-card" id="right_answer_group" hidden="">
         <entry class="column">
-            <label class="explanatory_label">Верный ответ:</label>
+            <label class="explanatory_label">{{right_answer}}</label>
             <label id="right_answer">No answer</label>
         </entry>
     </div>
 
     <div class="glass-card" id="dismiss_question_group" hidden="">
         <entry class="column">
-            <button type="button" class="button color-red" onclick="DismissQuestion()">Пропустить вопрос</button>
+            <button type="button" class="button color-red" onclick="DismissQuestion()">{{skip_question}}</button>
         </entry>
     </div>
 
     <div class="glass-card" id="replay_question_audio_group" hidden="">
         <entry class="column">
-            <button type="button" class="button color-blue" onclick="ReplayAudio()">Сыграть аудио</button>
+            <button type="button" class="button color-blue" onclick="ReplayAudio()">{{replay_audio}}</button>
         </entry>
     </div>
 
     <div class="glass-card" id="player_answers_host_group" hidden="">
         <entry class="column">
-            <label class="explanatory_label">Отвечает игрок:</label>
+            <label class="explanatory_label">{{answers_player}}</label>
             <label id="answering_player">UnnamedPlayer</label>
 
             <p class="empty_space"></p>
 
             <div class="answer-decision-row">
                 <button type="button" class="button color-blue answer-decision-multiplier" onclick="ReportAnswerDecision(true, 0.5)">×0.5</button>
-                <button type="button" class="button color-green answer-decision-correct" onclick="ReportAnswerDecision(true)">Верно</button>
+                <button type="button" class="button color-green answer-decision-correct" onclick="ReportAnswerDecision(true)">{{correct}}</button>
                 <button type="button" class="button color-blue answer-decision-multiplier" onclick="ReportAnswerDecision(true, 2)">×2</button>
-                <button type="button" class="button color-red answer-decision-incorrect" onclick="ReportAnswerDecision(false)">Неверно</button>
+                <button type="button" class="button color-red answer-decision-incorrect" onclick="ReportAnswerDecision(false)">{{incorrect}}</button>
             </div>
         </entry>
     </div>
 
     <section id="you_answer_group" class="info-block glass-card" hidden="">
-        <span class="answer-submitted-label" id="answer_submitted_label">Ответ отправлен</span>
+        <span class="answer-submitted-label" id="answer_submitted_label">{{answer_submitted}}</span>
 
         <entry class="column">
-            <label>Введите ответ или скажите его вслух</label>
-            <input class="info-block-input" type="text" id="player_answer_input" placeholder="Ваш ответ">
+            <label>{{enter_answer_or_tell_host}}</label>
+            <input class="info-block-input" type="text" id="player_answer_input" placeholder="{{your_guess}}"}>
             <button id="player_answer_input_button" type="button" class="button color-green" onclick="PlayerAnswer(document.getElementById('player_answer_input').value)">
-                Ответ
+                {{answer}}
             </button>
         </entry>
     </section>
 
     <div class="glass-card" id="cat_in_poke_player_group" hidden="">
         <p class="empty_space"></p>
-        <label>Выбираем, кто получит кота в мешке</label>
+        <label>{{selecting_cat_in_poke_victim}}</label>
     </div>
 
     <div class="glass-card" id="all_questions_answered_host_group" hidden="">
         <p class="empty_space"></p>
-        <button type="button" class="button color-green" onclick="CallNextRound()">Следующий раунд</button>
+        <button type="button" class="button color-green" onclick="CallNextRound()">{{next_round}}</button>
     </div>
 
     <div class="glass-card" id="all_questions_answered_player_group" hidden="">
         <p class="empty_space"></p>
-        <label>Следующий раунд вот-вот начнется</label>
+        <label>{{next_round_about_to_begin}}</label>
     </div>
 
     <div class="glass-card" id="skip_sequence_group" hidden="">
         <p class="empty_space"></p>
-        <button type="button" class="button color-blue" onclick="FastForward()">Перемотать вперед</button>
+        <button type="button" class="button color-blue" onclick="FastForward()">{{fast_forward}}</button>
     </div>
 
     <div class="glass-card" id="skip_displaying_group" hidden="">
         <p class="empty_space"></p>
-        <button type="button" class="button color-blue" onclick="SkipDisplaying()">Перемотать вперед</button>
+        <button type="button" class="button color-blue" onclick="SkipDisplaying()">{{fast_forward}}</button>
     </div>
 
     <div class="glass-card" id="final_round_answer_group" hidden="">
         <entry class="column">
-            <label>Ваш финальный ответ</label>
-            <input class="info-block-input" type="text" id="final_answer_input" placeholder="Ваш ответ">
-            <button class="button color-green" onclick="FinalRoundAnswer(document.getElementById('final_answer_input').value)">Ответ
+            <label>{{your_final_answer}}</label>
+            <input class="info-block-input" type="text" id="final_answer_input" placeholder="{{your_guess}}"}>
+            <button class="button color-green" onclick="FinalRoundAnswer(document.getElementById('final_answer_input').value)">{{answer}}
             </button>
         </entry>
     </div>
@@ -381,31 +388,31 @@
     <div class="glass-card column" id="applause_group" hidden="">
         <p class="empty_space"></p>
         <div class="applause-emoji" id="applause_emoji" role="button" tabindex="0" onclick="PlayClap()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PlayClap();}">👏</div>
-        <button type="button" class="button color-pink clap-button" onclick="PlayClap()">Аплодисменты!</button>
+        <button type="button" class="button color-pink clap-button" onclick="PlayClap()">{{clap_button}}</button>
     </div>
 
     <div id="reconnection_screen" hidden="">
         <p class="empty_space"></p>
-        <label>Потеря связи. Подключаемся заново...</label>
+        <label>{{reconnection}}</label>
         <label id="reconnect_countdown"></label>
     </div>
 
     <div class="glass-card" id="final_round_decide_answer_group" hidden="">
         <entry class="column">
-            <label class="explanatory_label">Отвечает игрок:</label>
+            <label class="explanatory_label">{{answers_player}}</label>
             <label id="final_round_answering_player">UnnamedPlayer</label>
 
-            <label class="explanatory_label">Ответ игрока:</label>
+            <label class="explanatory_label">{{their_answer}}</label>
             <label id="final_round_player_answer">LEGIT</label>
 
-            <label class="explanatory_label">Верный ответ:</label>
+            <label class="explanatory_label">{{right_answer}}</label>
             <label id="final_round_answer">No answer</label>
 
             <p class="empty_space"></p>
 
-            <button type="button" class="button color-green" onclick="ReportFinalAnswerDecision(true)">Верно
+            <button type="button" class="button color-green" onclick="ReportFinalAnswerDecision(true)">{{correct}}
             </button>
-            <button type="button" class="button color-red" onclick="ReportFinalAnswerDecision(false)">Неверно
+            <button type="button" class="button color-red" onclick="ReportFinalAnswerDecision(false)">{{incorrect}}
             </button>
         </entry>
     </div>
@@ -413,16 +420,16 @@
     <div class="glass-card" id="curiosity_or_end_group" hidden="">
         <entry class="column">
             <button type="button" class="button color-blue" onclick="ReportCuriosityOrEndGame('curious')">
-                Ответ другого вопроса
+                {{curious_other}}
             </button>
-            <button type="button" class="button color-red" onclick="ReportCuriosityOrEndGame('end')">Закончить игру
+            <button type="button" class="button color-red" onclick="ReportCuriosityOrEndGame('end')">{{end_game}}
             </button>
         </entry>
     </div>
 
     <div class="glass-card" id="curiosity_answer_group" hidden="">
         <entry class="column">
-            <button type="button" class="button color-blue" onclick="CuriosityRevealAnswer()">Показать ответ</button>
+            <button type="button" class="button color-blue" onclick="CuriosityRevealAnswer()">{{reveal_answer}}</button>
         </entry>
     </div>
 
@@ -430,25 +437,27 @@
         <entry class="column">
             <label id="highest_bidder"></label>
             <label id="highest_bid"></label>
-            <input class="info-block-input" type="number" id="your_bid" placeholder="Ставка">
-            <button id="button_bid" type="button" class="button color-green" onclick="window.auctionPage.onBidClicked(window.auction)">Ставка
+            <input class="info-block-input" type="number" id="your_bid" placeholder="{{bid}}"}>
+            <button id="button_bid" type="button" class="button color-green" onclick="window.auctionPage.onBidClicked(window.auction)">{{bid}}
             </button>
-            <button id="button_pass" type="button" class="button color-red" onclick="window.auctionPage.onPassClicked()">Пас
+            <button id="button_pass" type="button" class="button color-red" onclick="window.auctionPage.onPassClicked()">{{pass}}
             </button>
 
-            <label id="not_enough_points">Недостаточно очков</label>
-            <label id="you_are_highest_bidder">Ваша ставка лидирует</label>
-            <label id="passing">Пасуем...</label>
+            <label id="not_enough_points">{{not_enough_points}}</label>
+            <label id="you_are_highest_bidder">{{you_highest_bidder}}</label>
+            <label id="passing">{{passing}}</label>
         </entry>
     </div>
 
     <div class="glass-card" id="final_bid_player_group" hidden="">
         <entry class="column">
             <label id="final_bid_label">Mister T</label>
-            <input type="number" min="0" class="info-block-input" id="final_bid_input" placeholder="Ваша ставка">
-            <button id="final_bid_button" type="button" class="button color-green" onclick="FinalRoundBid(document.getElementById('final_bid_input').value)">Ставка
-            </button>
-            <button id="final_bid_allin_button" type="button" class="button color-purple" onclick="FinalRoundAllIn()">ВА-БАНК</button>
+            <input type="number" min="0" class="info-block-input" id="final_bid_input" placeholder="{{your_bid}}"}>
+            <div class="final-bid-actions">
+                <button id="final_bid_button" type="button" class="button color-green" onclick="FinalRoundBid(document.getElementById('final_bid_input').value)">{{bid}}
+                </button>
+                <button id="final_bid_allin_button" type="button" class="button color-gold" onclick="FinalRoundAllIn()">{{all_in}}</button>
+            </div>
         </entry>
     </div>
 
@@ -468,7 +477,7 @@
 
     <div class="glass-card" id="multiple_choice_host_group" hidden="">
         <entry class="column">
-            <button type="button" class="button color-red" onclick="EndMultipleChoice()">Закончить голосование</button>
+            <button type="button" class="button color-red" onclick="EndMultipleChoice()">{{end_voting}}</button>
         </entry>
     </div>
 
@@ -479,14 +488,14 @@
 
     <div class="glass-card" id="number_guess_host_group" hidden="">
         <entry class="column">
-            <button type="button" class="button color-red" onclick="EndNumberGuess()">Закончить угадывание</button>
+            <button type="button" class="button color-red" onclick="EndNumberGuess()">{{end_guessing}}</button>
         </entry>
     </div>
 
     <div class="glass-card" id="number_guess_player_group" hidden="">
         <entry class="column">
-            <input type="number" min="0" class="info-block-input" id="number_guess_input" placeholder="Ваш ответ">
-            <button id="number_guess_button" type="button" class="button color-green primary-button" onclick="NumberGuessMade(document.getElementById('number_guess_input').value)">Предположить
+            <input type="number" min="0" class="info-block-input" id="number_guess_input" placeholder="{{your_guess}}"}>
+            <button id="number_guess_button" type="button" class="button color-green primary-button" onclick="NumberGuessMade(document.getElementById('number_guess_input').value)">{{make_guess}}
             </button>
         </entry>
     </div>
@@ -503,59 +512,57 @@
 
     <div class="glass-card" id="stop_guessing_or_end_question_group" hidden="">
         <entry class="column">
-            <button type="button" class="button color-red" onclick="RevealingCluesStopGuessing()">Закончить раунд
+            <button type="button" class="button color-red" onclick="RevealingCluesStopGuessing()">{{stop_guessing}}
             </button>
-            <button type="button" class="button color-red" onclick="RevealingCluesEndQuestion()">Завершить вопрос
+            <button type="button" class="button color-red" onclick="RevealingCluesEndQuestion()">{{end_question}}
             </button>
         </entry>
     </div>
 
     <div class="glass-card" id="guess_or_pass_player_group" hidden="">
         <entry class="column">
-            <input class="info-block-input" id="revealing_clues_input" type="text" placeholder="Ваш ответ">
+            <input class="info-block-input" id="revealing_clues_input" type="text" placeholder="{{your_guess}}"}>
             <button id="revealing_clues_button" type="button" class="button color-green" onclick="RevealingCluesGuessMade(document.getElementById('revealing_clues_input').value)">
-                Предположить
+                {{make_guess}}
             </button>
 
             <p class="empty_space"></p>
 
-            <button type="button" class="button color-red" onclick="RevealingCluesPlayerPass()">Пропустить
+            <button type="button" class="button color-red" onclick="RevealingCluesPlayerPass()">{{skip}}
             </button>
         </entry>
     </div>
 
     <div class="glass-card" id="revealing_clues_decide_answer_group" hidden="">
         <entry class="column">
-            <label class="explanatory_label">Отвечает игрок:</label>
+            <label class="explanatory_label">{{answers_player}}</label>
             <label id="revealing_clues_answering_player">UnnamedPlayer</label>
 
-            <label class="explanatory_label">Ответ игрока:</label>
+            <label class="explanatory_label">{{their_answer}}</label>
             <label id="revealing_clues_player_answer">LEGIT</label>
 
-            <label class="explanatory_label">Верный ответ:</label>
+            <label class="explanatory_label">{{right_answer}}</label>
             <label id="revealing_clues_right_answer">No answer</label>
 
             <p class="empty_space"></p>
 
-            <button type="button" class="button color-green" onclick="ReportRevealingCluesDecision(true)">Верно
+            <button type="button" class="button color-green" onclick="ReportRevealingCluesDecision(true)">{{correct}}
             </button>
-            <button type="button" class="button color-red" onclick="ReportRevealingCluesDecision(false)">Неверно
+            <button type="button" class="button color-red" onclick="ReportRevealingCluesDecision(false)">{{incorrect}}
             </button>
         </entry>
     </div>
 
     <div class="glass-card" id="decide_final_players_group" hidden="">
         <entry class="column">
-            <span class="explanatory_label role-block-text">Все участвуют в финальном раунде. У всех игроков будет не менее 100 очков</span>
+            <span class="explanatory_label role-block-text">{{everyone_participates_description}}</span>
             <button type="button" class="button color-blue" onclick="EveryoneParticipates()">
-                Все
+                {{everyone_participates_button}}
             </button>
 
-            <span class="explanatory_label role-block-text">В финальном 
-раунде участвуют только игроки, имеющие право на участие. Игроки, 
-набравшие 0 или менее очков, больше не участвуют в игре</span>
+            <span class="explanatory_label role-block-text">{{eligible_participates_description}}</span>
             <button type="button" class="button color-blue" onclick="EligibleParticipate()">
-                У кого &gt; 0
+                {{eligible_participates_button}}
             </button>
         </entry>
     </div>
@@ -563,7 +570,7 @@
     <section class="glass-card" id="auction_host_group" hidden="">
         <p class="empty_space"></p>
         <button id="button_end_auction" class="button color-red primary-button" onclick="window.auctionHostPage.onEndAuction()">
-            Закончить аукцион
+            {{end_auction}}
         </button>
     </section>
 
@@ -604,12 +611,12 @@
             </div>
         </div>
 
-        <p class="qr-password-hint">Эта игра требует пароль</p>
-        <p class="qr-password-game-id">ID игры: <strong id="qr_password_game_id"></strong></p>
+        <p class="qr-password-hint">{{qr_game_requires_password}}</p>
+        <p class="qr-password-game-id">{{game_id}}: <strong id="qr_password_game_id"></strong></p>
 
         <div class="form-fields">
             <div class="field-group">
-                <label class="field-label" for="qr_password_input">Пароль игры</label>
+                <label class="field-label" for="qr_password_input">{{game_password}}</label>
                 <div class="input-icon-wrap">
                     <div class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
@@ -617,7 +624,7 @@
                             <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
                         </svg>
                     </div>
-                    <input class="game-input has-icon" id="qr_password_input" type="text" placeholder="Пароль игры">
+                    <input class="game-input has-icon" id="qr_password_input" type="text" placeholder="{{game_password}}"}>
                 </div>
             </div>
         </div>
@@ -626,13 +633,13 @@
 
         <div class="qr-password-actions">
             <button type="button" class="button color-green game-block-button" onclick="submitQrPassword()">
-                Присоединиться
+                {{join}}
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
                     <path d="m9 18 6-6-6-6"></path>
                 </svg>
             </button>
             <button type="button" class="button color-red game-block-button" onclick="cancelQrPassword()">
-                Ввести ID вручную
+                {{qr_enter_manually}}
             </button>
         </div>
     </div>
@@ -653,7 +660,7 @@
                     <circle cx="12" cy="7" r="4"></circle>
                 </svg>
             </div>
-            <span class="card-title">Установить аватар</span>
+            <span class="card-title">{{set_avatar}}</span>
         </div>
 
         <div id="custom_avatar_view_tabs" class="ca-view-tabs" role="tablist">
@@ -701,20 +708,20 @@
             <label id="custom_avatar_error" class="custom-avatar-error" role="alert"></label>
 
             <button id="custom_avatar_upload_button_big" type="button" class="button color-blue ca-upload-big">
-                Загрузить свой аватар
+                {{upload_custom_avatar}}
             </button>
 
             <div class="ca-actions-row" id="custom_avatar_actions_row" hidden="">
                 <button id="custom_avatar_upload_button" type="button" class="button color-blue ca-action-btn">
-                    Сменить изображение
+                    {{change_image}}
                 </button>
                 <button id="custom_avatar_reset_button" type="button" class="button color-red ca-action-btn">
-                    Сбросить
+                    {{reset}}
                 </button>
             </div>
 
             <button type="button" class="button color-green ca-confirm-btn" onclick="ConfirmCustomAvatar()">
-                Подтвердить
+                {{confirm}}
             </button>
 
         </div>
@@ -772,5 +779,28 @@
 <script type="text/javascript" src="js/utils.js"></script>
 <script src="js/emoji.js"></script>
 <script type="module" src="js/custom_avatar_3d.js"></script>
+<script>
+(function() {
+    function initLangSwitcher() {
+        var sel = document.getElementById('lang_select');
+        if (!sel || !window.i18n) return;
+        var cur = (window.i18n.lang || 'english').toLowerCase();
+        // normalize: fallback to english/russian only
+        if (cur !== 'russian' && cur !== 'english') cur = 'english';
+        sel.value = cur;
+        // keep in sync after i18n.ready resolves (lang.json loaded)
+        if (window.i18n.ready && window.i18n.ready.then) {
+            window.i18n.ready.then(function() {
+                try { sel.value = (window.i18n.lang || cur).toLowerCase(); } catch(e) {}
+            });
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLangSwitcher);
+    } else {
+        initLangSwitcher();
+    }
+})();
+</script>
 
 </body></html>
