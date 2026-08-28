@@ -150,8 +150,8 @@
     }
 
     const langFromQuery = getLangFromQuery();
-    const lang = (langFromQuery || safeGetStoredLang() || DEFAULT_LANG).toLowerCase();
-    safeStoreLang(lang);
+    let currentLang = (langFromQuery || safeGetStoredLang() || DEFAULT_LANG).toLowerCase();
+    safeStoreLang(currentLang);
 
     let dict = null;
     let t = makeTranslator(dict);
@@ -167,11 +167,11 @@
 
     const ready = (async () => {
         try {
-            dict = await fetchJson(buildLangUrl(lang));
+            dict = await fetchJson(buildLangUrl(currentLang));
         } catch (e) {
             // Fallback to english (best-effort).
             try {
-                if (lang !== DEFAULT_LANG) dict = await fetchJson(buildLangUrl(DEFAULT_LANG));
+                if (currentLang !== DEFAULT_LANG) dict = await fetchJson(buildLangUrl(DEFAULT_LANG));
             } catch (e2) {
                 dict = null;
             }
@@ -181,7 +181,7 @@
 
         // Set direction early (mostly for Arabic).
         try {
-            document.documentElement.dir = isRtlLang(lang) ? 'rtl' : 'ltr';
+            document.documentElement.dir = isRtlLang(currentLang) ? 'rtl' : 'ltr';
         } catch (e) {
             // ignore
         }
@@ -197,7 +197,9 @@
     })();
 
     window.i18n = {
-        lang,
+        get lang() {
+            return currentLang;
+        },
         get dict() {
             return dict;
         },
@@ -211,16 +213,41 @@
         apply(root) {
             applyTemplates(root || document, t);
         },
-        setLanguage(nextLang) {
+        async setLanguage(nextLang) {
             const next = String(nextLang || '').trim().toLowerCase();
-            if (!next) return;
+            if (!next || next === currentLang) return;
             safeStoreLang(next);
             try {
                 const url = new URL(window.location.href);
                 url.searchParams.set('lang', next);
-                window.location.href = url.toString();
+                window.history.replaceState({}, '', url.toString());
             } catch (e) {
-                window.location.href = `game.html?lang=${encodeURIComponent(next)}`;
+                // ignore - URL update is non-critical
+            }
+            try {
+                let newDict = null;
+                try {
+                    newDict = await fetchJson(buildLangUrl(next));
+                } catch (e) {
+                    if (next !== DEFAULT_LANG) {
+                        try { newDict = await fetchJson(buildLangUrl(DEFAULT_LANG)); } catch (e2) { newDict = null; }
+                    }
+                }
+                dict = newDict;
+                t = makeTranslator(dict);
+                currentLang = next;
+                try { document.documentElement.dir = isRtlLang(next) ? 'rtl' : 'ltr'; } catch (e) { /* ignore */ }
+                applyTemplates(document, t);
+                try {
+                    const allInBtn = document.getElementById('final_bid_allin_button');
+                    if (allInBtn) {
+                        const txt = t('all_in');
+                        allInBtn.textContent = (txt === 'all_in') ? 'ALL IN' : txt;
+                    }
+                } catch (e) { /* ignore */ }
+                try { window.dispatchEvent(new CustomEvent('pq:languageChanged', {detail: {lang: next}})); } catch (e) { /* ignore */ }
+            } catch (e) {
+                console.error('Failed to switch language', e);
             }
         }
     };

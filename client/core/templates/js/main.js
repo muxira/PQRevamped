@@ -248,6 +248,7 @@ window.onload = () => runWhenI18nReady(() => {
 
     // ===== State Machine =====
     let currentState = null;
+    let lastStateData = null;
 
     // ---------- Team mode client state ----------
     window.teamMode = false;
@@ -1082,6 +1083,7 @@ window.onload = () => runWhenI18nReady(() => {
 
         var prev = currentState;
         currentState = stateName;
+        lastStateData = data;
         console.log('Page: ' + (prev || '(init)') + ' → ' + stateName);
         botReport('Page: ' + (prev || '(init)') + ' -> ' + stateName);
 
@@ -1091,6 +1093,26 @@ window.onload = () => runWhenI18nReady(() => {
     }
 
     window.goTo = goTo;
+
+    // Language switch must NOT trigger game actions or reload.
+    // Re-translate current screen title/undertitle from stored state data.
+    window.addEventListener('pq:languageChanged', function() {
+        try {
+            const state = PAGE_STATES[currentState];
+            if (!state) return;
+            if (state.title != null) {
+                document.getElementById('title').textContent =
+                    typeof state.title === 'function' ? state.title(lastStateData) : state.title;
+            }
+            if (state.undertitle != null) {
+                document.getElementById('undertitle').textContent =
+                    typeof state.undertitle === 'function' ? state.undertitle(lastStateData) : state.undertitle;
+            }
+            if (typeof updateCaptainBadge === 'function') updateCaptainBadge();
+            // Re-apply captain-decides etc. already handled via applyTemplates for static nodes.
+            // Keep input values and focus - do not reset any game state or send messages.
+        } catch (e) { console.error('pq:languageChanged handler', e); }
+    });
 
     function showOverlay(sectionId) {
         var el = document.getElementById(sectionId);
