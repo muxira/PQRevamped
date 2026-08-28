@@ -851,7 +851,23 @@ window.onload = () => runWhenI18nReady(() => {
             title: () => t("WHAT'S YOUR BID?"),
             undertitle: (d) => t('YOUR SCORE:') + ' ' + d.MaxBid,
             show: ['final_bid_player_group'],
-            onEnter: (d) => { document.getElementById('final_bid_label').textContent = d.ThemeName; }
+            onEnter: (d) => {
+                document.getElementById('final_bid_label').textContent = d.ThemeName;
+                window.finalBidMax = (d && d.MaxBid != null) ? d.MaxBid : null;
+                var input = document.getElementById('final_bid_input');
+                if (input) {
+                    if (window.finalBidMax != null) {
+                        input.max = String(window.finalBidMax);
+                        input.placeholder = String(window.finalBidMax);
+                    }
+                    input.value = '';
+                }
+                var allInBtn = document.getElementById('final_bid_allin_button');
+                if (allInBtn) {
+                    var txt = t('all_in');
+                    allInBtn.textContent = (txt === 'all_in') ? 'ALL IN' : txt;
+                }
+            }
         },
         AUCTION_HOST: {
             title: () => t('AUCTION'),

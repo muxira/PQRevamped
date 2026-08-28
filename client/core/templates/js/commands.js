@@ -411,6 +411,15 @@ function FinalRoundBid(amount) {
     SendMessage({'FinalRoundBid': amount});
 }
 
+function FinalRoundAllIn() {
+    var input = document.getElementById('final_bid_input');
+    var amount = (window.finalBidMax != null) ? window.finalBidMax : (input ? (input.max || input.value) : null);
+    if (amount == null || String(amount).trim() === '') return;
+    var str = String(amount);
+    if (input) input.value = str;
+    FinalRoundBid(str);
+}
+
 function FinalRoundAnswer(answer) {
     SendMessage({'FinalRoundAnswer': answer});
 }
