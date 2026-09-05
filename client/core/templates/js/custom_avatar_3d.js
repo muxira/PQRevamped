@@ -188,6 +188,11 @@ function ensureScene() {
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
     container.appendChild(renderer.domElement);
+    // PQRevamped: block the browser context menu so right-drag (orbit camera) doesn't
+    // surface the native menu and steal focus mid-gesture.
+    renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+    // PQRevamped: explicit cursor hints. grab during active pan, default otherwise.
+    renderer.domElement.style.cursor = 'grab';
 
     // Lights - simple key + ambient
     const ambient = new THREE.AmbientLight(0xffffff, 0.85);
@@ -219,6 +224,14 @@ function ensureScene() {
     let isPanningTexture = false;
     let panStart = { x: 0, y: 0, offX: 0, offY: 0 };
     const TEX_PAN_SPEED = 0.8;
+    // PQRevamped (review item 6): publish a pan reset for the Flat↔3D tab switcher —
+    // the mirror of window.__pqFlatGestures.resetDrag. A mid-drag switch to Flat leaves
+    // isPanningTexture set (its mousemove early-returns off-view); switching back would
+    // resume from stale panStart and the texture would jump.
+    try {
+        if (!window.__pqCustomAvatar3D) window.__pqCustomAvatar3D = {};
+        window.__pqCustomAvatar3D.resetTexturePan = function () { isPanningTexture = false; };
+    } catch (e) { /* ignore */ }
     renderer.domElement.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return; // left only for texture pan
         if (window.currentView !== '3d') return;
@@ -435,15 +448,28 @@ function stopRenderLoop() {
 // Global tab switcher (called from inline onclick)
 window.switchCustomAvatarView = function(view) {
     window.currentView = currentView = view;
+    // PQRevamped (review item 6): cancel any in-flight texture drag on BOTH gesture
+    // circuits before switching views. A mid-drag switch bypasses mouseup, leaving
+    // isDragging / isPanningTexture set with stale coordinates — the next mousemove
+    // after switching back would teleport the texture. Guarded: either hook may not
+    // exist yet (flat UI not initialized / 3D scene never built).
+    try { if (window.__pqFlatGestures && typeof window.__pqFlatGestures.resetDrag === 'function') window.__pqFlatGestures.resetDrag(); } catch (e) { /* ignore */ }
+    try { if (window.__pqCustomAvatar3D && typeof window.__pqCustomAvatar3D.resetTexturePan === 'function') window.__pqCustomAvatar3D.resetTexturePan(); } catch (e) { /* ignore */ }
+    // PQRevamped: persist the tab choice so reopening the modal lands on the same view.
+    try { localStorage.setItem('pq_ca_view', view); } catch (e) { /* ignore */ }
     const tabFlat = document.getElementById('ca_tab_flat');
     const tab3d = document.getElementById('ca_tab_3d');
     const flat = document.getElementById('ca_flat_view');
-    const view3d = document.getElementById('ca_3d_view');
+    // PQRevamped: tolerate both id schemes. PQRevamped uses ca_3d_container as the
+    // 3D canvas mount point; the upstream module used ca_3d_view for the wrapper.
+    const view3d = document.getElementById('ca_3d_view') || document.getElementById('ca_3d_container');
     if (!tabFlat || !tab3d || !flat || !view3d) return;
+    // NOTE: toggle BOTH 'ca-tab--active' (current CSS/HTML, BEM) and legacy 'active'
+    // (HEAD-era markup/CSS) so the highlight works regardless of which bundle is cached.
     if (view === '3d') {
-        tabFlat.classList.remove('active');
+        tabFlat.classList.remove('active', 'ca-tab--active');
         tabFlat.setAttribute('aria-selected', 'false');
-        tab3d.classList.add('active');
+        tab3d.classList.add('active', 'ca-tab--active');
         tab3d.setAttribute('aria-selected', 'true');
         flat.hidden = true;
         flat.classList.remove('active');
@@ -454,9 +480,9 @@ window.switchCustomAvatarView = function(view) {
         // live update texture in case payload changed while on flat
         updateTexture().then(() => applyPayloadToTexture());
     } else {
-        tab3d.classList.remove('active');
+        tab3d.classList.remove('active', 'ca-tab--active');
         tab3d.setAttribute('aria-selected', 'false');
-        tabFlat.classList.add('active');
+        tabFlat.classList.add('active', 'ca-tab--active');
         tabFlat.setAttribute('aria-selected', 'true');
         view3d.hidden = true;
         view3d.classList.remove('active');
@@ -464,6 +490,15 @@ window.switchCustomAvatarView = function(view) {
         flat.classList.add('active');
         stopRenderLoop();
     }
+};
+
+// PQRevamped: read the persisted tab preference; default to 'flat' if absent.
+// Used by OpenCustomAvatarModal in main.js to restore the user's last choice.
+window.getSavedCustomAvatarView = function () {
+    try {
+        var v = localStorage.getItem('pq_ca_view');
+        return (v === '3d' || v === 'flat') ? v : 'flat';
+    } catch (e) { return 'flat'; }
 };
 
 // Hook into existing preview pipeline so 3D stays in sync with flat gestures
@@ -544,3 +579,16 @@ if (typeof origClose === 'function') {
 }
 
 console.log('custom_avatar_3d.js loaded (TEXTURE_FLIP_Y=' + TEXTURE_FLIP_Y + ')');
+
+// PQRevamped: publish the tab switcher on a shared namespace, NOT just an event.
+// Events fire and forget — if main.js hasn't yet attached its listener, the load
+// signal is lost and the inline onclick in game.html falls back to nothing.
+// Publishing on window.__pqCustomAvatar3D.switchCustomAvatarView lets both sides
+// poll the same object regardless of execution order.
+try {
+    if (!window.__pqCustomAvatar3D) window.__pqCustomAvatar3D = {};
+    window.__pqCustomAvatar3D.switchCustomAvatarView = window.switchCustomAvatarView;
+    window.__pqCustomAvatar3D.ready = true;
+    // Also dispatch for any caller that prefers events.
+    try { window.dispatchEvent(new CustomEvent('pq:customAvatar3DReady')); } catch (e) { /* ignore */ }
+} catch (e) { /* ignore */ }

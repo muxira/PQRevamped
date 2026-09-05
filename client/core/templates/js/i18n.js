@@ -106,8 +106,15 @@
         const container = root || document;
         const templateRe = /\{\{([^{}\r\n]+)\}\}/g;
 
-        // Collect text nodes first, then process. This avoids TreeWalker issues
-        // when setTextWithBr replaces a node (which breaks iteration).
+        // PQRevamped: replay strategy for {{key}} text nodes.
+        // Upstream replaces `{{join_game}}` once during DOMContentLoaded; the original
+        // template is then gone, so a later setLanguage() has nothing to translate.
+        // We remember each text node's pre-translation source in a side data structure
+        // (Map keyed by a synthetic id, kept on the text node itself) so subsequent
+        // calls re-translate from the source. Same for attributes.
+        if (!applyTemplates._srcText) applyTemplates._srcText = new WeakMap();
+
+        // ----- 1) {{key}} in text nodes (upstream behaviour, with replay) -----
         const textNodes = [];
         const walker = document.createTreeWalker(
             container,
@@ -118,22 +125,37 @@
                     const tag = node.parentNode.nodeName;
                     if (tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
                     const v = node.nodeValue;
-                    if (!v || v.indexOf('{{') === -1) return NodeFilter.FILTER_REJECT;
-                    return NodeFilter.FILTER_ACCEPT;
+                    if (!v) return NodeFilter.FILTER_REJECT;
+                    // Pick up nodes that still have templates, OR nodes whose source we
+                    // recorded earlier (so we can re-translate on language change).
+                    if (v.indexOf('{{') !== -1) return NodeFilter.FILTER_ACCEPT;
+                    if (applyTemplates._srcText.has(node)) return NodeFilter.FILTER_ACCEPT;
+                    return NodeFilter.FILTER_REJECT;
                 }
             }
         );
         while (walker.nextNode()) textNodes.push(walker.currentNode);
 
-        // Now process collected nodes.
         for (let i = 0; i < textNodes.length; i++) {
             const node = textNodes[i];
-            if (!node.parentNode) continue; // may have been removed
-            const replaced = node.nodeValue.replace(templateRe, (_, key) => t(key));
-            setTextWithBr(node, replaced);
+            if (!node.parentNode) continue;
+            const v = node.nodeValue;
+            if (v.indexOf('{{') !== -1) {
+                // First pass: save source, translate.
+                applyTemplates._srcText.set(node, v);
+                const replaced = v.replace(templateRe, (_, key) => t(key));
+                setTextWithBr(node, replaced);
+            } else {
+                // Replay: read source, re-translate.
+                const src = applyTemplates._srcText.get(node);
+                if (src) {
+                    const replaced = src.replace(templateRe, (_, key) => t(key));
+                    setTextWithBr(node, replaced);
+                }
+            }
         }
 
-        // Replace {{key}} inside common attributes.
+        // ----- 2) {{key}} in common attributes (upstream behaviour, with replay) -----
         const attrNames = ['placeholder', 'title', 'aria-label', 'value'];
         const nodes = container.querySelectorAll ? container.querySelectorAll('*') : [];
         for (let i = 0; i < nodes.length; i++) {
@@ -141,39 +163,87 @@
             for (let j = 0; j < attrNames.length; j++) {
                 const attr = attrNames[j];
                 const raw = el.getAttribute && el.getAttribute(attr);
-                if (!raw || raw.indexOf('{{') === -1) continue;
-                const replaced = raw.replace(templateRe, (_, key) => t(key));
-                // Attributes cannot contain <br>; convert to newlines to avoid showing raw tags.
-                el.setAttribute(attr, replaced.replace(BR_SPLIT_RE, '\n'));
+                if (!raw) continue;
+                // If the attribute still has {{}}, translate; otherwise skip (already done).
+                if (raw.indexOf('{{') !== -1) {
+                    el.setAttribute('data-pq-i18n-attr-src-' + attr, raw);
+                    const r = raw.replace(templateRe, (_, key) => t(key));
+                    el.setAttribute(attr, r.replace(BR_SPLIT_RE, '\n'));
+                } else {
+                    // Replay from saved source if any.
+                    const src = el.getAttribute('data-pq-i18n-attr-src-' + attr);
+                    if (src) {
+                        const r = src.replace(templateRe, (_, key) => t(key));
+                        el.setAttribute(attr, r.replace(BR_SPLIT_RE, '\n'));
+                    }
+                }
+            }
+        }
+
+        // ----- 3) PQRevamped: data-i18n* attributes (replay-safe) -----
+        //   data-i18n="key"            -> textContent of the element
+        //   data-i18n-placeholder="key" -> placeholder attribute
+        //   data-i18n-title="key"       -> title attribute
+        //   data-i18n-aria-label="key"  -> aria-label attribute
+        //   data-i18n-value="key"       -> value attribute (for input/button)
+        // Original text/attrs are saved on first pass as data-i18n-*_src.
+        const i18nEls = container.querySelectorAll
+            ? container.querySelectorAll('[data-i18n],[data-i18n-placeholder],[data-i18n-title],[data-i18n-aria-label],[data-i18n-value]')
+            : [];
+        for (let i = 0; i < i18nEls.length; i++) {
+            const el = i18nEls[i];
+            const tk = el.getAttribute('data-i18n');
+            if (tk) {
+                let src = el.getAttribute('data-i18n-src');
+                if (src == null) {
+                    src = el.textContent;
+                    el.setAttribute('data-i18n-src', src);
+                }
+                setTextWithBr(el, t(tk));
+            }
+            const pk = el.getAttribute('data-i18n-placeholder');
+            if (pk) {
+                let src = el.getAttribute('data-i18n-placeholder-src');
+                if (src == null) {
+                    src = el.getAttribute('placeholder') || '';
+                    el.setAttribute('data-i18n-placeholder-src', src);
+                }
+                el.setAttribute('placeholder', t(pk));
+            }
+            const tt = el.getAttribute('data-i18n-title');
+            if (tt) {
+                let src = el.getAttribute('data-i18n-title-src');
+                if (src == null) {
+                    src = el.getAttribute('title') || '';
+                    el.setAttribute('data-i18n-title-src', src);
+                }
+                el.setAttribute('title', t(tt));
+            }
+            const al = el.getAttribute('data-i18n-aria-label');
+            if (al) {
+                let src = el.getAttribute('data-i18n-aria-label-src');
+                if (src == null) {
+                    src = el.getAttribute('aria-label') || '';
+                    el.setAttribute('data-i18n-aria-label-src', src);
+                }
+                el.setAttribute('aria-label', t(al));
+            }
+            const va = el.getAttribute('data-i18n-value');
+            if (va) {
+                let src = el.getAttribute('data-i18n-value-src');
+                if (src == null) {
+                    src = el.getAttribute('value') || '';
+                    el.setAttribute('data-i18n-value-src', src);
+                }
+                el.setAttribute('value', t(va));
             }
         }
     }
 
-    function applyDataI18n(t) {
-        const els = document.querySelectorAll('[data-i18n]');
-        for (let i = 0; i < els.length; i++) {
-            const el = els[i];
-            const key = el.getAttribute('data-i18n');
-            if (!key) continue;
-            const txt = t(key);
-            // Use setTextWithBr for proper <br> handling; it will replace content
-            // For elements that originally had only text, we replace textContent
-            // For spans wrapping text inside buttons, this correctly updates just the span
-            setTextWithBr(el, txt);
-        }
-        const phEls = document.querySelectorAll('[data-i18n-placeholder]');
-        for (let i = 0; i < phEls.length; i++) {
-            const el = phEls[i];
-            const key = el.getAttribute('data-i18n-placeholder');
-            if (!key) continue;
-            const txt = t(key);
-            el.setAttribute('placeholder', txt.replace(BR_SPLIT_RE, '\n'));
-        }
-    }
-
     const langFromQuery = getLangFromQuery();
-    let currentLang = (langFromQuery || safeGetStoredLang() || DEFAULT_LANG).toLowerCase();
-    safeStoreLang(currentLang);
+    // PQRevamped: module-mutable lang so setLanguage() can update it after a no-reload switch.
+    let lang = (langFromQuery || safeGetStoredLang() || DEFAULT_LANG).toLowerCase();
+    safeStoreLang(lang);
 
     let dict = null;
     let t = makeTranslator(dict);
@@ -189,11 +259,11 @@
 
     const ready = (async () => {
         try {
-            dict = await fetchJson(buildLangUrl(currentLang));
+            dict = await fetchJson(buildLangUrl(lang));
         } catch (e) {
             // Fallback to english (best-effort).
             try {
-                if (currentLang !== DEFAULT_LANG) dict = await fetchJson(buildLangUrl(DEFAULT_LANG));
+                if (lang !== DEFAULT_LANG) dict = await fetchJson(buildLangUrl(DEFAULT_LANG));
             } catch (e2) {
                 dict = null;
             }
@@ -203,7 +273,7 @@
 
         // Set direction early (mostly for Arabic).
         try {
-            document.documentElement.dir = isRtlLang(currentLang) ? 'rtl' : 'ltr';
+            document.documentElement.dir = isRtlLang(lang) ? 'rtl' : 'ltr';
         } catch (e) {
             // ignore
         }
@@ -212,7 +282,6 @@
         whenDomReady(() => {
             try {
                 applyTemplates(document, t);
-                applyDataI18n(t);
             } catch (e) {
                 // ignore
             }
@@ -221,7 +290,10 @@
 
     window.i18n = {
         get lang() {
-            return currentLang;
+            return lang;
+        },
+        set lang(v) {
+            lang = String(v || '').toLowerCase();
         },
         get dict() {
             return dict;
@@ -236,36 +308,42 @@
         apply(root) {
             applyTemplates(root || document, t);
         },
-        async setLanguage(nextLang) {
+        setLanguage(nextLang) {
+            // PQRevamped: NO-RELOAD language switch.
+            // The upstream implementation reloads the page, which trips WebSocket
+            // mid-game and the server counts the round as PASS / exit / no-bid.
+            // We fetch the new dict, swap it in, re-apply {{key}} / data-i18n,
+            // and dispatch pq:languageChanged so main.js can re-render
+            // titles/undertitles from its lastStateData.
             const next = String(nextLang || '').trim().toLowerCase();
-            if (!next || next === currentLang) return;
+            if (!next || next === lang) return;
             safeStoreLang(next);
+            // Reflect in URL bar without reload.
             try {
                 const url = new URL(window.location.href);
                 url.searchParams.set('lang', next);
-                window.history.replaceState({}, '', url.toString());
-            } catch (e) {
-                // ignore - URL update is non-critical
-            }
-            try {
-                let newDict = null;
+                window.history.replaceState(null, '', url.toString());
+            } catch (e) { /* ignore */ }
+            // Load + swap dict synchronously-ish.
+            (async () => {
                 try {
-                    newDict = await fetchJson(buildLangUrl(next));
+                    const newDict = await fetchJson(buildLangUrl(next));
+                    dict = newDict;
+                    t = makeTranslator(dict);
+                    // PQRevamped: update the module-mutable lang after the new dict lands,
+                    // otherwise subsequent switch-back to the original language is a no-op
+                    // because next === lang still holds the initial value.
+                    lang = next;
+                    try { document.documentElement.dir = isRtlLang(next) ? 'rtl' : 'ltr'; } catch (e) { /* ignore */ }
+                    try { applyTemplates(document, t); } catch (e) { console.error('[i18n.apply]', e); }
+                    // Notify main.js / anyone else (lastStateData re-render, select update, etc.)
+                    try {
+                        document.dispatchEvent(new CustomEvent('pq:languageChanged', { detail: { lang: next }}));
+                    } catch (e) { /* ignore */ }
                 } catch (e) {
-                    if (next !== DEFAULT_LANG) {
-                        try { newDict = await fetchJson(buildLangUrl(DEFAULT_LANG)); } catch (e2) { newDict = null; }
-                    }
+                    console.error('[i18n.setLanguage] failed to load', next, e);
                 }
-                dict = newDict;
-                t = makeTranslator(dict);
-                currentLang = next;
-                try { document.documentElement.dir = isRtlLang(next) ? 'rtl' : 'ltr'; } catch (e) { /* ignore */ }
-                applyTemplates(document, t);
-                applyDataI18n(t);
-                try { window.dispatchEvent(new CustomEvent('pq:languageChanged', {detail: {lang: next}})); } catch (e) { /* ignore */ }
-            } catch (e) {
-                console.error('Failed to switch language', e);
-            }
+            })();
         }
     };
 

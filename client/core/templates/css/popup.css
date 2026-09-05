@@ -1,32 +1,43 @@
 /* ===== Score Change Popup ===== */
 
+/* Reachable only through a button that carries `hidden` in the markup and that nothing
+   un-hides, so this whole section is paint-only, kept consistent rather than kept
+   working. Centred with insets + auto margins so dir="rtl" is safe. */
+
 .popup-menu {
     display: none;
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: hsl(var(--card));
-    padding: 2rem;
-    border: 1px solid hsl(var(--border));
-    border-radius: 1.5rem;
-    width: 400px;
-    height: 500px;
-    max-width: 90%;
+    inset-block: 0;
+    inset-inline: 16px;
+    margin-block: auto;
+    margin-inline: auto;
+    background: var(--pq-panel);
+    color: var(--pq-ink);
+    padding: 18px 16px;
+    border: var(--pq-border);
+    border-radius: var(--pq-radius);
+    box-sizing: border-box;
+    width: auto;
+    max-width: 28rem;
+    height: fit-content;
+    max-height: 90vh;
+    overflow-y: auto;
     z-index: 100;
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--pq-shadow);
     font-family: "partyquiz", sans-serif;
 }
 
+/* The element in the markup is <div id="popup-overlay"> with no class at all, so the
+   old .popup-overlay rule had never applied to anything — the overlay was an unstyled
+   in-flow block that pushed the page down when OpenChangeScoreListPopup() set
+   display:block on it. Declared on the id, which is what the JS actually reaches. */
+
+#popup-overlay,
 .popup-overlay {
     display: none;
     position: fixed;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    inset: 0;
+    background: rgba(5, 2, 16, .45);
     z-index: 99;
 }
 
@@ -48,8 +59,8 @@
 
 body.partyquiz .button.close-popup-button {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    inset-block-start: 10px;
+    inset-inline-end: 10px;
     font-weight: bold;
     cursor: pointer;
     width: 36px;
@@ -69,23 +80,22 @@ body.no-scroll { overflow: hidden; }
 /* ===== QR Password Prompt ===== */
 
 .qr-password-modal {
-    max-width: min(420px, 90%);
+    max-width: 28rem;
     text-align: center;
 }
 
 .qr-password-hint {
-    font-size: 1rem;
+    font-size: 13px;
     line-height: 1.5;
     margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: hsl(var(--foreground));
-    opacity: 0.85;
+    font-weight: 400;
+    color: var(--pq-muted);
 }
 
 .qr-password-game-id {
-    font-size: 1.1rem;
+    font-size: 15px;
     margin-bottom: 1.25rem;
-    color: hsl(var(--foreground));
+    color: var(--pq-ink);
 }
 
 .qr-password-game-id strong {
@@ -95,7 +105,7 @@ body.no-scroll { overflow: hidden; }
 
 .qr-password-error {
     display: block;
-    color: hsl(var(--destructive));
+    color: var(--pq-danger);
     font-size: 0.9rem;
     font-weight: 600;
     min-height: 1.3em;
@@ -120,9 +130,7 @@ body.no-scroll { overflow: hidden; }
 .error-popup-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(5, 2, 16, .45);
     opacity: 0;
     pointer-events: none;
     transition: opacity 250ms ease;
@@ -139,25 +147,32 @@ body.no-scroll { overflow: hidden; }
     pointer-events: none;
 }
 
+/* top/left + translate(-50%) is kept deliberately: it centres identically under
+   dir="rtl" (translateX is not flipped by direction), and the transform is the popup's
+   own show/hide motion. The `transition` declaration is load-bearing —
+   handleErrorPopupTransitionEnd() waits for the opacity transition to end before it
+   resets the popup's state, so a popup with no transition never resets. */
+
 .error-popup {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -45%);
     min-width: 260px;
-    width: min(420px, 90%);
-    padding: 2rem 1.75rem 1.75rem;
-    border-radius: 2rem;
-    background: hsl(var(--card));
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
-    color: hsl(var(--foreground));
+    width: min(28rem, 90%);
+    padding: 22px 20px;
+    border-radius: var(--pq-radius);
+    background: var(--pq-panel);
+    box-shadow: var(--pq-shadow);
+    color: var(--pq-ink);
     text-align: center;
     opacity: 0;
     pointer-events: none;
     transition: opacity 250ms ease, transform 250ms ease;
     z-index: 160;
     font-family: "partyquiz", sans-serif;
-    border: 1px solid hsl(var(--border));
+    border: var(--pq-border);
+    box-sizing: border-box;
 }
 
 .error-popup.visible {
@@ -173,30 +188,29 @@ body.no-scroll { overflow: hidden; }
 }
 
 .error-popup__icon {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto 16px;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 14px;
     border-radius: 50%;
-    background: hsl(var(--destructive) / 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
+    background: rgba(239, 67, 67, .16);
+    color: var(--pq-danger);
+    display: grid;
+    place-items: center;
+    font-size: 22px;
     font-weight: 700;
-    color: hsl(var(--destructive));
 }
 
 .error-popup__message {
-    font-size: 1rem;
-    line-height: 1.5;
-    margin-bottom: 1.5rem;
-    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 18px;
+    font-weight: 400;
+    color: var(--pq-ink);
+    white-space: pre-line;
 }
 
 .error-popup__button {
     width: 100%;
     max-width: 220px;
     margin: 0 auto;
-    padding: 0.75rem 1.5rem;
-    border-radius: 1rem;
 }

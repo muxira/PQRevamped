@@ -1,6 +1,5 @@
 var avatars = (window.PQ_AVATARS && Array.isArray(window.PQ_AVATARS)) ? window.PQ_AVATARS : [];
 
-const fadeMs = 250;
 let currentAvatarIndex = 0;
 
 // Must match Host/Assets/Scripts/Studio/Gameplay/Players/Player/CustomAvatarConstants.cs
@@ -61,7 +60,6 @@ let customAvatarMaskImg = null;
 function loadCustomAvatarMask() {
     if (customAvatarMaskImg) return;
     var img = new Image();
-    img.crossOrigin = 'anonymous';
     img.src = '../../assets/custom_avatar_background.png';
     img.onload = function () {
         customAvatarMaskImg = img;
@@ -72,8 +70,20 @@ function loadCustomAvatarMask() {
 function InitAvatars() {
     ensureCustomAvatarInList();
     initCustomAvatarUIOnce();
+    preloadAvatarImages();
     currentAvatarIndex = 0;
     updateCarousel(false);
+}
+
+// Warm the browser cache once so a carousel step swaps to an already-decoded image.
+// Without this the first pass through the list paints an empty box for a frame.
+function preloadAvatarImages() {
+    if (!Array.isArray(avatars)) return;
+    avatars.forEach(function (file) {
+        if (!file || file === CUSTOM_AVATAR_ID) return;
+        var img = new Image();
+        img.src = '../../avatars/' + file;
+    });
 }
 
 // navigate
@@ -87,8 +97,9 @@ function NextAvatar() {
     updateCarousel(true);
 }
 
-// core renderer
-function updateCarousel(withFade) {
+// core renderer. The second argument is kept for the existing call sites; there is
+// deliberately no fade — every avatar used to blink to opacity 0 and back on each step.
+function updateCarousel(_withFade) {
     const prev = (currentAvatarIndex - 1 + avatars.length) % avatars.length;
     const next = (currentAvatarIndex + 1) % avatars.length;
 
@@ -104,16 +115,6 @@ function updateCarousel(withFade) {
 
     // Notify that info may have changed (for Set Info button state)
     if (typeof updateSetInfoButtonState === 'function') updateSetInfoButtonState();
-
-    if (withFade) {
-        // small, pleasant fade
-        const imgs = document.querySelectorAll('#avatar_group img');
-        imgs.forEach(img => {
-            img.classList.add('avatar-fade');
-            // remove class after animation so next change can trigger again
-            setTimeout(() => img.classList.remove('avatar-fade'), fadeMs);
-        });
-    }
 }
 
 // helper
@@ -124,11 +125,18 @@ function setImg(id, file) {
     if (file === CUSTOM_AVATAR_ID) {
         const thumb = window.customAvatar && window.customAvatar.thumbnailDataUrl;
         const raw = window.customAvatar && window.customAvatar.dataUrl;
-        img.src = thumb || raw || CUSTOM_AVATAR_PLACEHOLDER_SRC;
+        applySrc(img, thumb || raw || CUSTOM_AVATAR_PLACEHOLDER_SRC);
         return;
     }
 
-    img.src = (window.PQ_ORIGIN || PQ_ORIGIN) + "/avatars/" + file;
+    applySrc(img, "../../avatars/" + file);
+}
+
+// Writing the same src back re-runs the image algorithm for no reason; on a slot whose
+// picture did not change (a two-avatar list, or a re-render on the same index) that is a
+// visible blink. Only write when the value actually differs.
+function applySrc(img, src) {
+    if (img.getAttribute('src') !== src) img.src = src;
 }
 
 // Update only the carousel slots that show the custom avatar, without re-triggering updateCarousel
@@ -263,10 +271,7 @@ function initCustomAvatarUIOnce() {
     // Gestures captured on the whole modal panel so user can drag from anywhere,
     // not only over the preview canvas itself.
     var previewCanvas = document.getElementById('custom_avatar_preview');
-    var flatView = document.getElementById('ca_flat_view');
-    var flatPreviewCenter = document.querySelector('#ca_flat_view .ca-preview-center');
-    // Only flat preview gestures: scoped to flat view container, not whole modal
-    var gestureSurface = flatPreviewCenter || previewCanvas;
+    var gestureSurface = document.getElementById('custom_avatar_modal') || previewCanvas;
     if (previewCanvas && gestureSurface) {
         var isDragging = false;
         var lastX = 0;
@@ -299,12 +304,15 @@ function initCustomAvatarUIOnce() {
 
         // Mouse: drag to pan
         gestureSurface.addEventListener('mousedown', function (e) {
-            if (e.button !== 0) return; // only left button
-            if (window.currentView === '3d') return;
-            var flatEl = document.getElementById('ca_flat_view');
-            if (flatEl && flatEl.hidden) return;
-            if (flatView && !flatView.contains(e.target)) return;
+            // Interactive elements keep fully native behavior first (context menu in
+            // text fields, button activation) — no preventDefault for them, ever.
             if (isInteractiveTarget(e.target)) return;
+            // Non-left buttons never start a drag — but swallow their mousedown default
+            // here so MMB doesn't trigger browser autoscroll over the modal. (RMB's own
+            // context menu is a separate event and still fires; the 3D canvas suppresses
+            // it itself via its contextmenu handler.)
+            if (e.button !== 0) { e.preventDefault(); return; } // only left button starts a drag
+            if (window.currentView === '3d') return; // 3D mode owns its own pan handler
             var payload = window.customAvatar && window.customAvatar.payload;
             if (!payload || !payload.Data) return;
             isDragging = true;
@@ -340,7 +348,10 @@ function initCustomAvatarUIOnce() {
             applyInteraction();
         });
 
-        window.addEventListener('mouseup', function () {
+        window.addEventListener('mouseup', function (e) {
+            // Symmetric with the 3D handler (custom_avatar_3d.js): only the left button
+            // ends a drag, so releasing RMB/MMB mid-drag no longer aborts an active LMB pan.
+            if (e && e.button !== 0) return;
             if (isDragging) {
                 isDragging = false;
                 ctrlDown = false;
@@ -348,12 +359,25 @@ function initCustomAvatarUIOnce() {
             }
         });
 
+        // PQRevamped (review item 6): publish a drag reset for the Flat↔3D tab switcher.
+        // A mid-drag tab switch bypasses mouseup (the flat mousemove early-returns in 3D
+        // mode with isDragging still set), so switching back would resume the pan from
+        // stale coordinates and the texture would jump. switchCustomAvatarView() calls
+        // this on every switch; guarded calls tolerate the hook not existing yet.
+        try {
+            window.__pqFlatGestures = window.__pqFlatGestures || {};
+            window.__pqFlatGestures.resetDrag = function () {
+                isDragging = false;
+                ctrlDown = false;
+                lastPinchDist = 0;
+                lastPinchAngle = 0;
+                try { previewCanvas.style.cursor = 'grab'; } catch (e) { /* ignore */ }
+            };
+        } catch (e) { /* ignore */ }
+
         // Mouse: scroll to zoom
         gestureSurface.addEventListener('wheel', function (e) {
             if (window.currentView === '3d') return;
-            var flatEl = document.getElementById('ca_flat_view');
-            if (flatEl && flatEl.hidden) return;
-            if (flatView && !flatView.contains(e.target)) return;
             if (isInteractiveTarget(e.target)) return;
             var payload = window.customAvatar && window.customAvatar.payload;
             if (!payload || !payload.Data) return;
@@ -367,9 +391,6 @@ function initCustomAvatarUIOnce() {
         // Touch: 1-finger drag to pan, 2-finger pinch to zoom
         gestureSurface.addEventListener('touchstart', function (e) {
             if (window.currentView === '3d') return;
-            var flatEl = document.getElementById('ca_flat_view');
-            if (flatEl && flatEl.hidden) return;
-            if (flatView && !flatView.contains(e.target)) return;
             if (isInteractiveTarget(e.target)) return;
             var payload = window.customAvatar && window.customAvatar.payload;
             if (!payload || !payload.Data) return;
@@ -390,8 +411,6 @@ function initCustomAvatarUIOnce() {
 
         gestureSurface.addEventListener('touchmove', function (e) {
             if (window.currentView === '3d') return;
-            var flatEl = document.getElementById('ca_flat_view');
-            if (flatEl && flatEl.hidden) return;
             var payload = window.customAvatar && window.customAvatar.payload;
             if (!payload) return;
 

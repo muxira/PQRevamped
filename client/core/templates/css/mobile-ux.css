@@ -20,7 +20,7 @@ body.partyquiz .connection-dot {
     height: 10px;
     border-radius: 50%;
     background-color: #ef4444; /* red — disconnected (default) */
-    margin-left: auto;
+    margin-inline-start: auto;
     flex-shrink: 0;
 }
 
@@ -39,9 +39,11 @@ body.partyquiz .connection-dot.reconnecting {
 body.partyquiz .answer-submitted-label {
     display: block;
     text-align: center;
-    color: hsl(var(--foreground, 0 0% 100%));
-    font-size: 0.875rem;
-    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pq-success);
+    min-height: 17px;
+    margin-block-start: 8px;
     opacity: 0;
     transition: opacity 0.3s ease-in;
 }

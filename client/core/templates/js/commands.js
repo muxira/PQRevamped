@@ -42,42 +42,21 @@ function PlayClap() {
 
 function LeaveGame() {
     window.pqStore.removeItem('state');
-    try { socket.send(JSON.stringify({'Leave': null})); } catch (e) { /* ignore if socket closed */ }
+
+    // send() still throws if the socket dies between the readyState check and the call; the reload
+    // below is the actual exit, so it must not be skipped over a frame that no longer matters.
+    try {
+        if (socket && socket.readyState === WebSocket.OPEN)
+            socket.send(JSON.stringify({'Leave': null}));
+        else
+            console.error('WebSocket not connected');
+    } catch (e) {
+        console.error('Leave frame not sent: ' + e);
+    }
+
     // Reload so the fresh (stateless) page renders immediately. Small delay lets the Leave frame flush.
     setTimeout(() => location.reload(), 200);
 }
-
-function RequestLeaveGame() {
-    var overlay = document.getElementById('leave_confirm_overlay');
-    var modal = document.getElementById('leave_confirm_modal');
-    if (!overlay || !modal) { LeaveGame(); return; }
-    overlay.hidden = false;
-    modal.hidden = false;
-    if (window.i18n && typeof window.i18n.apply === 'function') {
-        try { window.i18n.apply(modal); } catch (e) { /* ignore */ }
-    }
-}
-function CancelLeaveGame() {
-    var overlay = document.getElementById('leave_confirm_overlay');
-    var modal = document.getElementById('leave_confirm_modal');
-    if (overlay) overlay.hidden = true;
-    if (modal) modal.hidden = true;
-}
-function ConfirmLeaveGame() {
-    CancelLeaveGame();
-    LeaveGame();
-}
-
-// ESC closes leave confirmation
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        var modal = document.getElementById('leave_confirm_modal');
-        if (modal && !modal.hidden) {
-            e.preventDefault();
-            CancelLeaveGame();
-        }
-    }
-});
 
 function SetHostRole() {
     SendMessage({'SetRole': 'host'});
@@ -308,6 +287,11 @@ function CallAllHere() {
 }
 
 function PlayEmoji(emojiType) {
+    // No active game (it ended and we are back on ENTER_ID): no-op. Same guard as
+    // RefreshData — sending into a dead game makes the server answer "Game not found".
+    // The emoji layer is hidden on out-of-game screens too; this covers any tap that
+    // still races a screen transition.
+    if (typeof window !== 'undefined' && !window.pqGameId) return;
     SendMessage({'PlayEmoji': emojiType});
 }
 
@@ -319,7 +303,23 @@ function AnswerButtonPressed() {
     SendMessage({'ButtonPressed': 'answer'});
 }
 
+function SetAnswerDecisionButtonsEnabled(enabled) {
+    const group = document.getElementById('player_answers_host_group');
+
+    if (!group)
+        return;
+
+    group.querySelectorAll('button').forEach(b => b.disabled = !enabled);
+}
+
 function ReportAnswerDecision(isCorrect, scoreMultiplier = 1) {
+    const group = document.getElementById('player_answers_host_group');
+
+    if (group && group.querySelector('button:disabled'))
+        return;
+
+    SetAnswerDecisionButtonsEnabled(false);
+
     SendMessage({'AnswerDecision': {'IsCorrect': isCorrect, 'ScoreMultiplier': scoreMultiplier}});
 }
 
@@ -347,6 +347,7 @@ function RevealingCluesGuessMade(guess) {
 }
 
 function RevealingCluesPlayerPass() {
+    window._rcPassed = true;
     SendMessage({'RevealingCluesPassed': 'true'});
 }
 
@@ -443,13 +444,50 @@ function FinalRoundBid(amount) {
     SendMessage({'FinalRoundBid': amount});
 }
 
+// PQRevamped: Gold All-In. Sets window.finalBidMax to the current score and sends it.
+// Called by the gold "ВА-БАНК / ALL IN" button in final_bid_player_group.
+// Reading from #pq_score_value keeps us in sync with whatever the upstream score UI shows.
 function FinalRoundAllIn() {
-    var input = document.getElementById('final_bid_input');
-    var amount = (window.finalBidMax != null) ? window.finalBidMax : (input ? (input.max || input.value) : null);
-    if (amount == null || String(amount).trim() === '') return;
-    var str = String(amount);
-    if (input) input.value = str;
-    FinalRoundBid(str);
+    var scoreEl = document.getElementById('pq_score_value');
+    var n = scoreEl ? parseInt(scoreEl.textContent, 10) : NaN;
+    if (!isFinite(n) || n < 0) { n = 0; }
+    window.finalBidMax = n;
+    FinalRoundBid(n);
+}
+
+// ===== PQRevamped: leave fool-protection =====
+// Three small helpers around LeaveGame(): RequestLeaveGame() opens the confirm modal;
+// Cancel/Confirm dismiss or run LeaveGame(). ESC and overlay click both dismiss.
+function RequestLeaveGame() {
+    var overlay = document.getElementById('leave_confirm_overlay');
+    var modal   = document.getElementById('leave_confirm_modal');
+    if (overlay) { overlay.hidden = false; overlay.setAttribute('aria-hidden','false'); }
+    if (modal)   { modal.hidden   = false; modal.setAttribute('aria-hidden','false'); }
+    // ESC handler is one-shot; bound on the modal so it auto-cleans on confirm/cancel.
+    var onKey = function (e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            try { document.removeEventListener('keydown', onKey, true); } catch (err) { /* ignore */ }
+            CancelLeaveGame();
+        }
+    };
+    try { document.addEventListener('keydown', onKey, true); } catch (e) { /* ignore */ }
+    if (modal) modal._pqEscHandler = onKey;
+}
+
+function CancelLeaveGame() {
+    var overlay = document.getElementById('leave_confirm_overlay');
+    var modal   = document.getElementById('leave_confirm_modal');
+    if (overlay) { overlay.hidden = true; overlay.setAttribute('aria-hidden','true'); }
+    if (modal)   { modal.hidden   = true; modal.setAttribute('aria-hidden','true'); }
+    if (modal && modal._pqEscHandler) {
+        try { document.removeEventListener('keydown', modal._pqEscHandler, true); } catch (e) { /* ignore */ }
+        modal._pqEscHandler = null;
+    }
+}
+
+function ConfirmLeaveGame() {
+    CancelLeaveGame();
+    if (typeof LeaveGame === 'function') LeaveGame();
 }
 
 function FinalRoundAnswer(answer) {
@@ -554,6 +592,10 @@ function RequestPlayersList() {
 }
 
 function RefreshData() {
+    // No active game (game over → ENTER_ID, or none joined yet): no-op. Sending
+    // RefreshData without a game makes the server answer "Game not found", which
+    // the client would then surface as a scary error for an expected situation.
+    if (typeof window !== 'undefined' && !window.pqGameId) return;
     SendMessage({'RefreshData': 'true'});
 }
 

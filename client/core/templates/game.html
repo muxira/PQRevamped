@@ -1,27 +1,39 @@
 <!DOCTYPE html>
-<html dir="ltr"><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
 
     <title>PARTY QUIZ</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
 
-    <link rel="stylesheet" type="text/css" href="css/reset.css">
-    <link rel="stylesheet" type="text/css" href="css/pwa.css">
-    <link rel="stylesheet" type="text/css" href="css/input.css">
-    <link rel="stylesheet" type="text/css" href="css/normalize.css">
-    <link rel="stylesheet" type="text/css" href="css/index.css">
-    <link rel="stylesheet" type="text/css" href="css/styles.css">
-    <link rel="stylesheet" type="text/css" href="css/popup.css">
-    <link rel="stylesheet" type="text/css" href="css/mobile-ux.css">
+    <link rel="stylesheet" type="text/css" href="./css/reset.css?v=7"/>
+    <link rel="stylesheet" type="text/css" href="./css/pwa.css?v=7"/>
+    <link rel="stylesheet" type="text/css" href="./css/input.css?v=9"/>
+    <link rel="stylesheet" type="text/css" href="./css/normalize.css?v=7">
+    <link rel="stylesheet" type="text/css" href="./css/index.css?v=19">
+    <link rel="stylesheet" type="text/css" href="./css/styles.css?v=22">
+    <link rel="stylesheet" type="text/css" href="./css/popup.css?v=8">
+    <link rel="stylesheet" type="text/css" href="./css/mobile-ux.css?v=9">
+    <link rel="stylesheet" type="text/css" href="./css/pq-tokens.css?v=5">
+    <link rel="stylesheet" type="text/css" href="./css/pq-components.css?v=4">
+    <link rel="stylesheet" type="text/css" href="./css/pq-screens.css?v=22">
+    <!-- PQRevamped: 3D Try-On styles (kept last so our rules win the cascade) -->
+    <link rel="stylesheet" type="text/css" href="./css/custom_avatar_3d.css?v=1">
 
-    <link rel="stylesheet" type="text/css" href="css/custom_avatar_3d.css">
+    <script>
+        (function () {
+            var t = null;
+            try { t = localStorage.getItem('pq_theme'); } catch (e) { t = null; }
+            if (t === 'studio' || t === 'night') document.documentElement.setAttribute('data-pq-theme', t);
+        })();
+    </script>
+
+    <!-- PQRevamped: Three.js importmap for the 3D Try-On preview -->
     <script type="importmap">
     {
         "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
         }
     }
     </script>
@@ -31,139 +43,167 @@
 <div class="orb orb-1" aria-hidden="true"></div>
 <div class="orb orb-2" aria-hidden="true"></div>
 
-<div id="lang_switcher" class="lang-switcher">
-    <select id="lang_select" aria-label="Language" onchange="window.i18n && window.i18n.setLanguage(this.value)">
-        <option value="english">English</option>
-        <option value="russian">Русский</option>
-        <option value="spanish">Español (España)</option>
-        <option value="spanishlatinamerica">Español (Latinoamérica)</option>
-        <option value="german">Deutsch</option>
-        <option value="portuguese">Português</option>
-        <option value="french">Français</option>
-        <option value="polish">Polska</option>
-        <option value="italian">Italiano</option>
-        <option value="ukrainian">Українська</option>
-        <option value="turkish">Türkçe</option>
-        <option value="simplifiedchinese">简体中文</option>
-        <option value="arabic">العربية</option>
-        <option value="czech">Čeština</option>
-        <option value="kazakh">Қазақша</option>
-        <option value="swedish">Svenska</option>
-        <option value="korean">한국어</option>
-        <option value="japanese">日本語</option>
-    </select>
-</div>
+<div id="pq_synergy_confetti" class="pq-confetti pq-confetti--page" aria-hidden="true"></div>
+
+<!-- One-shot celebration for "your answer was accepted". Page level like the synergy rain,
+     but painted above the screens instead of behind them, and driven by burstConfetti()
+     with its own latch so neither of the other two layers is disturbed. -->
+<div id="pq_correct_confetti" class="pq-confetti pq-confetti--celebrate" aria-hidden="true"></div>
 
 <bb class="column hack-limit-btn-height" id="d220806">
 
-    <header>
+    <header class="pq-header">
         <icon></icon>
-        <div class="connection-dot connected" id="connection_dot"></div>
+        <div class="connection-dot" id="connection_dot"></div>
+        <!-- PQRevamped: in-game language switcher (no-reload via i18n.setLanguage). -->
+        <select id="lang_switcher" class="lang-switcher" aria-label="Language"
+                onchange="if(window.i18n&&i18n.setLanguage){i18n.setLanguage(this.value)}">
+            <option value="english">English</option>
+            <option value="russian">Русский</option>
+            <option value="spanish">Español (España)</option>
+            <option value="spanishlatinamerica">Español (Latinoamérica)</option>
+            <option value="german">Deutsch</option>
+            <option value="portuguese">Português</option>
+            <option value="french">Français</option>
+            <option value="polish">Polska</option>
+            <option value="italian">Italiano</option>
+            <option value="ukrainian">Українська</option>
+            <option value="turkish">Türkçe</option>
+            <option value="simplifiedchinese">简体中文</option>
+            <option value="arabic">العربية</option>
+            <option value="czech">Čeština</option>
+            <option value="kazakh">Қазақша</option>
+            <option value="swedish">Svenska</option>
+            <option value="korean">한국어</option>
+            <option value="japanese">日本語</option>
+        </select>
+        <button class="pq-theme-toggle" id="pq_theme_toggle" type="button" hidden
+                onclick="ToggleTheme()" aria-label="{{theme_switch}}" title="{{theme_switch}}"></button>
+        <button class="refresh-button" id="refreshButton" onclick="handleRefresh()">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
+            <span class="refresh-tooltip" id="refreshTooltip">{{Press this button if you're stuck}}</span>
+        </button>
     </header>
 
-    <button class="refresh-button active" id="refreshButton" onclick="handleRefresh()">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: var(--darkreader-text-ffffff, #e8e6e3);">
-            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
-        </svg>
-        <span class="refresh-tooltip dismissed" id="refreshTooltip" data-i18n="Press this button if you're stuck"></span>
-    </button>
+    <!-- The strip carries the player's own score and nothing else. The selected theme and
+         its price have exactly one home: #question_selected_group, which both roles see. -->
+    <div id="pq_score_strip" class="pq-score-strip" hidden>
+        <div class="pq-score-strip__own" id="pq_score_own">
+            <span class="pq-eyebrow">{{YOUR SCORE:}}</span>
+            <span id="pq_score_value" class="pq-score-strip__value">0</span>
+        </div>
+    </div>
 
     <section class="topic-block">
-        <span id="title" data-i18n="join_game"></span>
+        <span id="title"></span>
         <span id="undertitle"></span>
     </section>
 
-    <div id="team_toast" class="team-toast" hidden=""></div>
+    <div id="team_toast" class="team-toast" hidden></div>
 
-    <section class="game-block glass-card screen-enter" id="enter_id_group">
+    <section class="game-block glass-card" id="enter_id_group" hidden>
         <div class="card-header">
             <div class="card-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                    <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
-                    <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/>
+                    <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>
                 </svg>
             </div>
+            <span class="pq-title">{{join_game}}</span>
+            <span class="pq-sub">{{enter_game_id}}</span>
         </div>
 
         <div class="form-fields">
             <div class="field-group">
-                <label class="field-label" for="game_id" data-i18n="game_id"></label>
-                <div class="input-icon-wrap">
-                    <div class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                    </div>
-                    <input class="game-input has-icon" id="game_id" type="text" data-i18n-placeholder="game_id" placeholder="">
-                </div>
+                <label class="field-label" for="game_id">{{game_id}}</label>
+                <input
+                        class="game-input"
+                        id="game_id"
+                        type="text"
+                        placeholder="{{game_id}}"
+                />
             </div>
 
             <div class="field-group">
-                <label class="field-label" for="game_password" data-i18n="game_password"></label>
-                <div class="input-icon-wrap">
-                    <div class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                            <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
-                            <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
-                        </svg>
-                    </div>
-                    <input class="game-input has-icon" id="game_password" type="text" data-i18n-placeholder="game_password" placeholder=""}>
-                </div>
+                <label class="field-label" for="game_password">{{game_password}}</label>
+                <input
+                        class="game-input"
+                        id="game_password"
+                        type="text"
+                        placeholder="{{game_password}}"
+                />
             </div>
         </div>
 
         <div class="game-block-button-wrapper">
-            <button id="join_game_button" type="button" class="button color-green game-block-button" onclick="TryJoinGame()">
-                <span data-i18n="join"></span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                    <path d="m9 18 6-6-6-6"></path>
+            <button
+                    id="join_game_button"
+                    type="button"
+                    class="button color-green game-block-button"
+                    onclick="TryJoinGame()"
+            >
+                {{join}}
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
                 </svg>
             </button>
         </div>
+
+        <div class="pq-divider"><span></span>{{or_scan_qr}}<span></span></div>
+
         <label id="error_label"></label>
     </section>
 
-    <section id="resume_game_group" class="resume-game-block glass-card" hidden="">
-        <p class="resume-game-block-message" data-i18n="resume_server_unreachable"></p>
-        <button class="button color-red resume-game-block-button" onclick="RequestLeaveGame()" data-i18n="leave_game"></button>
+    <section id="resume_game_group" class="resume-game-block glass-card" hidden>
+        <p class="resume-game-block-message">{{resume_server_unreachable}}</p>
+        <button class="button color-red resume-game-block-button" onclick="RequestLeaveGame()">{{leave_game}}</button>
     </section>
 
-    <section class="role-block glass-card" id="role_selection_group" hidden="">
+    <section class="role-block" id="role_selection_group" hidden>
         <div class="role-card" onclick="SetHostRole()">
             <div class="role-card-icon role-card-icon--host">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                    <path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.809a1 1 0 0 1-.956-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path>
-                    <path d="M5.5 21h13"></path>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.809a1 1 0 0 1-.956-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/>
+                    <path d="M5.5 21h13"/>
                 </svg>
             </div>
             <div class="role-card-body">
-                <span class="role-card-title" data-i18n="role_host"></span>
-                <span class="role-card-desc" data-i18n="host_role_selection_description"></span>
+                <span class="role-card-title">{{role_host}}</span>
+                <span class="role-card-desc">{{host_role_selection_description}}</span>
             </div>
             <div class="role-card-arrow">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                    <path d="m9 18 6-6-6-6"></path>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
                 </svg>
             </div>
         </div>
 
         <div class="role-card" onclick="SetPlayerRole()">
             <div class="role-card-icon role-card-icon--player">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                    <line x1="6" x2="10" y1="11" y2="11"></line>
-                    <line x1="8" x2="8" y1="9" y2="13"></line>
-                    <line x1="15" x2="15.01" y1="12" y2="12"></line>
-                    <line x1="18" x2="18.01" y1="10" y2="10"></line>
-                    <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"></path>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="6" x2="10" y1="11" y2="11"/>
+                    <line x1="8" x2="8" y1="9" y2="13"/>
+                    <line x1="15" x2="15.01" y1="12" y2="12"/>
+                    <line x1="18" x2="18.01" y1="10" y2="10"/>
+                    <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/>
                 </svg>
             </div>
             <div class="role-card-body">
-                <span class="role-card-title" data-i18n="role_player"></span>
-                <span class="role-card-desc" data-i18n="player_role_selection_description"></span>
+                <span class="role-card-title">{{role_player}}</span>
+                <span class="role-card-desc">{{player_role_selection_description}}</span>
             </div>
             <div class="role-card-arrow">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                    <path d="m9 18 6-6-6-6"></path>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
                 </svg>
             </div>
         </div>
@@ -172,7 +212,7 @@
     </section>
 
     <!-- avatar_group → shared carousel (top-level so goTo can show it on Set-Info and Create-Team) -->
-    <div id="avatar_group" class="avatar-carousel" hidden="">
+    <div id="avatar_group" class="avatar-carousel" hidden>
         <!-- previous -->
         <div class="avatar-item avatar-prev">
             <img id="avatar_prev_img" alt="previous avatar">
@@ -194,426 +234,563 @@
         <input type="hidden" id="img_no" value="0">
     </div>
 
-    <section class="info-block glass-card" id="set_info_group" hidden="">
+    <section class="info-block glass-card" id="set_info_group" hidden>
+        <span class="pq-eyebrow">{{SET YOUR INFO}}</span>
+
         <!-- custom avatar open-modal button (visible only when custom avatar selected) -->
-        <button id="custom_avatar_open_btn" type="button" class="button color-blue custom-avatar-open-btn" hidden="" onclick="OpenCustomAvatarModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path>
+        <button id="custom_avatar_open_btn" type="button"
+                class="button color-blue custom-avatar-open-btn" hidden
+                onclick="OpenCustomAvatarModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>
             </svg>
-            <span data-i18n="customize_avatar"></span>
+            {{customize_avatar}}
         </button>
 
         <!-- name -->
-        <input class="info-block-input name-input" id="player_name" type="text" data-i18n-placeholder="type_in_your_name" placeholder=""} maxlength="20">
+        <input
+                class="info-block-input name-input"
+                id="player_name"
+                type="text"
+                placeholder="{{type_in_your_name}}"
+                maxlength="20"
+        />
 
         <!-- self-introduction (single-line, but larger) -->
-        <textarea class="info-block-input intro-input" id="player_intro" rows="4" data-i18n-placeholder="type_in_your_intro" placeholder=""}></textarea>
+        <textarea
+                class="info-block-input intro-input"
+                id="player_intro"
+                rows="4"
+                placeholder="{{type_in_your_intro}}"
+        ></textarea>
 
-        <!-- ▴▴--------------------------------▴▴ -->
-        
-        <p class="empty_space"></p>
         <label id="info_set_error"></label>
-        <button id="set_info_button" class="button color-green primary-button disabled" onclick="SetInfo()" data-i18n="set_info"></button>
+        <button id="set_info_button" class="button color-green primary-button disabled" onclick="SetInfo()">{{set_info}}</button>
     </section>
 
-    <section class="game-block glass-card" id="enter_member_name_group" hidden="">
-        <p class="card-title" data-i18n="your_name"></p>
-        <p class="card-sub" data-i18n="type_in_your_name"></p>
-        <input class="info-block-input name-input" id="member_name_input" type="text" data-i18n-placeholder="your_name" placeholder=""} maxlength="24" oninput="OnMemberNameInput(this.value)">
-        <button class="button color-green" onclick="ConfirmMemberName()" data-i18n="continue"></button>
+    <section class="game-block glass-card" id="enter_member_name_group" hidden>
+        <p class="pq-title">{{your_name}}</p>
+        <p class="pq-sub">{{enter_your_name}}</p>
+        <input class="info-block-input name-input" id="member_name_input" type="text"
+               placeholder="{{your_name}}" maxlength="24" oninput="OnMemberNameInput(this.value)" />
+        <button class="button color-green" onclick="ConfirmMemberName()">{{continue}}</button>
     </section>
 
-    <section class="game-block glass-card" id="team_lobby_group" hidden="">
-        <p class="card-title" data-i18n="teams"></p>
-        <p class="card-sub" id="team_lobby_sub" data-i18n="join_or_create_team"></p>
-        <div id="team_list"></div>
-        <button class="button color-purple" id="team_create_btn" onclick="StartTeamCreate()" data-i18n="create_team"></button>
-    </section>
-
-    <section class="game-block glass-card" id="team_create_group" hidden="">
-        <p class="card-title" data-i18n="new_team"></p>
-        <input class="info-block-input name-input" id="team_name_input" type="text" data-i18n-placeholder="team_name" placeholder=""} maxlength="24">
-        <div class="team-create-actions">
-            <button class="button color-green" onclick="ConfirmCreateTeam()" data-i18n="create_team"></button>
-            <button class="button color-red" onclick="goTo('TEAM_LOBBY')" data-i18n="back"></button>
+    <section class="game-block" id="team_lobby_group" hidden>
+        <div class="team-lobby-headline">
+            <p class="pq-sub" id="team_lobby_sub">{{join_or_create_team}}</p>
         </div>
-        <p class="note" data-i18n="create_team_hint"></p>
+        <div id="team_list"></div>
+        <button class="button color-purple" id="team_create_btn" onclick="StartTeamCreate()">{{create_team}}</button>
+    </section>
+
+    <section class="game-block glass-card" id="team_create_group" hidden>
+        <p class="pq-title">{{new_team}}</p>
+        <input class="info-block-input name-input" id="team_name_input" type="text"
+               placeholder="{{team_name}}" maxlength="24" />
+        <div class="team-create-actions">
+            <button class="button color-green" onclick="ConfirmCreateTeam()">{{create_team}}</button>
+            <button class="button color-red" onclick="goTo('TEAM_LOBBY')">{{back}}</button>
+        </div>
+        <p class="note">{{create_team_hint}}</p>
     </section>
 
     <!-- Toast notification for feedback -->
-    <div id="toast" class="toast" data-i18n="info_set_success"></div>
+    <div id="toast" class="toast">{{info_set_success}}</div>
 
     <!-- Persistent role badge (team mode): captain or member + team name -->
-    <div id="captain_badge" class="captain-badge" hidden=""><span id="captain_badge_text"></span></div>
+    <div id="captain_badge" class="captain-badge" hidden><span id="captain_badge_text"></span></div>
 
-    <div id="sugg_strip" class="sugg-strip" hidden="">
-        <p class="sugg-strip-title" data-i18n="waiting_suggestions"></p>
+    <!-- Question context. Shown on every in-question state of every question type, for both
+         roles, and it precedes every group it can share a screen with so it always reads as
+         the header of that screen. Filled and emptied only by refreshQuestionMeta(). -->
+    <div class="glass-card" id="question_selected_group" hidden>
+        <entry class="column">
+            <p class="pq-qmeta">
+                <span id="question_selected_theme">Unnamed Theme</span>
+                <span id="question_selected_price">000</span>
+            </p>
+        </entry>
+    </div>
+
+    <div id="sugg_strip" class="sugg-strip" hidden>
+        <p class="sugg-strip-title">{{waiting_suggestions}}</p>
         <div id="sugg_list"></div>
     </div>
 
-    <section id="teammate_suggest_group" class="info-block glass-card" hidden="">
-        <p class="card-sub teammate-note" data-i18n="captain_decides"></p>
-        <button type="button" class="select-button" id="teammate_buzzer" onmousedown="AnswerButtonPressed()"></button>
+    <section id="teammate_suggest_group" class="info-block glass-card" hidden>
+        <p class="teammate-note" id="teammate_suggest_note">{{captain_decides}}</p>
+        <!-- The buzzer wears the same shell as #answer_button so it gets the same ring: the
+             ring is a sibling of the button, and without the shell the team-mate screen was
+             the one buzz screen in the client with no pulse at all. -->
+        <div class="pq-buzz-shell" id="teammate_buzz_shell">
+            <button type="button" class="select-button" id="teammate_buzzer" onmousedown="AnswerButtonPressed()"></button>
+            <span class="pq-ring" aria-hidden="true"></span>
+        </div>
         <entry class="column" id="teammate_suggest_entry">
-            <label id="teammate_suggest_label" data-i18n="your_suggestion"></label>
-            <input class="info-block-input" type="text" id="teammate_suggest_input" data-i18n-placeholder="your_suggestion" placeholder=""} onkeydown="if(event.key==='Enter'){event.preventDefault();SubmitTeammateSuggestion();}">
-            <button type="button" class="button color-purple" onclick="SubmitTeammateSuggestion()" data-i18n="send_to_captain"></button>
+            <label id="teammate_suggest_label">{{your_suggestion}}</label>
+            <input class="info-block-input" type="text" id="teammate_suggest_input" placeholder="{{your_suggestion}}"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();SubmitTeammateSuggestion();}" />
+            <button type="button" class="button color-purple"
+                    onclick="SubmitTeammateSuggestion()">{{send_to_captain}}</button>
         </entry>
     </section>
 
-    <section id="teammate_readonly_group" class="info-block glass-card" hidden="">
-        <p class="card-title" id="teammate_readonly_title" data-i18n="captain_decides_short"></p>
-        <p class="card-sub teammate-note" id="teammate_readonly_note" data-i18n="captain_decides"></p>
+    <section id="teammate_readonly_group" class="info-block glass-card" hidden>
+        <p class="pq-title" id="teammate_readonly_title">{{captain_decides_short}}</p>
+        <p class="teammate-note" id="teammate_readonly_note">{{captain_decides}}</p>
     </section>
 
-    <section class="players-ready-block glass-card" id="all_here_host_group" hidden="">
-        <button class="button color-green primary-button" onclick="CallAllHere()" data-i18n="all_here"></button>
+    <section class="players-ready-block glass-card" id="all_here_host_group" hidden>
+        <button class="button color-green primary-button" onclick="CallAllHere()">
+            {{all_here}}
+        </button>
     </section>
 
-    <section class="player-block glass-card" id="all_here_player_group" hidden="">
-        <span data-i18n="you_are"></span>
+    <section class="player-block glass-card" id="all_here_player_group" hidden>
+        <span>{{you_are}}</span>
         <span id="all_here_player_name">UnnamedPlayer</span>
     </section>
 
-    <div class="glass-card" id="select_question_player_group" hidden="">
+    <div class="glass-card" id="select_question_player_group" hidden>
         <entry class="column">
             <label id="select_question_player_group_name">UnnamedPlayer</label>
             <label id="select_question_player_group_score">000</label>
         </entry>
     </div>
 
-    <div class="center glass-card" id="can_answer_player_group" hidden="">
-        <p class="empty_space_5"></p>
-        <button type="button" class="select-button" id="answer_button" onmousedown="AnswerButtonPressed()"></button>
+    <div class="center glass-card" id="can_answer_player_group" hidden>
+        <div class="pq-buzz-shell">
+            <button type="button" class="select-button" id="answer_button" onmousedown="AnswerButtonPressed()"></button>
+            <span class="pq-ring" aria-hidden="true"></span>
+        </div>
     </div>
 
-    <div class="center glass-card" id="get_ready_player_group" hidden="">
-        <p class="empty_space_5"></p>
-        <button type="button" class="select-button-blocked" onmousedown="AnswerButtonPressed()"></button>
+    <div class="center glass-card" id="get_ready_player_group" hidden>
+        <div class="pq-buzz-shell">
+            <button type="button" class="select-button-blocked" onmousedown="AnswerButtonPressed()"></button>
+        </div>
     </div>
 
-    <div class="glass-card" id="question_selected_group" hidden="">
+    <div class="glass-card" id="everyone_bids_group" hidden>
         <entry class="column">
-            <label class="explanatory_label" data-i18n="selected_category"></label>
-            <label id="question_selected_theme">Unnamed Theme</label>
-
-            <p class="empty_space"></p>
-
-            <label class="explanatory_label" data-i18n="question_price"></label>
-            <label id="question_selected_price">000</label>
+            <button type="button" class="button pq-btn-ghost" onclick="StopFinalBidding()">{{stop_final_bidding}}</button>
         </entry>
     </div>
 
-    <div class="glass-card" id="everyone_bids_group" hidden="">
+    <div class="glass-card" id="everyone_answers_group" hidden>
         <entry class="column">
-            <button type="button" class="button color-red" onclick="StopFinalBidding()" data-i18n="stop_final_bidding"></button>
+            <button type="button" class="button pq-btn-ghost" onclick="StopFinalAnswering()">{{stop_final_answering}}
+            </button>
         </entry>
     </div>
 
-    <div class="glass-card" id="everyone_answers_group" hidden="">
+    <div class="glass-card" id="right_answer_group" hidden>
         <entry class="column">
-            <button type="button" class="button color-red" onclick="StopFinalAnswering()" data-i18n="stop_final_answering"></button>
-        </entry>
-    </div>
-
-    <div class="glass-card" id="right_answer_group" hidden="">
-        <entry class="column">
-            <label class="explanatory_label" data-i18n="right_answer"></label>
+            <label class="explanatory_label">{{right_answer}}</label>
             <label id="right_answer">No answer</label>
         </entry>
     </div>
 
-    <div class="glass-card" id="dismiss_question_group" hidden="">
+    <div class="glass-card" id="player_answers_host_group" hidden>
         <entry class="column">
-            <button type="button" class="button color-red" onclick="DismissQuestion()" data-i18n="skip_question"></button>
-        </entry>
-    </div>
-
-    <div class="glass-card" id="replay_question_audio_group" hidden="">
-        <entry class="column">
-            <button type="button" class="button color-blue" onclick="ReplayAudio()" data-i18n="replay_audio"></button>
-        </entry>
-    </div>
-
-    <div class="glass-card" id="player_answers_host_group" hidden="">
-        <entry class="column">
-            <label class="explanatory_label" data-i18n="answers_player"></label>
+            <label class="explanatory_label">{{answers_player}}</label>
             <label id="answering_player">UnnamedPlayer</label>
 
-            <p class="empty_space"></p>
-
             <div class="answer-decision-row">
-                <button type="button" class="button color-blue answer-decision-multiplier" onclick="ReportAnswerDecision(true, 0.5)">×0.5</button>
-                <button type="button" class="button color-green answer-decision-correct" onclick="ReportAnswerDecision(true)" data-i18n="correct"></button>
-                <button type="button" class="button color-blue answer-decision-multiplier" onclick="ReportAnswerDecision(true, 2)">×2</button>
-                <button type="button" class="button color-red answer-decision-incorrect" onclick="ReportAnswerDecision(false)" data-i18n="incorrect"></button>
+                <button type="button" class="button color-blue answer-decision-multiplier" onclick="ReportAnswerDecision(true, 0.5)">&times;0.5</button>
+                <button type="button" class="button color-green answer-decision-correct" onclick="ReportAnswerDecision(true)">{{correct}}</button>
+                <button type="button" class="button color-blue answer-decision-multiplier" onclick="ReportAnswerDecision(true, 2)">&times;2</button>
             </div>
+
+            <button type="button" class="button color-red answer-decision-incorrect" onclick="ReportAnswerDecision(false)">{{incorrect}}</button>
         </entry>
     </div>
 
-    <section id="you_answer_group" class="info-block glass-card" hidden="">
-        <span class="answer-submitted-label" id="answer_submitted_label" data-i18n="answer_submitted"></span>
+    <div class="glass-card" id="dismiss_question_group" hidden>
+        <entry class="column">
+            <button type="button" class="button color-red pq-btn-ghost" onclick="DismissQuestion()">{{skip_question}}</button>
+        </entry>
+    </div>
+
+    <div class="glass-card" id="replay_question_audio_group" hidden>
+        <entry class="column">
+            <button type="button" class="button color-blue pq-btn-ghost" onclick="ReplayAudio()">{{replay_audio}}</button>
+        </entry>
+    </div>
+
+    <section id="you_answer_group" class="info-block glass-card" hidden>
+        <span class="pq-answer-head">{{YOU ANSWER!}}</span>
 
         <entry class="column">
-            <label data-i18n="enter_answer_or_tell_host"></label>
-            <input class="info-block-input" type="text" id="player_answer_input" onkeydown="if(event.key==='Enter'){event.preventDefault();PlayerAnswer(this.value)}" data-i18n-placeholder="your_guess" placeholder=""}>
-            <button id="player_answer_input_button" type="button" class="button color-green" onclick="PlayerAnswer(document.getElementById('player_answer_input').value)" data-i18n="answer"></button>
+            <label>{{enter_answer_or_tell_host}}</label>
+            <input
+                    class="info-block-input"
+                    type="text"
+                    id="player_answer_input"
+                    placeholder="{{your_answer}}"
+            />
+            <button
+                    id="player_answer_input_button"
+                    type="button"
+                    class="button color-green"
+                    onclick="PlayerAnswer(document.getElementById('player_answer_input').value)">
+                {{answer}}
+            </button>
         </entry>
+
+        <span class="answer-submitted-label" id="answer_submitted_label">{{answer_submitted}}</span>
     </section>
 
-    <div class="glass-card" id="cat_in_poke_player_group" hidden="">
-        <p class="empty_space"></p>
-        <label data-i18n="selecting_cat_in_poke_victim"></label>
+    <div class="glass-card" id="cat_in_poke_player_group" hidden>
+        <label id="cat_in_poke_wait_label">{{selecting_cat_in_poke_victim}}</label>
     </div>
 
-    <div class="glass-card" id="all_questions_answered_host_group" hidden="">
-        <p class="empty_space"></p>
-        <button type="button" class="button color-green" onclick="CallNextRound()" data-i18n="next_round"></button>
+    <div class="glass-card" id="all_questions_answered_host_group" hidden>
+        <div class="pq-result-head">
+            <span class="pq-eyebrow">{{round_result}}</span>
+            <span id="pq_rank_host" class="pq-rank"></span>
+        </div>
+        <div id="pq_standings_host" class="pq-standings"></div>
+        <button type="button" class="button color-green" onclick="CallNextRound()">{{next_round}}</button>
     </div>
 
-    <div class="glass-card" id="all_questions_answered_player_group" hidden="">
-        <p class="empty_space"></p>
-        <label data-i18n="next_round_about_to_begin"></label>
+    <div class="glass-card" id="all_questions_answered_player_group" hidden>
+        <div class="pq-result-head">
+            <span class="pq-eyebrow">{{round_result}}</span>
+            <span id="pq_rank_player" class="pq-rank"></span>
+            <span id="pq_delta_player" class="pq-delta"></span>
+        </div>
+        <div id="pq_standings_player" class="pq-standings"></div>
+        <label>{{next_round_about_to_begin}}</label>
     </div>
 
-    <div class="glass-card" id="skip_sequence_group" hidden="">
+    <div class="glass-card" id="skip_sequence_group" hidden>
         <p class="empty_space"></p>
-        <button type="button" class="button color-blue" onclick="FastForward()" data-i18n="fast_forward"></button>
+        <button type="button" class="button color-blue" onclick="FastForward()">{{fast_forward}}</button>
     </div>
 
-    <div class="glass-card" id="skip_displaying_group" hidden="">
-        <p class="empty_space"></p>
-        <button type="button" class="button color-blue" onclick="SkipDisplaying()" data-i18n="fast_forward"></button>
+    <div class="glass-card" id="skip_displaying_group" hidden>
+        <button type="button" class="button color-blue pq-btn-ghost" onclick="SkipDisplaying()">{{fast_forward}}</button>
     </div>
 
-    <div class="glass-card" id="final_round_answer_group" hidden="">
+    <div class="glass-card" id="final_round_answer_group" hidden>
         <entry class="column">
-            <label data-i18n="your_final_answer"></label>
-            <input class="info-block-input" type="text" id="final_answer_input" data-i18n-placeholder="your_guess" placeholder="" onkeydown="if(event.key==='Enter'){event.preventDefault();FinalRoundAnswer(this.value)}"}>
-            <button class="button color-green" onclick="FinalRoundAnswer(document.getElementById('final_answer_input').value)" data-i18n="answer"></button>
+            <label>{{your_final_answer}}</label>
+            <input
+                    class="info-block-input"
+                    type="text"
+                    id="final_answer_input"
+                    placeholder="{{your_answer}}"
+            />
+            <button class="button color-green"
+                    onclick="FinalRoundAnswer(document.getElementById('final_answer_input').value)">{{answer}}
+            </button>
         </entry>
     </div>
 
-    <div class="glass-card column" id="applause_group" hidden="">
-        <p class="empty_space"></p>
+    <div class="glass-card column" id="applause_group" hidden>
         <div class="applause-emoji" id="applause_emoji" role="button" tabindex="0" onclick="PlayClap()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PlayClap();}">👏</div>
-        <button type="button" class="button color-purple clap-button" onclick="PlayClap()" data-i18n="clap_button"></button>
-        <button type="button" class="button color-red" onclick="RequestLeaveGame()" style="margin-top: 12px;" data-i18n="leave_game"></button>
+        <!-- PQRevamped: Purple Clap. Same accent as the answer buttons so the screen family
+                         "ackwait" visually rhymes with "answer" instead of pink/red. -->
+        <button type="button" class="button color-purple clap-button" onclick="PlayClap()">{{clap_button}}</button>
     </div>
 
-    <div id="reconnection_screen" hidden="">
-        <p class="empty_space"></p>
-        <label data-i18n="reconnection"></label>
+    <div id="reconnection_screen" hidden>
+        <label id="reconnect_waiting">{{reconnection}}</label>
         <label id="reconnect_countdown"></label>
+        <div id="reconnect_terminal" hidden>
+            <label id="reconnect_failed_label">{{reconnect_failed}}</label>
+            <button type="button" class="button color-green" onclick="RetryReconnect()">{{reconnect_retry}}</button>
+            <button type="button" class="button color-pink" onclick="LeaveGameFromTerminal()">{{leave_game}}</button>
+        </div>
     </div>
 
-    <div class="glass-card" id="final_round_decide_answer_group" hidden="">
+    <div class="glass-card" id="final_round_decide_answer_group" hidden>
         <entry class="column">
-            <label class="explanatory_label" data-i18n="answers_player"></label>
+            <label class="explanatory_label">{{answers_player}}</label>
             <label id="final_round_answering_player">UnnamedPlayer</label>
 
-            <label class="explanatory_label" data-i18n="their_answer"></label>
-            <label id="final_round_player_answer">LEGIT</label>
+            <div class="pq-fact">
+                <span class="explanatory_label">{{their_answer}}</span>
+                <label id="final_round_player_answer">LEGIT</label>
+            </div>
 
-            <label class="explanatory_label" data-i18n="right_answer"></label>
-            <label id="final_round_answer">No answer</label>
+            <div class="pq-fact pq-fact--right">
+                <span class="explanatory_label">{{right_answer}}</span>
+                <label id="final_round_answer">No answer</label>
+            </div>
 
-            <p class="empty_space"></p>
-
-            <button type="button" class="button color-green" onclick="ReportFinalAnswerDecision(true)" data-i18n="correct"></button>
-            <button type="button" class="button color-red" onclick="ReportFinalAnswerDecision(false)" data-i18n="incorrect"></button>
+            <button type="button" class="button color-green" onclick="ReportFinalAnswerDecision(true)">{{correct}}
+            </button>
+            <button type="button" class="button color-red" onclick="ReportFinalAnswerDecision(false)">{{incorrect}}
+            </button>
         </entry>
     </div>
 
-    <div class="glass-card" id="curiosity_or_end_group" hidden="">
+    <div class="glass-card" id="curiosity_or_end_group" hidden>
         <entry class="column">
-            <button type="button" class="button color-blue" onclick="ReportCuriosityOrEndGame('curious')" data-i18n="curious_other"></button>
-            <button type="button" class="button color-red" onclick="ReportCuriosityOrEndGame('end')" data-i18n="end_game"></button>
+            <button type="button" class="pq-choice" onclick="ReportCuriosityOrEndGame('curious')">
+                <span class="pq-choice-title">{{curious_other}}</span>
+            </button>
+            <button type="button" class="pq-choice pq-choice--danger" onclick="ReportCuriosityOrEndGame('end')">
+                <span class="pq-choice-title">{{end_game}}</span>
+            </button>
         </entry>
     </div>
 
-    <div class="glass-card" id="curiosity_answer_group" hidden="">
+    <div class="glass-card" id="curiosity_answer_group" hidden>
         <entry class="column">
-            <button type="button" class="button color-blue" onclick="CuriosityRevealAnswer()" data-i18n="reveal_answer"></button>
+            <button type="button" class="button color-blue" onclick="CuriosityRevealAnswer()">{{reveal_answer}}</button>
         </entry>
     </div>
 
-    <div class="glass-card" id="auction_player_group" hidden="">
+    <div class="glass-card" id="auction_player_group" hidden>
         <entry class="column">
-            <label id="highest_bidder"></label>
-            <label id="highest_bid"></label>
-            <input class="info-block-input" type="number" id="your_bid" data-i18n-placeholder="bid" placeholder=""}>
-            <button id="button_bid" type="button" class="button color-green" onclick="window.auctionPage.onBidClicked(window.auction)" data-i18n="bid"></button>
-            <button id="button_pass" type="button" class="button color-red" onclick="window.auctionPage.onPassClicked()" data-i18n="pass"></button>
+            <div class="pq-bid-leader">
+                <label id="highest_bidder"></label>
+                <label id="highest_bid"></label>
+            </div>
 
-            <label id="not_enough_points" data-i18n="not_enough_points"></label>
-            <label id="you_are_highest_bidder" data-i18n="you_highest_bidder"></label>
-            <label id="passing" data-i18n="passing"></label>
-        </entry>
-    </div>
+            <div class="pq-bid-stepper" id="pq_bid_stepper">
+                <button type="button" id="pq_bid_minus" class="pq-bid-step" onclick="AuctionBidStep(-1)">&minus;</button>
+                <div class="pq-bid-value">
+                    <span class="pq-eyebrow">{{YOUR BID IS}}</span>
+                    <input
+                            class="info-block-input"
+                            type="number"
+                            id="your_bid"
+                            placeholder="{{bid}}"
+                    />
+                </div>
+                <button type="button" id="pq_bid_plus" class="pq-bid-step" onclick="AuctionBidStep(1)">+</button>
+            </div>
 
-    <div class="glass-card" id="final_bid_player_group" hidden="">
-        <entry class="column">
-            <label id="final_bid_label">Mister T</label>
-            <input type="number" min="0" class="info-block-input" id="final_bid_input" data-i18n-placeholder="your_bid" placeholder="" onkeydown="if(event.key==='Enter'){event.preventDefault();FinalRoundBid(this.value)}"}>
-            <div class="final-bid-actions">
-                <button id="final_bid_button" type="button" class="button color-green" onclick="FinalRoundBid(document.getElementById('final_bid_input').value)" data-i18n="bid"></button>
-                <button id="final_bid_allin_button" type="button" class="button color-gold" onclick="FinalRoundAllIn()" data-i18n="all_in"></button>
+            <div class="pq-bid-status">
+                <label id="not_enough_points">{{not_enough_points}}</label>
+                <label id="you_are_highest_bidder">{{you_highest_bidder}}</label>
+                <label id="passing">{{passing}}</label>
+            </div>
+
+            <div class="pq-bid-actions">
+                <button id="button_bid" type="button" class="button color-green"
+                        onclick="window.auctionPage.onBidClicked(window.auction)">{{bid}}
+                </button>
+                <button id="button_pass" type="button" class="button color-red"
+                        onclick="window.auctionPage.onPassClicked()">{{pass}}
+                </button>
             </div>
         </entry>
     </div>
 
-    <section class="glass-card questions-board" id="select_question_host_group" hidden="">
+    <div class="glass-card" id="final_bid_player_group" hidden>
+        <entry class="column">
+            <label id="final_bid_label">Mister T</label>
+            <span class="pq-eyebrow">{{YOUR BID IS}}</span>
+            <input
+                    type="number"
+                    min="0"
+                    class="info-block-input"
+                    id="final_bid_input"
+                    placeholder="{{your_bid}}"
+            />
+            <!-- PQRevamped: gold All-In lives next to the regular bid button. CSS .final-bid-actions
+                 arranges them side-by-side and stacks on narrow screens. -->
+            <div class="final-bid-actions">
+                <button id="final_bid_button" type="button" class="button color-green"
+                        onclick="FinalRoundBid(document.getElementById('final_bid_input').value)">{{bid}}
+                </button>
+                <button id="final_bid_all_in" type="button" class="button color-gold all-in-btn"
+                        onclick="FinalRoundAllIn()" data-i18n="all_in">ВА-БАНК</button>
+            </div>
+        </entry>
+    </div>
+
+    <section class="glass-card questions-board" id="select_question_host_group" hidden>
         <div id="questions_table" class="questions-block-table"></div>
     </section>
 
-    <div class="glass-card" id="cat_in_poke_host_group" hidden="">
-        <p class="empty_space"></p>
+    <div class="glass-card" id="cat_in_poke_host_group" hidden>
         <table id="cat_in_poke_table" cellspacing="0" cellpadding="0"></table>
     </div>
 
-    <div class="glass-card" id="players_list_host_group" hidden="">
+    <div class="glass-card" id="players_list_host_group" hidden>
         <p class="empty_space"></p>
         <table cellspacing="0" cellpadding="0"></table>
     </div>
 
-    <div class="glass-card" id="multiple_choice_host_group" hidden="">
+    <div class="glass-card" id="multiple_choice_host_group" hidden>
         <entry class="column">
-            <button type="button" class="button color-red" onclick="EndMultipleChoice()" data-i18n="end_voting"></button>
+            <button type="button" class="button color-red" onclick="EndMultipleChoice()">{{end_voting}}</button>
         </entry>
     </div>
 
-    <div class="glass-card" id="multiple_choice_options_group" hidden="">
-        <p class="empty_space"></p>
+    <div class="glass-card" id="multiple_choice_options_group" hidden>
         <table cellspacing="0" cellpadding="0"></table>
     </div>
 
-    <div class="glass-card" id="number_guess_host_group" hidden="">
+    <div class="glass-card" id="number_guess_host_group" hidden>
         <entry class="column">
-            <button type="button" class="button color-red" onclick="EndNumberGuess()" data-i18n="end_guessing"></button>
+            <button type="button" class="button color-red" onclick="EndNumberGuess()">{{end_guessing}}</button>
         </entry>
     </div>
 
-    <div class="glass-card" id="number_guess_player_group" hidden="">
+    <div class="glass-card" id="number_guess_player_group" hidden>
         <entry class="column">
-            <input type="number" min="0" class="info-block-input" id="number_guess_input" data-i18n-placeholder="your_guess" placeholder="" onkeydown="if(event.key==='Enter'){event.preventDefault();NumberGuessMade(this.value)}"}>
-            <button id="number_guess_button" type="button" class="button color-green primary-button" onclick="NumberGuessMade(document.getElementById('number_guess_input').value)" data-i18n="make_guess"></button>
+            <input
+                    type="number"
+                    min="0"
+                    class="info-block-input"
+                    id="number_guess_input"
+                    placeholder="{{your_guess}}"
+            />
+            <button id="number_guess_button" type="button" class="button color-green primary-button"
+                    onclick="NumberGuessMade(document.getElementById('number_guess_input').value)">{{make_guess}}
+            </button>
         </entry>
     </div>
 
-    <div class="glass-card" id="final_round_themes_group" hidden="">
-        <p class="empty_space"></p>
+    <div class="glass-card" id="final_round_themes_group" hidden>
         <table id="final_round_themes_table" cellspacing="0" cellpadding="0"></table>
     </div>
 
-    <div class="glass-card" id="themes_to_introduce_group" hidden="">
-        <p class="empty_space"></p>
+    <div class="glass-card" id="themes_to_introduce_group" hidden>
         <table id="themes_to_introduce_table" cellspacing="0" cellpadding="0"></table>
     </div>
 
-    <div class="glass-card" id="stop_guessing_or_end_question_group" hidden="">
+    <div class="glass-card" id="stop_guessing_or_end_question_group" hidden>
         <entry class="column">
-            <button type="button" class="button color-red" onclick="RevealingCluesStopGuessing()" data-i18n="stop_guessing"></button>
-            <button type="button" class="button color-red" onclick="RevealingCluesEndQuestion()" data-i18n="end_question"></button>
+            <button type="button" class="button color-red" onclick="RevealingCluesStopGuessing()">{{stop_guessing}}
+            </button>
+            <button type="button" class="button pq-btn-ghost" onclick="RevealingCluesEndQuestion()">{{end_question}}
+            </button>
         </entry>
     </div>
 
-    <div class="glass-card" id="guess_or_pass_player_group" hidden="">
+    <div class="glass-card" id="guess_or_pass_player_group" hidden>
         <entry class="column">
-            <input class="info-block-input" id="revealing_clues_input" onkeydown="if(event.key==='Enter'){event.preventDefault();RevealingCluesGuessMade(this.value)}" type="text" data-i18n-placeholder="your_guess" placeholder=""}>
-            <button id="revealing_clues_button" type="button" class="button color-green" onclick="RevealingCluesGuessMade(document.getElementById('revealing_clues_input').value)" data-i18n="make_guess"></button>
+            <input
+                    class="info-block-input"
+                    id="revealing_clues_input"
+                    type="text"
+                    placeholder="{{your_answer}}"
+            />
+            <button id="revealing_clues_button" type="button" class="button color-green"
+                    onclick="RevealingCluesGuessMade(document.getElementById('revealing_clues_input').value)">
+                {{make_guess}}
+            </button>
 
-            <p class="empty_space"></p>
-
-            <button type="button" class="button color-red" onclick="RevealingCluesPlayerPass()" data-i18n="skip"></button>
+            <button type="button" id="revealing_clues_pass_button" class="button color-red"
+                    onclick="RevealingCluesPlayerPass()">{{pass_for_now}}
+            </button>
         </entry>
     </div>
 
-    <div class="glass-card" id="revealing_clues_decide_answer_group" hidden="">
+    <div class="glass-card" id="revealing_clues_decide_answer_group" hidden>
         <entry class="column">
-            <label class="explanatory_label" data-i18n="answers_player"></label>
+            <label class="explanatory_label">{{answers_player}}</label>
             <label id="revealing_clues_answering_player">UnnamedPlayer</label>
 
-            <label class="explanatory_label" data-i18n="their_answer"></label>
-            <label id="revealing_clues_player_answer">LEGIT</label>
+            <div class="pq-fact">
+                <label class="explanatory_label">{{their_answer}}</label>
+                <label id="revealing_clues_player_answer">LEGIT</label>
+            </div>
 
-            <label class="explanatory_label" data-i18n="right_answer"></label>
-            <label id="revealing_clues_right_answer">No answer</label>
+            <div class="pq-fact pq-fact--right">
+                <label class="explanatory_label">{{right_answer}}</label>
+                <label id="revealing_clues_right_answer">No answer</label>
+            </div>
 
-            <p class="empty_space"></p>
-
-            <button type="button" class="button color-green" onclick="ReportRevealingCluesDecision(true)" data-i18n="correct"></button>
-            <button type="button" class="button color-red" onclick="ReportRevealingCluesDecision(false)" data-i18n="incorrect"></button>
+            <button type="button" class="button color-green" onclick="ReportRevealingCluesDecision(true)">{{correct}}
+            </button>
+            <button type="button" class="button color-red" onclick="ReportRevealingCluesDecision(false)">{{incorrect}}
+            </button>
         </entry>
     </div>
 
-    <div class="glass-card" id="decide_final_players_group" hidden="">
+    <div class="glass-card" id="decide_final_players_group" hidden>
         <entry class="column">
-            <span class="explanatory_label role-block-text" data-i18n="everyone_participates_description"></span>
-            <button type="button" class="button color-blue" onclick="EveryoneParticipates()" data-i18n="everyone_participates_button"></button>
+            <button type="button" class="pq-choice" onclick="EveryoneParticipates()">
+                <span class="pq-choice-title">{{everyone_participates_button}}</span>
+                <span class="pq-choice-desc">{{everyone_participates_description}}</span>
+            </button>
 
-            <span class="explanatory_label role-block-text" data-i18n="eligible_participates_description"></span>
-            <button type="button" class="button color-blue" onclick="EligibleParticipate()" data-i18n="eligible_participates_button"></button>
+            <button type="button" class="pq-choice" onclick="EligibleParticipate()">
+                <span class="pq-choice-title">{{eligible_participates_button}}</span>
+                <span class="pq-choice-desc">{{eligible_participates_description}}</span>
+            </button>
         </entry>
     </div>
 
-    <section class="glass-card" id="auction_host_group" hidden="">
-        <p class="empty_space"></p>
-        <button id="button_end_auction" class="button color-red primary-button" onclick="window.auctionHostPage.onEndAuction()" data-i18n="end_auction"></button>
+    <section class="glass-card" id="auction_host_group" hidden>
+        <button
+                id="button_end_auction"
+                class="button color-red primary-button"
+                onclick="window.auctionHostPage.onEndAuction()"
+        >
+            {{end_auction}}
+        </button>
     </section>
 
-    <overlay class="collapsed emojis-block" id="emoji_layer" style="display: none;">
-        <button class="button color-white emojis-block-button" id="controls" style="font-size: 8.9219px;"></button>
-        <button class="button color-white emojis-block-button" id="cool" onclick="PlayEmoji('Cool')" style="font-size: 8.9219px;">
-            <sprite class="sprite-img-sd img-sd-cool"></sprite>
-        </button>
-        <button class="button color-white emojis-block-button" id="bigsmile" onclick="PlayEmoji('Happy')" style="font-size: 8.9219px;">
-            <sprite class="sprite-img-sd img-sd-bigsmile"></sprite>
-        </button>
-        <button class="button color-white emojis-block-button" id="sad" onclick="PlayEmoji('Sad')" style="font-size: 8.9219px;">
-            <sprite class="sprite-img-sd img-sd-sad"></sprite>
-        </button>
-        <button class="button color-white emojis-block-button" id="sleep" onclick="PlayEmoji('Tired')" style="font-size: 8.9219px;">
-            <sprite class="sprite-img-sd img-sd-sleep"></sprite>
-        </button>
-        <button class="button color-white emojis-block-button" id="sick" onclick="PlayEmoji('Puke')" style="font-size: 8.9219px;">
-            <sprite class="sprite-img-sd img-sd-sick3"></sprite>
-        </button>
-        <button class="button color-white emojis-block-button" id="poop" onclick="PlayEmoji('Poop')" style="font-size: 8.9219px;">
-            <sprite class="sprite-img-sd img-sd-poop"></sprite>
-        </button>
+    <!-- Emoji stack. The layer is column-reverse, so the toggle is first in the DOM and
+         sits at the bottom; the six run upwards in the design's order. The glyphs are
+         text, as the design draws them — the old spritesheet cells were sized for the
+         64px buttons this panel no longer has. emoji.js owns the .emoji-open class. -->
+    <overlay class="emojis-block" id="emoji_layer">
+        <button class="button color-white emojis-block-button" id="controls" type="button"
+                aria-expanded="false"></button>
+        <button class="button color-white emojis-block-button" id="cool" type="button"
+                onclick="PlayEmoji('Cool'); pqFloatEmoji('😎')">😎</button>
+        <button class="button color-white emojis-block-button" id="bigsmile" type="button"
+                onclick="PlayEmoji('Happy'); pqFloatEmoji('😄')">😄</button>
+        <button class="button color-white emojis-block-button" id="poop" type="button"
+                onclick="PlayEmoji('Poop'); pqFloatEmoji('💩')">💩</button>
+        <button class="button color-white emojis-block-button" id="sick" type="button"
+                onclick="PlayEmoji('Puke'); pqFloatEmoji('🤢')">🤢</button>
+        <button class="button color-white emojis-block-button" id="sad" type="button"
+                onclick="PlayEmoji('Sad'); pqFloatEmoji('😢')">😢</button>
+        <button class="button color-white emojis-block-button" id="sleep" type="button"
+                onclick="PlayEmoji('Tired'); pqFloatEmoji('🥱')">🥱</button>
     </overlay>
 
     <!-- QR Code Password Prompt -->
-    <div id="qr_password_overlay" class="modal-overlay" hidden="" onclick="cancelQrPassword()"></div>
-    <div id="qr_password_modal" class="modal-panel glass-card qr-password-modal" hidden="">
+    <div id="qr_password_overlay" class="modal-overlay" hidden onclick="cancelQrPassword()"></div>
+    <div id="qr_password_modal" class="modal-panel glass-card qr-password-modal" hidden>
         <div class="card-header">
             <div class="card-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                    <rect width="5" height="5" x="3" y="3" rx="1"></rect><rect width="5" height="5" x="16" y="3" rx="1"></rect>
-                    <rect width="5" height="5" x="3" y="16" rx="1"></rect><path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
-                    <path d="M21 21v.01"></path><path d="M12 7v3a2 2 0 0 1-2 2H7"></path><path d="M3 12h.01"></path>
-                    <path d="M12 3h.01"></path><path d="M12 16v.01"></path><path d="M16 12h1"></path>
-                    <path d="M21 12v.01"></path><path d="M12 21v-1"></path>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/>
+                    <rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/>
+                    <path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/>
+                    <path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/>
+                    <path d="M21 12v.01"/><path d="M12 21v-1"/>
                 </svg>
             </div>
         </div>
 
-        <p class="qr-password-hint" data-i18n="qr_game_requires_password"></p>
-        <p class="qr-password-game-id"><span data-i18n="game_id"></span>: <strong id="qr_password_game_id"></strong></p>
+        <p class="qr-password-hint">{{qr_game_requires_password}}</p>
+        <p class="qr-password-game-id">{{game_id}}: <strong id="qr_password_game_id"></strong></p>
 
         <div class="form-fields">
             <div class="field-group">
-                <label class="field-label" for="qr_password_input" data-i18n="game_password"></label>
+                <label class="field-label" for="qr_password_input">{{game_password}}</label>
                 <div class="input-icon-wrap">
                     <div class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                            <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
-                            <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/>
+                            <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>
                         </svg>
                     </div>
-                    <input class="game-input has-icon" id="qr_password_input" type="text" data-i18n-placeholder="game_password" placeholder=""}>
+                    <input
+                            class="game-input has-icon"
+                            id="qr_password_input"
+                            type="text"
+                            placeholder="{{game_password}}"
+                    />
                 </div>
             </div>
         </div>
@@ -622,100 +799,133 @@
 
         <div class="qr-password-actions">
             <button type="button" class="button color-green game-block-button" onclick="submitQrPassword()">
-                <span data-i18n="join"></span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                    <path d="m9 18 6-6-6-6"></path>
+                {{join}}
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
                 </svg>
             </button>
-            <button type="button" class="button color-red game-block-button" onclick="cancelQrPassword()" data-i18n="qr_enter_manually"></button>
+            <button type="button" class="button color-red game-block-button" onclick="cancelQrPassword()">
+                {{qr_enter_manually}}
+            </button>
         </div>
     </div>
 
     <!-- Custom Avatar Modal -->
-    <div id="custom_avatar_modal_overlay" class="modal-overlay" hidden="" onclick="CloseCustomAvatarModal()"></div>
-    <div id="custom_avatar_modal" class="modal-panel glass-card" hidden="">
+    <div id="custom_avatar_modal_overlay" class="modal-overlay" hidden onclick="CloseCustomAvatarModal()"></div>
+    <div id="custom_avatar_modal" class="modal-panel glass-card" hidden>
         <button type="button" class="modal-close modal-close--corner" onclick="CloseCustomAvatarModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                <path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
             </svg>
         </button>
 
         <div class="card-header">
             <div class="card-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: currentColor;">
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
                 </svg>
             </div>
-            <span class="card-title" data-i18n="set_avatar"></span>
-        </div>
-
-        <div id="custom_avatar_view_tabs" class="ca-view-tabs" role="tablist">
-            <button type="button" id="ca_tab_flat" class="ca-tab active" role="tab" aria-selected="true" onclick="switchCustomAvatarView('flat')">Flat</button>
-            <button type="button" id="ca_tab_3d" class="ca-tab" role="tab" aria-selected="false" onclick="switchCustomAvatarView('3d')">3D Try-On</button>
+            <span class="card-title">{{set_avatar}}</span>
         </div>
 
         <div id="custom_avatar_panel" class="custom-avatar-panel-v2">
-            <input id="custom_avatar_file" type="file" accept="image/png,image/jpeg,image/jpg" hidden="">
+            <input id="custom_avatar_file" type="file" accept="image/png,image/jpeg,image/jpg" hidden/>
 
-            <div id="ca_flat_view" class="ca-view active">
-                <div class="ca-preview-center">
+            <!-- PQRevamped: 3D Try-On tabs (was added by PQRevamped). The flat canvas keeps its
+                 id so avatars.js gesture code is untouched; the 3D canvas is brand-new. -->
+            <div class="ca-tabs" id="ca_tabs" role="tablist">
+                <button type="button" class="ca-tab ca-tab--active" id="ca_tab_flat" role="tab"
+                        aria-selected="true" data-i18n="ca_tab_flat"
+                        onclick="pqSwitchCustomAvatarView('flat')">Flat</button>
+                <button type="button" class="ca-tab" id="ca_tab_3d" role="tab"
+                        aria-selected="false" data-i18n="ca_tab_3d"
+                        onclick="pqSwitchCustomAvatarView('3d')">3D Try-On</button>
+            </div>
+            <div class="ca-preview-center">
+                <div class="ca-view" id="ca_flat_view">
                     <canvas id="custom_avatar_preview" width="256" height="256"></canvas>
                 </div>
-                <div class="ca-hints">
-                    <div class="ca-hint">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" x2="22" y1="12" y2="12"></line><line x1="12" x2="12" y1="2" y2="22"></line></svg>
-                        <span>Drag to pan</span>
-                    </div>
-                    <div class="ca-hint">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line><line x1="8" x2="14" y1="11" y2="11"></line><line x1="11" x2="11" y1="8" y2="14"></line></svg>
-                        <span>Scroll to zoom</span>
-                    </div>
-                    <div class="ca-hint">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
-                        <span>Ctrl+drag to rotate</span>
-                    </div>
+                <!-- ca_3d_container is what custom_avatar_3d.js appends its Three.js canvas to.
+                     ca_3d_status is where WebGL or load errors are written. -->
+                <div class="ca-view" id="ca_3d_container" hidden>
+                    <div class="ca-3d-status" id="ca_3d_status"></div>
                 </div>
             </div>
 
-            <div id="ca_3d_view" class="ca-view" hidden>
-                <div id="ca_3d_container" class="ca-3d-container"></div>
-                <div class="ca-hints ca-hints--3d">
-                    <div class="ca-hint">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" x2="22" y1="12" y2="12"></line><line x1="12" x2="12" y1="2" y2="22"></line></svg>
-                        <span>Drag to orbit</span>
-                    </div>
-                    <div class="ca-hint">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line><line x1="8" x2="14" y1="11" y2="11"></line><line x1="11" x2="11" y1="8" y2="14"></line></svg>
-                        <span>Wheel / pinch to zoom</span>
-                    </div>
+            <div class="ca-hints">
+                <div class="ca-hint">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="5 9 2 12 5 15"/>
+                        <polyline points="9 5 12 2 15 5"/>
+                        <polyline points="15 19 12 22 9 19"/>
+                        <polyline points="19 9 22 12 19 15"/>
+                        <line x1="2" x2="22" y1="12" y2="12"/>
+                        <line x1="12" x2="12" y1="2" y2="22"/>
+                    </svg>
+                    <span>{{hint_pan}}</span>
                 </div>
-                <div id="ca_3d_status" class="ca-3d-status" aria-live="polite"></div>
+                <div class="ca-hint">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" x2="16.65" y1="21" y2="16.65"/>
+                        <line x1="8" x2="14" y1="11" y2="11"/>
+                        <line x1="11" x2="11" y1="8" y2="14"/>
+                    </svg>
+                    <span>{{hint_zoom}}</span>
+                </div>
+                <div class="ca-hint">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                        <path d="M21 3v5h-5"/>
+                    </svg>
+                    <span>{{hint_rotate}}</span>
+                </div>
             </div>
+
             <label id="custom_avatar_error" class="custom-avatar-error" role="alert"></label>
 
-            <button id="custom_avatar_upload_button_big" type="button" class="button color-blue ca-upload-big" data-i18n="upload_custom_avatar"></button>
+            <button id="custom_avatar_upload_button_big" type="button"
+                    class="button color-blue ca-upload-big">
+                {{upload_custom_avatar}}
+            </button>
 
-            <div class="ca-actions-row" id="custom_avatar_actions_row" hidden="">
-                <button id="custom_avatar_upload_button" type="button" class="button color-blue ca-action-btn" data-i18n="change_image"></button>
-                <button id="custom_avatar_reset_button" type="button" class="button color-red ca-action-btn" data-i18n="reset"></button>
+            <div class="ca-actions-row" id="custom_avatar_actions_row" hidden>
+                <button id="custom_avatar_upload_button" type="button"
+                        class="button color-blue ca-action-btn">
+                    {{change_image}}
+                </button>
+                <button id="custom_avatar_reset_button" type="button"
+                        class="button color-red ca-action-btn">
+                    {{reset}}
+                </button>
             </div>
 
-            <button type="button" class="button color-green ca-confirm-btn" onclick="ConfirmCustomAvatar()" data-i18n="confirm"></button>
+            <button type="button" class="button color-green ca-confirm-btn"
+                    onclick="ConfirmCustomAvatar()">
+                {{confirm}}
+            </button>
 
         </div>
     </div>
 
     <div class="camera-block camera_control">
         <button id="button_main" type="button" class="button color-green button-main video-camera-image-wrapper">
-            <img src="video-camera.png" alt="video_camera" class="video-camera-image">
+            <img src="../../assets/video-camera.png" alt="video_camera" class="video-camera-image">
         </button>
         <div id="buttons" class="camera_roster">
         </div>
     </div>
 
-    <button hidden="" type="button" class="button color-blue bottom game-block-button" onclick="ToggleChangeScoreListPopup()">
-        change points
+    <button hidden type="button" class="button color-blue bottom game-block-button"
+            onclick="ToggleChangeScoreListPopup()">
+        {{change_points}}
     </button>
 
     <div id="central_information_overlay" class="central-info-overlay" aria-hidden="true">
@@ -727,29 +937,46 @@
 
     <div id="error_popup_overlay" class="error-popup-overlay" aria-hidden="true"></div>
 
-    <section id="error_popup" class="error-popup" role="alertdialog" aria-live="assertive" aria-modal="true" aria-hidden="true">
+    <section
+            id="error_popup"
+            class="error-popup"
+            role="alertdialog"
+            aria-live="assertive"
+            aria-modal="true"
+            aria-hidden="true">
         <div class="error-popup__icon" aria-hidden="true">!</div>
         <p id="error_popup_message" class="error-popup__message">Something went wrong. Please try again.</p>
         <button id="error_popup_button" type="button" class="button color-pink error-popup__button">OK</button>
     </section>
 
-    <!-- Leave Game Confirmation (fool protection) -->
-    <div id="leave_confirm_overlay" class="modal-overlay" hidden="" onclick="CancelLeaveGame()"></div>
-    <div id="leave_confirm_modal" class="modal-panel glass-card" hidden="">
-        <div class="card-header">
-            <div class="card-icon" style="background: hsl(0 84% 60% / 0.12); color: hsl(0 84% 60%);">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            </div>
-            <span class="card-title" data-i18n="leave_game"></span>
-        </div>
-        <p class="card-sub" style="margin: 12px 0 18px; font-size: 0.95rem; color: hsl(var(--muted-foreground));" data-i18n="leave_confirm_text"></p>
-        <div class="team-create-actions">
-            <button type="button" class="button color-green" onclick="CancelLeaveGame()" data-i18n="cancel"></button>
-            <button type="button" class="button color-red" onclick="ConfirmLeaveGame()" data-i18n="leave_game"></button>
-        </div>
-    </div>
-
     <div id="popup-overlay"></div>
+
+    <!-- PQRevamped: leave-confirm modal. RequestLeaveGame shows it; Cancel/Confirm/ESC/overlay all close it. -->
+    <div id="leave_confirm_overlay" class="modal-overlay" hidden
+         onclick="CancelLeaveGame()"></div>
+    <section id="leave_confirm_modal" class="modal-panel glass-card" role="alertdialog"
+             aria-modal="true" aria-hidden="true" hidden>
+        <div class="card-header">
+            <div class="card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+            </div>
+            <span class="card-title" data-i18n="leave_confirm_title">Покинуть игру?</span>
+        </div>
+        <p class="leave-confirm-text" data-i18n="leave_confirm_text">
+            Вы уверены, что хотите выйти? Если сейчас идёт раунд, это будет считаться как пропуск.
+        </p>
+        <div class="leave-confirm-actions">
+            <button id="leave_confirm_cancel" type="button" class="button color-grey"
+                    data-i18n="cancel" onclick="CancelLeaveGame()">Отмена</button>
+            <button id="leave_confirm_leave" type="button" class="button color-red"
+                    data-i18n="leave_game" onclick="ConfirmLeaveGame()">Покинуть</button>
+        </div>
+    </section>
 
     <div id="change-score-list-popup" class="popup-menu">
         <button type="button" class="button color-red close-popup-button" onclick="CloseChangeScoreListPopup()">X
@@ -763,39 +990,15 @@
 
     <entry id="log" class="log-block"></entry>
 </bb>
-<script type="text/javascript" src="js/config.js"></script>
-<script type="text/javascript" src="js/i18n.js"></script>
-<script type="text/javascript" src="js/avatars_list.js"></script>
-<script type="text/javascript" src="js/avatars.js"></script>
-<script type="text/javascript" src="js/commands.js"></script>
-<script type="text/javascript" src="js/jquery.min.js"></script>
-<script type="text/javascript" src="js/main.js"></script>
-<script type="text/javascript" src="js/selection.js"></script>
-<script type="text/javascript" src="js/utils.js"></script>
-<script src="js/emoji.js"></script>
-<script type="module" src="js/custom_avatar_3d.js"></script>
-<script>
-(function() {
-    function initLangSwitcher() {
-        var sel = document.getElementById('lang_select');
-        if (!sel || !window.i18n) return;
-        var cur = (window.i18n.lang || 'english').toLowerCase();
-        var valid = Array.prototype.map.call(sel.options, function(o){ return o.value; });
-        if (valid.indexOf(cur) === -1) cur = 'english';
-        sel.value = cur;
-        // keep in sync after i18n.ready resolves (lang.json loaded)
-        if (window.i18n.ready && window.i18n.ready.then) {
-            window.i18n.ready.then(function() {
-                try { sel.value = (window.i18n.lang || cur).toLowerCase(); } catch(e) {}
-            });
-        }
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initLangSwitcher);
-    } else {
-        initLangSwitcher();
-    }
-})();
-</script>
-
-</body></html>
+<script type="text/javascript" src="./js/i18n.js?v=7"></script>
+<script type="text/javascript" src="./js/avatars_list.js?v=7"></script>
+<script type="text/javascript" src="./js/avatars.js?v=11"></script>
+<!-- PQRevamped: 3D Try-On module (Three.js). ES-module so it can import three/addons/. -->
+<script type="module" src="./js/custom_avatar_3d.js?v=1"></script>
+<script type="text/javascript" src="./js/commands.js?v=17"></script>
+<script type="text/javascript" src="./js/jquery_min.js?v=7"></script>
+<script type="text/javascript" src="./js/main.js?v=54"></script>
+<script type="text/javascript" src="./js/selection.js?v=7"></script>
+<script type="text/javascript" src="./js/utils.js?v=8"></script>
+<script src="js/emoji.js?v=9"></script>
+</body>

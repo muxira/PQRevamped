@@ -3,3 +3,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+# Browser-export leftovers (HAR dumps, saved-page folders) — never commit these,
+# the repo hosts only the ported client/.
+*.har

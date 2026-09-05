@@ -76,9 +76,14 @@ Lobby, team management, WebSocket flow (`wss://partyquiz.club:3012`), question/a
 ├── client/
 │   ├── assets/
 │   │   ├── custom_avatar_background.png    # local copy (canvas CORS, see below)
+│   │   ├── party_quiz_logo_wordmark.png
+│   │   ├── video-camera.png
+│   │   ├── fonts/
+│   │   │   └── party-quiz-sans-400/700.ttf # local @font-face (see below)
 │   │   └── models/
 │   │       ├── Body.obj                    # reference mesh for 3D preview
 │   │       └── Body.placeholder.obj        # fallback if Body.obj not cleared
+│   ├── avatars/                            # stock avatar PNG art (local copy)
 │   ├── localized/
 │   │   ├── arabic/ czech/ english/ french/ german/ italian/ japanese/ kazakh/
 │   │   │   korean/ polish/ portuguese/ russian/ simplifiedchinese/ spanish/
@@ -87,16 +92,15 @@ Lobby, team management, WebSocket flow (`wss://partyquiz.club:3012`), question/a
 │       ├── game.html                       # main companion page (data-i18n)
 │       ├── css/
 │       │   ├── index.css / styles.css / ...
+│       │   ├── pq-tokens.css / pq-components.css / pq-screens.css
 │       │   └── custom_avatar_3d.css        # tabs + 3D container
 │       ├── js/
 │       │   ├── config.js                   # PQ_ORIGIN constant
 │       │   ├── i18n.js                     # 18 langs, dynamic switch
 │       │   ├── avatars.js                  # avatar + custom avatar logic
-│       │   ├── custom_avatar_3d.js         # 3D Try-On module (~300 lines)
+│       │   ├── custom_avatar_3d.js         # 3D Try-On module
 │       │   ├── commands.js / main.js / ... # AllIn, leave confirm, Enter handlers, lang events
-│       │   └── jquery.min.js
-│       ├── favicon.ico
-│       └── video-camera.png
+│       │   └── jquery_min.js
 ├── .github/workflows/pages.yml             # deploys on master/main
 ├── CHANGES.md
 └── LICENSE
@@ -150,7 +154,9 @@ Verified `2026-08-24/25` via `curl -I` — most `partyquiz.club` static assets *
 |-------|-----------|
 | `client/assets/custom_avatar_background.png` (20714 bytes) | `canvas.toDataURL()` + Three.js texture upload would taint canvas if cross-origin |
 | `client/localized/*/lang.json` (18 locales, ~7-16 KB each) | `fetch()` for i18n JSON is blocked by CORS (double UTF-8 fix) |
-| `play.regular.ttf` (font) | blocked by CORS (`downloadable font: cross-site access not allowed`) — now `local("Arial")` fallback in `index.css:50`, no binary shipped |
+| `client/avatars/*.png` (stock avatar art) | `<img>` loads would work cross-origin, but local copy keeps the carousel instant and offline-safe |
+| `client/assets/fonts/party-quiz-sans-*.ttf` | `@font-face` in `pq-tokens.css` (cross-site font fetch is blocked by CORS) |
+| `play.regular.ttf` (font) | **not shipped** — blocked by CORS *and* non-redistributable; `index.css` falls back to `local("Arial")`. The stale `index.css` `@font-face` URL 404s harmlessly into the fallback |
 
 ## Calibration (one-time manual check)
 

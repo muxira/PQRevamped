@@ -4,27 +4,25 @@ input,
 textarea.info-block-input {
     box-sizing: border-box;
     display: block;
-    border: 2px solid hsl(258 90% 66% / 0.15);
-    padding: 1rem 1.5rem;
+    border: 2px solid var(--pq-line);
+    padding: 15px;
     width: 100%;
     max-width: 28rem;
     margin-bottom: 0;
-    font-size: 1rem;
-    font-family: "partyquiz", sans-serif;
-    font-weight: 600;
+    font-size: 17px;
+    font-family: "partyquiz", Play, system-ui, sans-serif;
+    font-weight: 700;
     outline: none;
-    background-color: rgba(255, 255, 255, 0.8);
-    color: hsl(var(--foreground));
-    border-radius: 1rem;
-    box-shadow: 0 4px 12px hsl(258 90% 66% / 0.08);
-    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: var(--pq-field);
+    color: var(--pq-ink);
+    border-radius: 16px;
+    box-shadow: none;
+    transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 input:focus,
 textarea.info-block-input:focus {
-    border-color: hsl(258 90% 66% / 0.5);
-    background-color: #fff;
-    box-shadow: 0 6px 20px hsl(258 90% 66% / 0.15);
+    border-color: var(--pq-accent);
 }
 
 #game_id {
@@ -41,8 +39,8 @@ textarea.info-block-input {
 input::placeholder,
 textarea.info-block-input::placeholder {
     transition: all 0.2s ease-in-out;
-    color: hsl(var(--muted-foreground) / 0.6);
-    font-weight: 500;
+    color: var(--pq-muted);
+    font-weight: 400;
 }
 
 input:focus::placeholder,
@@ -56,7 +54,7 @@ textarea.info-block-input.populated::placeholder {
 input::-webkit-input-placeholder,
 textarea.info-block-input::-webkit-input-placeholder {
     transition: all 0.2s ease-in-out;
-    color: hsl(var(--muted-foreground) / 0.6);
+    color: var(--pq-muted);
 }
 
 input:focus::-webkit-input-placeholder,
@@ -69,7 +67,7 @@ textarea.info-block-input.populated::-webkit-input-placeholder {
 input:-ms-input-placeholder,
 textarea.info-block-input:-ms-input-placeholder {
     transition: all 0.2s ease-in-out;
-    color: hsl(var(--muted-foreground) / 0.6);
+    color: var(--pq-muted);
 }
 
 input:focus:-ms-input-placeholder,
@@ -82,13 +80,13 @@ textarea.info-block-input.populated:-ms-input-placeholder {
 /* ===== Blink Feedback ===== */
 
 .blink {
-    background-color: hsl(var(--primary) / 0.15) !important;
-    border-color: hsl(var(--primary) / 0.5) !important;
+    background-color: var(--pq-soft) !important;
+    border-color: var(--pq-accent) !important;
 }
 
 .blink-error {
-    background-color: hsl(0 84% 60% / 0.2) !important;
-    border-color: hsl(0 84% 60% / 0.8) !important;
+    background-color: color-mix(in srgb, var(--pq-danger) 20%, transparent) !important;
+    border-color: var(--pq-danger) !important;
 }
 
 /* ===== Helper span reveal ===== */
