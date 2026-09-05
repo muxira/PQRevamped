@@ -123,7 +123,7 @@ Any static server works — `npx serve`, `php -S`, VS Code Live Server, etc.
 2. Open the companion URL above, enter Game ID / password, pick role (Host / Player)
 3. Pick avatar → for custom avatar click **Кастомизировать** → upload PNG/JPG → tweak with pan/zoom/rotate, check 3D tab → **Подтвердить**
 
-> **WebSocket override:** `main.js` defaults to `partyquiz.club` (`wss://partyquiz.club:3012`) from any domain. To point elsewhere add `?server=partyquiz.club` (or `stage.partyquiz.club`) to the URL. Still requires a real host `.exe` with a matching game ID — the WebSocket alone doesn't create a lobby.
+> **WebSocket override:** `main.js` defaults to `partyquiz.club` (`wss://partyquiz.club:3012`) from any domain — GitHub Pages, localhost/LAN preview, etc. never use the page hostname for the game socket. To point elsewhere add `?server=<host>` (e.g. `?server=192.168.1.5` for a LAN-hosted server, `?server=stage.partyquiz.club` → port 5012). Still requires a real host `.exe` with a matching game ID — the WebSocket alone doesn't create a lobby.
 > **Language:** add `?lang=russian` (or any of 18) or use the top-left dropdown — choice is stored in `localStorage pq_lang` and survives reload.
 
 ## Configuration

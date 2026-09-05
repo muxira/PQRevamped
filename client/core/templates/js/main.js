@@ -1879,7 +1879,14 @@ RESUME_GAME: {
         let serverOverride = getQueryParam('server');
         let host = serverOverride || window.location.hostname;
 
-        if (!serverOverride && host == 'localhost')
+        // Static fork: this page is usually NOT served by the game server itself
+        // (GitHub Pages, localhost/LAN preview, file://), so a foreign hostname must
+        // never be used for the game socket — e.g. on Pages this built
+        // wss://muxira.github.io:3012, which refuses the connection and leaves the
+        // client blinking orange in "loading" forever. Default to the live
+        // infrastructure; ?server= still overrides (local/dev servers, stage).
+        // This matches the README ("defaults to partyquiz.club from any domain").
+        if (!serverOverride && host !== 'partyquiz.club' && host !== 'stage.partyquiz.club')
             host = "partyquiz.club";
 
         let port = 3012;
