@@ -1,0 +1,55 @@
+name: Bug report
+description: Something looks wrong, breaks, or behaves differently from the official client.
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The fastest way to a fix is a precise reproduction —
+        especially for phones, where "it doesn't work" usually means "it works, but not
+        where I expected".
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you get instead?
+      placeholder: "Opened the 3D tab on my phone and the canvas stayed black; the loading text never went away."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open .../core/templates/game.html
+        2. Join game ...
+        3. Tap Customize avatar → 3D
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: "Pixel 7, Chrome 129 / iPhone 13, Safari 17"
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Where were you running it?
+      placeholder: "GitHub Pages / localhost:8000 / LAN IP / ?server=…"
+  - type: dropdown
+    id: upstream
+    attributes:
+      label: Does the official client behave the same way?
+      options:
+        - "Did not check"
+        - "No — only this fork"
+        - "Yes, it is an upstream bug too"
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output / screenshot
+      description: Browser console errors, if any. Drag images straight into this box.
+      render: shell

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question / help joining a game
+    url: https://github.com/muxira/PQRevamped#-faq
+    about: Check the FAQ first — connection dots, 3D tab, language switch.
+  - name: Party Quiz itself
+    url: https://partyquiz.club
+    about: The official game, its host app and account questions are not handled here.

@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    name: Static checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Asset, i18n and JSON checks
+        run: python3 scripts/check.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: JavaScript syntax
+        run: |
+          status=0
+          while IFS= read -r file; do
+            if ! node --check "$file"; then status=1; fi
+          done < <(find core/templates/js scripts -name '*.js' -not -path '*/node_modules/*')
+          node --check sw.js
+          exit $status
+
+      - name: ES module syntax
+        run: node --input-type=module --check < core/templates/js/custom_avatar_3d.js
+
+      - name: Dictionaries parse and match English
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          root = pathlib.Path('localized')
+          english = json.loads((root / 'english/lang.json').read_text(encoding='utf-8-sig'))
+          failures = []
+          for path in sorted(root.glob('*/lang.json')):
+              data = json.loads(path.read_text(encoding='utf-8-sig'))
+              missing = sorted(set(english) - set(data))
+              if missing:
+                  failures.append(f'{path}: {len(missing)} missing, e.g. {missing[:3]}')
+          print('\n'.join(failures) or f'{len(english)} keys in every locale')
+          sys.exit(1 if failures else 0)
+          PY
