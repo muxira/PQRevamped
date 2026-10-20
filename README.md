@@ -17,6 +17,11 @@
 
 <sub>English · <a href="README.ru.md">Русский</a></sub>
 
+<br/>
+<br/>
+
+<img src="docs/screenshots/00-hero.png" width="880" alt="Team lobby, final leaderboard and settings sheet on a phone"/>
+
 </div>
 
 ---
@@ -45,9 +50,26 @@ flowchart LR
 | ⚙️ | **Settings sheet** | Language, appearance (auto / light / dark), haptic feedback, keep-screen-awake. Swipe down or press Back to close. |
 | 📱 | **Phone-first ergonomics** | Safe-area insets, dynamic viewport height, a bottom bar that steps out of the keyboard's way, thumb-sized controls, pinch-zoom re-enabled and a compact landscape layout. |
 | 📲 | **Installable PWA** | Manifest, maskable icons, service worker that pre-caches the shell — the second launch is instant even on a flaky party Wi-Fi. |
-| 🛡️ | **"Leave game?" confirmation** | Reuses the upstream confirm dialog, so a stray thumb no longer drops you out of a live round. |
+| 🛡️ | **"Leave game?" confirmation** | Closing or reloading during a round now asks first, so a stray thumb no longer drops you out of a live game. |
+| ♻️ | **Session recovery** | If the tab *was* killed, the resume screen can ask the matchmaker for your seat back instead of only offering *Leave*. |
+| 🏁 | **A leaderboard that stays** | Round results and the end-of-game table were painted for a single frame (or not at all); both now hold the screen, medals included. |
+| 🖼️ | **Avatars that always draw** | The circle next to a nickname shows initials at once and swaps in the picture when it arrives — a slow or 404 image no longer leaves a hole. |
 | 🔁 | **Remembers your last game** | The join screen is pre-filled with the last game ID you used. |
 | 🧹 | **Cleaned-up fork** | Dead vendor files, the duplicate asset copy and the stale config shim are gone; every path is checked in CI. |
+
+---
+
+## 📸 Screens
+
+| Landing | Join | Lobby | Answer |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/07-landing.png" width="196" alt="Language picker"/> | <img src="docs/screenshots/06-join.png" width="196" alt="Join screen with the game ID field"/> | <img src="docs/screenshots/03-team-lobby.png" width="196" alt="Team lobby"/> | <img src="docs/screenshots/08-answer.png" width="196" alt="Answering screen"/> |
+
+| Round result | Final leaderboard | Settings | Session recovery |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/01-round-result.png" width="196" alt="Round result with the standings"/> | <img src="docs/screenshots/02-final-result.png" width="196" alt="End-of-game leaderboard with medals"/> | <img src="docs/screenshots/04-settings.png" width="196" alt="Settings sheet"/> | <img src="docs/screenshots/05-resume.png" width="196" alt="Resume game screen"/> |
+
+<sub>**Rendered previews, not live captures.** This repo has no build step and no browser in CI, so `scripts/render-previews.py` draws every screen with Pillow from the app's own design tokens (`pq-tokens.css`), its own font, avatar PNGs and markup order. Colours, spacing and copy match the shipped screens; live data, animation and the 3D canvas are the parts a still image cannot carry.</sub>
 
 ---
 
@@ -178,8 +200,9 @@ Known upstream quirks this fork changes on purpose: the socket host (see [URL pa
 │       └── js/                    # upstream 10 scripts + revamped.js + custom_avatar_3d.js
 ├── assets/                        # logo, fonts (woff2+ttf), sprites, icons, Body.obj
 ├── avatars/                       # 26 stock avatar illustrations
-├── localized/<locale>/lang.json   # 18 dictionaries, 295 keys each
-├── scripts/                       # preview · check · i18n sync · upstream fetch
+├── localized/<locale>/lang.json   # 18 dictionaries, 296 keys each
+├── docs/screenshots/              # README previews, drawn by scripts/render-previews.py
+├── scripts/                       # preview · check · i18n sync · upstream fetch · previews
 └── .github/workflows/             # CI (checks) + Pages (deploy gate)
 ```
 
@@ -195,6 +218,7 @@ python3 scripts/preview.py --lan     # ...and bind 0.0.0.0 for a phone
 python3 scripts/check.py             # references, i18n keys, JSON, leftovers
 python3 scripts/sync-i18n.py         # audit dictionaries (--scrape: pull new keys)
 python3 scripts/fetch-upstream.py    # mirror the live client into _upstream/ for a diff
+python3 scripts/render-previews.py   # redraw docs/screenshots/*.png (needs Pillow)
 ```
 
 `scripts/check.py` runs in CI on every push and before every Pages deploy, so a typo in a stylesheet path fails the build instead of shipping a page with no CSS. CI also runs `node --check` over every script and verifies that all 18 dictionaries carry the same key set.
@@ -281,6 +305,7 @@ No. It is the same client, same protocol, same host authority. The additions are
 - **License:** [MIT](LICENSE) © 2026 muxira (Artem Muzyra).
 - **Not affiliated** with Party Quiz or its developers. "Party Quiz" and its logo belong to their authors; the assets in this repository are the ones a browser downloads from the public client, included so the companion can run as a static site.
 - **`assets/models/Body.obj`** is a reference mesh used only for the preview. If you plan to redistribute this fork commercially, re-check that you have the right to ship it — otherwise disable the 3D tab (or swap in your own mesh) before publishing.
+- **README previews** are drawn by [`scripts/render-previews.py`](scripts/render-previews.py); the emoji artwork they contain (👏 and the medals) is Noto Color Emoji under Apache-2.0 — see [`docs/screenshots/emoji/`](docs/screenshots/emoji/).
 - **Please be gentle** with the official infrastructure: this is fine for personal / friends-and-family use, not for load testing or automation.
 - Thanks to the Party Quiz team for a web client that is small enough to read in an evening.
 

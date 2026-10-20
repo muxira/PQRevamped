@@ -6,7 +6,8 @@ Run locally or in CI:
     python3 scripts/check.py
 
 It verifies, without a browser:
-  1. every local href/src/url() a shipped file points at actually exists;
+  1. every local href/src/url() (and every Markdown image) a shipped file points at
+     actually exists;
   2. every {{template}} and data-i18n key appears in localized/english/lang.json;
   3. all 18 dictionaries have the same key set as English;
   4. every JSON file parses and every page is valid UTF-8;
@@ -25,6 +26,7 @@ SKIP_DIRS = {".git", "_upstream", "node_modules", ".github"}
 TEXT_SUFFIXES = {".html", ".css", ".js", ".json", ".webmanifest", ".md", ".yml", ".py", ".txt"}
 
 REF_RE = re.compile(r"""(?:href|src)\s*=\s*["']([^"']+)["']|url\(\s*["']?([^"')]+)["']?\s*\)""")
+MD_IMAGE_RE = re.compile(r"!\[[^\]]*\]\(\s*([^)\s]+)")
 TEMPLATE_RE = re.compile(r"\{\{([^{}\r\n]+)\}\}")
 DATA_I18N_RE = re.compile(r'data-i18n(?:-[a-z-]+)?\s*=\s*"([^"]+)"')
 LOCAL_ORIGIN_RE = re.compile(r"^(?:\.{0,2}/|[A-Za-z0-9_-]+/)")
@@ -47,8 +49,11 @@ def iter_files():
 
 
 def check_references(path: Path, text: str) -> None:
-    for match in REF_RE.finditer(text):
-        raw = (match.group(1) or match.group(2) or "").strip()
+    refs = list(REF_RE.finditer(text))
+    if path.suffix == ".md":
+        refs += list(MD_IMAGE_RE.finditer(text))
+    for match in refs:
+        raw = (match.group(1) or (match.group(2) if match.re.groups > 1 else "") or "").strip()
         if not raw or raw.startswith(("data:", "mailto:", "tel:", "javascript:", "#", "//")):
             continue
         if re.match(r"^[a-z]+:", raw):
@@ -103,7 +108,7 @@ def main() -> int:
         files[path] = text
 
     for path, text in files.items():
-        if path.suffix in {".html", ".css", ".js", ".webmanifest"}:
+        if path.suffix in {".html", ".css", ".js", ".webmanifest", ".md"}:
             check_references(path, text)
         if path.suffix == ".json":
             try:
@@ -122,7 +127,7 @@ def main() -> int:
     for message in errors:
         print(f"error {message}")
 
-    checked = sum(1 for p in files if p.suffix in {".html", ".css", ".js", ".json"})
+    checked = sum(1 for p in files if p.suffix in {".html", ".css", ".js", ".json", ".md"})
     print(f"\n{checked} shipped files checked, {len(errors)} error(s), {len(warnings)} warning(s)")
     return 1 if errors else 0
 

@@ -60,6 +60,8 @@ Synced with `partyquiz.club` as it was served on 2026-10-20 (snapshot captured w
 - **Repo layout** now mirrors the upstream tree (`core/`, `assets/`, `avatars/`,
   `localized/` at the root). The old `client/` wrapper is gone — and with it a broken
   `../../assets/…` path that made the footer camera image 404 on GitHub Pages.
+- **Preview renderer** (`scripts/render-previews.py`) — draws `docs/screenshots/*.png` with
+  Pillow from the shipped tokens, font, avatars and markup order; used by both READMEs.
 - **Tooling** — `scripts/preview.py` (LAN-friendly static server with correct MIME types),
   `scripts/check.py` (references, i18n keys, JSON, leftovers), `scripts/sync-i18n.py`
   (dictionary audit + upstream scrape), `scripts/fetch-upstream.py` (snapshot for a diff),
@@ -73,6 +75,23 @@ Synced with `partyquiz.club` as it was served on 2026-10-20 (snapshot captured w
 
 ### Fixed
 
+- **Accidentally closing the page lost the game.** Leaving mid-round was only guarded by
+  the old dismissible confirm modal, which a closed tab or a phone evicting the tab
+  bypassed. A `beforeunload` guard now asks first (it stays silent for an intentional
+  leave), and the resume screen is no longer a dead end: it offers *Try again*, which
+  re-claims the seat with the same `ResumeGame()` call the bot uses, shows a note when the
+  retry goes unanswered, and only reports a lost session after the server says the player
+  is gone.
+- **The leaderboard flashed for a frame, or never appeared.** `DisplayFinalResult` had
+  become a no-op upstream after the podium was removed, so the end-of-game table had
+  nowhere to land, and the round table was painted at the moment the screen was switching
+  away. Standings now repaint while the result screen *and* the applause screen are up,
+  the applause screen carries the final table (gold/silver/bronze rows and medals), and a
+  late roster update can no longer wipe it.
+- **The avatar circle next to a nickname was sometimes empty.** Avatars are now a circle
+  with initials painted immediately plus an image layered on top: it hides the initials on
+  `load` and removes itself on `error`, so a slow, blocked or 404 picture leaves readable
+  initials instead of a hole (also applied to team rows and custom avatars).
 - The camera/screenshot asset in the footer resolved to a non-existent path.
 - Arabic no longer inherits the Latin `lang` attribute (`<html lang="ar" dir="rtl">`).
 - A `<select>` value in the header could not be styled on iOS; the language picker is now
