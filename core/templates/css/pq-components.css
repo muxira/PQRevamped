@@ -1,0 +1,198 @@
+/* Visibility guard: goTo() shows and hides groups with the hidden attribute, so any
+   display rule elsewhere must lose to it or two screens stack. Keep this first. */
+[hidden] { display: none !important; }
+
+/* Motion vocabulary, copied from the design bundle. */
+
+@keyframes pq-in { 0% { opacity: 0; transform: scale(.94) translateY(10px); } 100% { opacity: 1; transform: none; } }
+@keyframes pq-pop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes pq-pulse { 0%, 100% { transform: scale(1); } 35% { transform: scale(1.24) rotate(-4deg); } 70% { transform: scale(.97) rotate(3deg); } }
+@keyframes pq-ring { 0% { transform: scale(.9); opacity: .55; } 100% { transform: scale(1.6); opacity: 0; } }
+@keyframes pq-bar { 0% { width: 0; } 100% { width: var(--w, 50%); } }
+/* Parametrised so a full-page layer can carry the pieces the whole viewport height; the
+   fallback is the design's fixed 620px, which is what the podium layer keeps using. */
+@keyframes pq-fall { 0% { transform: translateY(-40px) rotate(0); opacity: 1; } 100% { transform: translateY(var(--fall, 620px)) rotate(540deg); opacity: .9; } }
+@keyframes pq-float { 0% { opacity: 0; transform: translateY(0) scale(.6); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-160px) scale(1.25); } }
+/* Parametrised so a consumer that is itself dimmed (the blocked buzzer at opacity .3)
+   blinks relative to its own level instead of being lifted to full opacity by the
+   animation. The fallback reproduces the design's 1 <-> .25 exactly. */
+@keyframes pq-blink { 0%, 100% { opacity: var(--pq-blink-opacity, 1); } 50% { opacity: calc(var(--pq-blink-opacity, 1) * .25); } }
+
+/* Winning the buzzer is the loudest moment of the game and it used to be a silent screen
+   swap. Both layers are spawned by JS at the press point and remove themselves. */
+@keyframes pq-shock { to { transform: scale(2.6); opacity: 0; border-width: 1px; } }
+@keyframes pq-flash { from { opacity: .45; } to { opacity: 0; } }
+
+.pq-shock {
+    position: fixed; width: 120px; height: 120px; margin: -60px 0 0 -60px;
+    border: 6px solid var(--pq-accent); border-radius: 50%;
+    pointer-events: none; z-index: 98;
+    animation: pq-shock .5s cubic-bezier(.2, .8, .2, 1) forwards;
+}
+
+.pq-flash {
+    position: fixed; inset: 0; background: var(--pq-accent);
+    pointer-events: none; z-index: 97;
+    animation: pq-flash .32s ease-out forwards;
+}
+
+/* goTo() puts .screen-enter on every shown group: the entry motion of all screens
+   changes here, without touching JS. */
+.screen-enter { animation: pq-in .42s var(--pq-spring) both; }
+
+@keyframes pq-fade { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-property: opacity, color, background-color, border-color !important;
+        scroll-behavior: auto !important;
+    }
+
+    .screen-enter { animation: pq-fade .2s ease-out both !important; }
+}
+
+/* Component vocabulary shared by every screen. */
+
+.pq-panel {
+    background: var(--pq-panel);
+    border: var(--pq-border);
+    border-radius: var(--pq-radius);
+    box-shadow: var(--pq-shadow);
+    padding: 18px 16px;
+    box-sizing: border-box;
+}
+
+.pq-stack   { display: flex; flex-direction: column; gap: 12px; }
+.pq-eyebrow { font-size: 12px; font-weight: 700; color: var(--pq-muted); }
+.pq-title   { font-size: 26px; font-weight: 700; letter-spacing: -.02em; color: var(--pq-ink); }
+.pq-sub     { font-size: 12px; font-weight: 400; color: var(--pq-muted); }
+
+.pq-row {
+    display: flex; align-items: center; gap: 11px;
+    padding: 11px 12px; border-radius: 18px;
+    background: var(--pq-panel); border: var(--pq-border); box-shadow: var(--pq-shadow);
+}
+
+.pq-avatar {
+    flex: none; width: 44px; height: 44px; border-radius: 50%;
+    background: var(--pq-soft); border: 2px dashed var(--pq-dash);
+    display: grid; place-items: center;
+    font-size: 14px; font-weight: 700; color: var(--pq-accent);
+    object-fit: cover; overflow: hidden;
+}
+
+.pq-avatar--sm { width: 32px; height: 32px; font-size: 12px; }
+
+/* Buttons: the existing .button family is retargeted rather than replaced. */
+
+body.partyquiz .button {
+    font-family: "partyquiz", Play, system-ui, sans-serif;
+    font-size: 18px; font-weight: 700; color: var(--pq-on-accent);
+    border: none; cursor: pointer;
+    padding: 16px; border-radius: var(--pq-radius);
+    background: var(--pq-accent); box-shadow: var(--pq-btn-shadow);
+    text-shadow: none; text-align: center;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform .08s ease-out, box-shadow .08s ease-out;
+    user-select: none; -webkit-touch-callout: none;
+    line-height: 1.2; word-break: break-word;
+}
+
+/* The hard offset shadow is the button's depth, so a press has to travel exactly that far
+   and take the shadow with it. Sliding 2px while the shadow stays put reads as a slip. */
+body.partyquiz .button:active { transform: translate(4px, 4px); box-shadow: 0 0 0 transparent; }
+body.partyquiz .button.color-green  { background: var(--pq-success-fill); width: auto; }
+body.partyquiz .button.color-red,
+body.partyquiz .button.color-pink   { background: var(--pq-danger-fill); }
+body.partyquiz .button.color-blue   { background: #1bc1f7; color: #1a0f2e; }
+body.partyquiz .button.color-purple { background: var(--pq-soft); color: var(--pq-accent); box-shadow: none; opacity: 1; }
+body.partyquiz .button.color-white  { background: var(--pq-menu); color: var(--pq-ink); border: var(--pq-border); }
+body.partyquiz .button.color-purple:active,
+body.partyquiz .pq-btn-ghost:active { transform: translateY(2px); }
+body.partyquiz .button[disabled]    { opacity: .45; box-shadow: none; }
+
+.pq-btn-ghost {
+    background: transparent !important; color: var(--pq-muted) !important;
+    border: 1.5px solid var(--pq-line) !important; box-shadow: none !important;
+    border-radius: 14px !important; padding: 11px !important; font-size: 13px !important;
+}
+
+/* Fields. */
+
+body.partyquiz .info-block-input,
+body.partyquiz .game-input {
+    width: 100%; box-sizing: border-box;
+    font-family: "partyquiz", Play, system-ui, sans-serif;
+    font-size: 17px; font-weight: 700;
+    padding: 15px; border-radius: 16px;
+    border: 2px solid var(--pq-line);
+    background: var(--pq-field); color: var(--pq-ink);
+    outline: none;
+}
+
+body.partyquiz .info-block-input:focus,
+body.partyquiz .game-input:focus { border-color: var(--pq-accent); }
+
+body.partyquiz .info-block-input::placeholder { color: var(--pq-muted); font-weight: 400; }
+
+/* Right-to-left: layout mirroring is carried entirely by logical properties; i18n.js already sets
+   document.documentElement.dir = 'rtl' for the arabic locale. Only the handful of
+   glyphs and outward nudges that a logical property cannot express live here. */
+
+/* Forward chevrons: they point at the next step, so they must point the other way. */
+[dir="rtl"] #join_game_button svg,
+[dir="rtl"] .role-card-arrow svg,
+[dir="rtl"] .qr-password-actions .button svg { transform: scaleX(-1); }
+
+/* Corner nudges: the close button hangs outward past its panel corner. */
+[dir="rtl"] .popup-close { transform: translate(-30%, -30%); }
+
+/* The emoji FAB swaps corners via inset-inline-*; its scale origin has to follow. */
+[dir="rtl"] overlay#emoji_layer { transform-origin: bottom left; }
+
+/* Tomodachi-style wavy stripes on hover/press. Overlay pseudo-element rather than a
+   background-image so the colour variants' `background:` shorthand cannot wipe it, and the
+   wave is a mask rather than a coloured image so the same overlay can be white over a filled
+   button and near-black over a white card. */
+
+body.partyquiz .button,
+body.partyquiz .role-card,
+body.partyquiz .pq-choice { position: relative; overflow: hidden; }
+
+/* Surfaces painted in the panel colour need the dark ink; white waves are invisible there. */
+body.partyquiz .role-card,
+body.partyquiz .pq-choice,
+body.partyquiz .pq-btn-ghost,
+body.partyquiz .button.color-white,
+body.partyquiz .button.color-blue,
+body.partyquiz .button.color-purple { --pq-stripe: var(--pq-stripe-ink); }
+
+body.partyquiz .button::before,
+body.partyquiz .role-card::before,
+body.partyquiz .pq-choice::before {
+    content: ""; position: absolute; pointer-events: none; opacity: 0;
+    left: -100%; top: 50%; width: 300%; aspect-ratio: 1;
+    transform: translateY(-50%) rotate(-35deg);
+    background: var(--pq-stripe);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20'%3E%3Cpath fill='%23000' d='M0 5Q10 1 20 5T40 5V15Q30 19 20 15T0 15Z'/%3E%3C/svg%3E") 0 0 / 40px 20px repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20'%3E%3Cpath fill='%23000' d='M0 5Q10 1 20 5T40 5V15Q30 19 20 15T0 15Z'/%3E%3C/svg%3E") 0 0 / 40px 20px repeat;
+    transition: opacity .15s ease-out;
+}
+
+@media (hover: hover) {
+    body.partyquiz .button:hover::before,
+    body.partyquiz .role-card:hover::before,
+    body.partyquiz .pq-choice:hover::before { opacity: 1; animation: pq-stripes 1.2s linear infinite; }
+}
+
+body.partyquiz .button:active::before,
+body.partyquiz .role-card:active::before,
+body.partyquiz .pq-choice:active::before { opacity: 1; animation: pq-stripes 1.2s linear infinite; }
+
+body.partyquiz .button[disabled]::before { display: none; }
+
+/* The wave is a mask now, not a background image: the drift has to move the mask, or the
+   flat colour underneath animates nothing. */
+@keyframes pq-stripes { to { -webkit-mask-position: 40px 20px; mask-position: 40px 20px; } }

@@ -1,1 +1,392 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=client/core/templates/game.html"><title>Party Quiz Companion</title><link rel="icon" type="image/x-icon" href="favicon.ico"></head><body><a href="client/core/templates/game.html">Open</a></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
+    <title>PARTY QUIZ</title>
+
+    <link rel="stylesheet" type="text/css" href="core/templates/css/pq-tokens.css?v=10">
+
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* pq-tokens.css already declares these three on body.partyquiz (0,1,1) and is linked
+           first; matching that selector keeps this block authoritative instead of dead. */
+        body.partyquiz {
+            background-color: var(--pq-bg);
+            color: var(--pq-ink);
+            font-family: "partyquiz", Play, system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        /* Motion. pq-components.css is not linked here, so pq-in is copied verbatim: this
+           page has no other use for that file. */
+        @keyframes pq-in { 0% { opacity: 0; transform: scale(.94) translateY(10px); } 100% { opacity: 1; transform: none; } }
+
+        /* Parametrised exactly like the game's copy: a running keyframe outranks the declared
+           opacity for as long as it runs, so a hard-coded 0.7 here would blow the .14 accent
+           orb up to full strength and wash the card out. */
+        @keyframes orb-pulse {
+            0%, 100% { opacity: var(--orb-opacity, 0.7); }
+            50% { opacity: calc(var(--orb-opacity, 0.7) * 0.6); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .card, .orb { animation: none !important; }
+            *, *::before, *::after { transition-duration: .001ms !important; }
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(42px);
+            animation: orb-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .orb-1 {
+            top: -90px;
+            inset-inline-end: -70px;
+            width: 230px;
+            height: 230px;
+            background-color: var(--pq-soft);
+            --orb-opacity: .9;
+            opacity: var(--orb-opacity);
+        }
+
+        .orb-2 {
+            bottom: -80px;
+            inset-inline-start: -70px;
+            width: 210px;
+            height: 210px;
+            background-color: var(--pq-accent);
+            --orb-opacity: .14;
+            opacity: var(--orb-opacity);
+            animation-delay: 2s;
+        }
+
+        .card {
+            /* The orbs are positioned elements; an unpositioned card paints underneath them. */
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 28rem;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 22px 20px;
+            box-sizing: border-box;
+            background: var(--pq-panel);
+            border: var(--pq-border);
+            border-radius: var(--pq-radius);
+            box-shadow: var(--pq-shadow);
+            animation: pq-in .4s cubic-bezier(.34, 1.56, .64, 1) both;
+        }
+
+        .logo-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+        .logo-img { height: 68px; max-width: 80vw; object-fit: contain; display: block; }
+
+        .page-subtitle { font-size: 12px; color: var(--pq-muted); text-align: center; }
+
+        .form-group { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+
+        .field { display: flex; flex-direction: column; gap: 6px; }
+
+        .field-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--pq-muted); }
+
+        .select-wrap { position: relative; width: 100%; }
+
+        .select-wrap::after {
+            content: "";
+            position: absolute;
+            inset-inline-end: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            width: 0;
+            height: 0;
+            border-inline: 6px solid transparent;
+            border-top: 7px solid var(--pq-muted);
+            transition: border-top-color 150ms;
+        }
+
+        .select-wrap:focus-within::after { border-top-color: var(--pq-accent); }
+
+        .select-input {
+            width: 100%; box-sizing: border-box;
+            font-family: "partyquiz", Play, system-ui, sans-serif;
+            font-size: 17px; font-weight: 700;
+            /* inline-end padding leaves room for the arrow drawn by .select-wrap::after */
+            padding-block: 13px; padding-inline: 16px 44px;
+            border-radius: 16px;
+            border: 2px solid var(--pq-line);
+            background: var(--pq-field); color: var(--pq-ink);
+            outline: none; appearance: none; -webkit-appearance: none; -moz-appearance: none;
+            cursor: pointer;
+            transition: border-color 150ms;
+        }
+
+        .select-input:focus { border-color: var(--pq-accent); }
+
+        /* The native option list paints on the select's own background, and --pq-field is a
+           7%-white wash on night: composited against the browser default it comes out almost
+           white, i.e. near-white ink on near-white. Give the list an opaque surface. */
+        .select-input option { background-color: var(--pq-menu); color: var(--pq-ink); }
+
+        .btn-primary {
+            width: 100%;
+            font-family: "partyquiz", Play, system-ui, sans-serif;
+            font-size: 19px; font-weight: 700; color: var(--pq-on-accent);
+            border: none; cursor: pointer;
+            padding: 17px; border-radius: var(--pq-radius);
+            background: var(--pq-accent); box-shadow: var(--pq-btn-shadow);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: transform .1s ease-out;
+        }
+
+        .btn-primary:active { transform: translateY(2px); }
+
+        .btn-primary svg { width: 20px; height: 20px; }
+
+        @media (max-width: 425px) {
+            .card {
+                padding: 18px 16px;
+            }
+            .logo-img {
+                height: 58px;
+            }
+        }
+    </style>
+
+    <script>
+        (function () {
+            var t = null;
+            try { t = localStorage.getItem('pq_theme'); } catch (e) { t = null; }
+            if (t === 'studio' || t === 'night') document.documentElement.setAttribute('data-pq-theme', t);
+        })();
+    </script>
+</head>
+<body class="partyquiz" ontouchstart="">
+
+<div class="orb orb-1" aria-hidden="true"></div>
+<div class="orb orb-2" aria-hidden="true"></div>
+
+<div class="card">
+    <div class="logo-wrap">
+        <img class="logo-img" src="assets/party_quiz_logo_wordmark.png" alt="Party Quiz"/>
+        <p class="page-subtitle" id="subtitle_text">Choose your language to begin</p>
+    </div>
+
+    <div class="form-group">
+        <div class="field">
+            <label class="field-label" for="language_select" id="language_label">Language</label>
+            <div class="select-wrap">
+                <select class="select-input" id="language_select" aria-label="Select language">
+                    <option value="english">English</option>
+                    <option value="russian">Русский</option>
+                    <option value="spanish">Español (España)</option>
+                    <option value="spanishlatinamerica">Español (Latinoamérica)</option>
+                    <option value="german">Deutsch</option>
+                    <option value="portuguese">Português</option>
+                    <option value="french">Français</option>
+                    <option value="polish">Polska</option>
+                    <option value="italian">Italiano</option>
+                    <option value="ukrainian">Українська</option>
+                    <option value="turkish">Türkçe</option>
+                    <option value="simplifiedchinese">简体中文</option>
+                    <option value="arabic">العربية</option>
+                    <option value="czech">Čeština</option>
+                    <option value="kazakh">Қазақша</option>
+                    <option value="swedish">Svenska</option>
+                    <option value="korean">한국어</option>
+                    <option value="japanese">日本語</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-primary" id="language_start_button" type="button">
+            Start
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script type="text/javascript" src="js/language_load.js?v=3"></script>
+<script>
+    (function () {
+        const STORAGE_KEY = 'pq_lang';
+        const select = document.getElementById('language_select');
+        const startBtn = document.getElementById('language_start_button');
+        if (!select || !startBtn) return;
+
+        function safeGetStoredLang() {
+            try {
+                return localStorage.getItem(STORAGE_KEY);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function normalizeLangId(v) {
+            return String(v || '').trim().toLowerCase();
+        }
+
+        const START_LABELS = {
+            english: 'Start',
+            russian: 'Начать',
+            spanish: 'Comenzar',
+            spanishlatinamerica: 'Comenzar',
+            german: 'Starten',
+            portuguese: 'Começar',
+            french: 'Commencer',
+            polish: 'Rozpocznij',
+            italian: 'Inizia',
+            ukrainian: 'Почати',
+            turkish: 'Başla',
+            simplifiedchinese: '开始',
+            arabic: 'ابدأ',
+            czech: 'Začít',
+            kazakh: 'Бастау',
+            swedish: 'Starta',
+            korean: '시작',
+            japanese: '始める'
+        };
+
+        const SUBTITLE_LABELS = {
+            english: 'Choose your language to begin',
+            russian: 'Выберите язык, чтобы начать',
+            spanish: 'Elige tu idioma para comenzar',
+            spanishlatinamerica: 'Elige tu idioma para comenzar',
+            german: 'Wähle deine Sprache, um zu beginnen',
+            portuguese: 'Escolha seu idioma para começar',
+            french: 'Choisissez votre langue pour commencer',
+            polish: 'Wybierz język, aby rozpocząć',
+            italian: 'Scegli la tua lingua per iniziare',
+            ukrainian: 'Оберіть мову, щоб почати',
+            turkish: 'Başlamak için dilinizi seçin',
+            simplifiedchinese: '选择语言以开始',
+            arabic: 'اختر لغتك للبدء',
+            czech: 'Vyberte jazyk pro zahájení',
+            kazakh: 'Бастау үшін тілді таңдаңыз',
+            swedish: 'Välj ditt språk för att börja',
+            korean: '시작하려면 언어를 선택하세요',
+            japanese: '言語を選択して始めましょう'
+        };
+
+        const LANGUAGE_LABELS = {
+            english: 'Language',
+            russian: 'Язык',
+            spanish: 'Idioma',
+            spanishlatinamerica: 'Idioma',
+            german: 'Sprache',
+            portuguese: 'Idioma',
+            french: 'Langue',
+            polish: 'Język',
+            italian: 'Lingua',
+            ukrainian: 'Мова',
+            turkish: 'Dil',
+            simplifiedchinese: '语言',
+            arabic: 'اللغة',
+            czech: 'Jazyk',
+            kazakh: 'Тіл',
+            swedish: 'Språk',
+            korean: '언어',
+            japanese: '言語'
+        };
+
+        function detectLang() {
+            const stored = normalizeLangId(safeGetStoredLang());
+            if (stored) return stored;
+
+            const nav = normalizeLangId(navigator.language || navigator.userLanguage || '');
+            const map = [
+                {re: /^ru\b/, id: 'russian'},
+                {re: /^es\b/, id: 'spanish'},
+                {re: /^de\b/, id: 'german'},
+                {re: /^pt\b/, id: 'portuguese'},
+                {re: /^fr\b/, id: 'french'},
+                {re: /^pl\b/, id: 'polish'},
+                {re: /^it\b/, id: 'italian'},
+                {re: /^uk\b/, id: 'ukrainian'},
+                {re: /^tr\b/, id: 'turkish'},
+                {re: /^zh\b/, id: 'simplifiedchinese'},
+                {re: /^ar\b/, id: 'arabic'},
+                {re: /^cs\b/, id: 'czech'},
+                {re: /^kk\b/, id: 'kazakh'},
+                {re: /^sv\b/, id: 'swedish'},
+                {re: /^ko\b/, id: 'korean'},
+                {re: /^ja\b/, id: 'japanese'}
+            ];
+            for (let i = 0; i < map.length; i++) {
+                if (map[i].re.test(nav)) return map[i].id;
+            }
+            return 'english';
+        }
+
+        const subtitleEl = document.getElementById('subtitle_text');
+        const langLabel = document.getElementById('language_label');
+
+        function updateStartButton() {
+            const lang = normalizeLangId(select.value);
+            const label = START_LABELS[lang] || START_LABELS.english;
+            startBtn.innerHTML = label +
+                ' <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" ' +
+                'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '<path d="m9 18 6-6-6-6"/></svg>';
+            if (subtitleEl) subtitleEl.textContent = SUBTITLE_LABELS[lang] || SUBTITLE_LABELS.english;
+            if (langLabel) langLabel.textContent = LANGUAGE_LABELS[lang] || LANGUAGE_LABELS.english;
+        }
+
+        const initial = detectLang();
+        for (let i = 0; i < select.options.length; i++) {
+            if (normalizeLangId(select.options[i].value) === initial) {
+                select.value = select.options[i].value;
+                break;
+            }
+        }
+        updateStartButton();
+
+        function go() {
+            const lang = normalizeLangId(select.value);
+            if (typeof LoadLanguage === 'function') {
+                LoadLanguage(lang);
+            } else {
+                try {
+                    parent.location = 'core/templates/game.html?lang=' + encodeURIComponent(lang);
+                } catch (e) {
+                    window.location.href = 'core/templates/game.html?lang=' + encodeURIComponent(lang);
+                }
+            }
+        }
+
+        startBtn.addEventListener('click', go);
+        select.addEventListener('change', updateStartButton);
+    })();
+</script>
+</body>
+</html>
