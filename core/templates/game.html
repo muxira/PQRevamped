@@ -2,7 +2,18 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport"
-          content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
+          content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"/>
+    <meta name="theme-color" content="#7b3fe4"/>
+    <meta name="color-scheme" content="light dark"/>
+    <meta name="description" content="Party Quiz companion — join a game, pick an avatar, answer, bid and appeal from your phone."/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="Party Quiz"/>
+    <meta name="format-detection" content="telephone=no"/>
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico"/>
+    <link rel="manifest" href="../../manifest.webmanifest"/>
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png"/>
 
     <title>PARTY QUIZ</title>
 
@@ -19,7 +30,9 @@
     <link rel="stylesheet" type="text/css" href="./css/pq-tokens.css?v=10">
     <link rel="stylesheet" type="text/css" href="./css/pq-components.css?v=14">
     <link rel="stylesheet" type="text/css" href="./css/pq-bonus.css?v=5">
-    <link rel="stylesheet" type="text/css" href="./css/pq-screens.css?v=51">
+    <link rel="stylesheet" type="text/css" href="./css/pq-screens.css?v=52">
+    <!-- PQRevamped additions, kept last so they win the cascade. -->
+    <link rel="stylesheet" type="text/css" href="./css/pq-revamped.css?v=1">
 
     <script>
         (function () {
@@ -27,6 +40,17 @@
             try { t = localStorage.getItem('pq_theme'); } catch (e) { t = null; }
             if (t === 'studio' || t === 'night') document.documentElement.setAttribute('data-pq-theme', t);
         })();
+    </script>
+
+    <!-- PQRevamped: Three.js is loaded lazily by custom_avatar_3d.js, only when the
+         3D Try-On tab is opened. The import map simply gives the CDN modules a name. -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
     </script>
 </head>
 <body class="partyquiz locked" ontouchstart="">
@@ -46,6 +70,15 @@
     <header class="pq-header">
         <icon></icon>
         <div class="connection-dot" id="connection_dot"></div>
+        <!-- PQRevamped: settings (language / theme / haptics / wake lock). -->
+        <button class="pq-icon-button" id="pq_settings_button" type="button"
+                aria-label="{{settings}}" title="{{settings}}" aria-haspopup="dialog" aria-controls="pq_settings_sheet">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.36.4.66.73.87.33.2.71.31 1.1.31H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+        </button>
         <button class="pq-theme-toggle" id="pq_theme_toggle" type="button" hidden
                 onclick="ToggleTheme()" aria-label="{{theme_switch}}" title="{{theme_switch}}"></button>
         <button class="refresh-button" id="refreshButton" type="button" onclick="handleRefresh()" aria-label="{{refresh}}" title="{{refresh}}">
@@ -156,6 +189,11 @@
 
     <section id="resume_game_group" class="resume-game-block glass-card" hidden>
         <p class="resume-game-block-message">{{resume_server_unreachable}}</p>
+        <!-- PQRevamped: the seat is usually still held by the matchmaker, so ask for it back
+             before offering the only way out. The note appears when the retry has gone
+             unanswered for a few seconds; the card itself stays usable either way. -->
+        <button class="button color-green resume-game-block-button" onclick="pqTryResume()">{{reconnect_retry}}</button>
+        <p id="resume_game_note" class="resume-game-block-message" hidden>{{resume_retry_note}}</p>
         <button class="button color-red resume-game-block-button" onclick="LeaveGame()">{{leave_game}}</button>
     </section>
 
@@ -492,6 +530,13 @@
     </div>
 
     <div class="glass-card column" id="applause_group" hidden>
+        <!-- PQRevamped: the game-over applause is also the final leaderboard. Upstream's
+             podium was removed and DisplayFinalResult left as a no-op, so the last table of
+             a game never appeared anywhere; both messages now land on this group. -->
+        <div id="pq_final_board" class="pq-final-board" hidden>
+            <span class="pq-eyebrow">{{game_result}}</span>
+            <div id="pq_standings_final" class="pq-standings"></div>
+        </div>
         <div class="applause-emoji" id="applause_emoji" role="button" tabindex="0" onclick="PlayClap()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PlayClap();}">👏</div>
         <button type="button" class="button color-pink clap-button" onclick="PlayClap()">{{clap_button}}</button>
         <a id="wishlist_link" class="button color-white wishlist-button" hidden href="https://store.steampowered.com/app/2024070/?utm_source=partyquiz_client" target="_blank" rel="noopener noreferrer">{{wishlist_button}}</a>
@@ -841,8 +886,37 @@
         <div id="custom_avatar_panel" class="custom-avatar-panel-v2">
             <input id="custom_avatar_file" type="file" accept="image/png,image/jpeg,image/jpg" hidden/>
 
+            <!-- PQRevamped: Flat (canvas gestures from avatars.js) / 3D Try-On. -->
+            <div class="ca-tabs" id="custom_avatar_view_tabs" role="tablist" aria-label="{{set_avatar}}">
+                <button type="button" class="ca-tab ca-tab--active" id="ca_tab_flat" role="tab"
+                        aria-selected="true" aria-controls="ca_flat_view" data-i18n="ca_tab_flat">2D</button>
+                <button type="button" class="ca-tab" id="ca_tab_3d" role="tab"
+                        aria-selected="false" aria-controls="ca_3d_view" data-i18n="ca_tab_3d">3D</button>
+            </div>
             <div class="ca-preview-center">
-                <canvas id="custom_avatar_preview" width="256" height="256"></canvas>
+                <div class="ca-view ca-view--flat" id="ca_flat_view" role="tabpanel" aria-labelledby="ca_tab_flat">
+                    <canvas id="custom_avatar_preview" width="256" height="256"></canvas>
+                </div>
+                <div class="ca-view ca-view--3d" id="ca_3d_view" role="tabpanel" aria-labelledby="ca_tab_3d" hidden>
+                    <div class="ca-3d-container" id="ca_3d_container"></div>
+                    <div class="ca-3d-loading" id="ca_3d_loading" hidden>
+                        <span class="ca-3d-spinner" aria-hidden="true"></span>
+                        <span data-i18n="ca_loading">Loading 3D…</span>
+                    </div>
+                    <p class="ca-3d-status" id="ca_3d_status" hidden role="status"></p>
+                    <button type="button" class="ca-3d-reset" id="ca_3d_reset" hidden
+                            aria-label="{{ca_reset_view}}" title="{{ca_reset_view}}">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+                        </svg>
+                    </button>
+                    <p class="ca-3d-hint" id="ca_3d_hint">
+                        <span aria-hidden="true">☝</span> <span data-i18n="ca_hint_orbit">Drag to orbit</span>
+                        <span class="ca-3d-hint__sep" aria-hidden="true">·</span>
+                        <span aria-hidden="true">🤏</span> <span data-i18n="ca_hint_pinch">Pinch to zoom</span>
+                    </p>
+                </div>
             </div>
 
             <div class="ca-hints">
@@ -1024,11 +1098,15 @@
 <script type="text/javascript" src="./js/i18n.js?v=8"></script>
 <script type="text/javascript" src="./js/avatars_list.js?v=7"></script>
 <script type="text/javascript" src="./js/avatars.js?v=12"></script>
-<script type="text/javascript" src="./js/commands.js?v=35"></script>
-<script type="text/javascript" src="./js/main.js?v=109"></script>
+<script type="text/javascript" src="./js/commands.js?v=36"></script>
+<script type="text/javascript" src="./js/main.js?v=110"></script>
 <script type="text/javascript" src="./js/bonus-lootbox.js?v=2"></script>
 <script type="text/javascript" src="./js/bonus.js?v=5"></script>
 <script type="text/javascript" src="./js/selection.js?v=7"></script>
 <script type="text/javascript" src="./js/utils.js?v=8"></script>
 <script src="js/emoji.js?v=9"></script>
+<!-- PQRevamped: 3D Try-On (ES module, Three.js is fetched on demand) and the
+     settings / mobile QOL layer. Both are additive and never patch upstream state. -->
+<script type="module" src="./js/custom_avatar_3d.js?v=2"></script>
+<script type="text/javascript" src="./js/revamped.js?v=1"></script>
 </body>

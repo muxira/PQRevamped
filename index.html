@@ -1,283 +1,333 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
-    <title>PARTY QUIZ</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta name="theme-color" content="#7b3fe4"/>
+    <meta name="color-scheme" content="light dark"/>
+    <meta name="description" content="Party Quiz companion — choose your language and join the game from your phone."/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="Party Quiz"/>
+    <meta name="format-detection" content="telephone=no"/>
+    <title>Party Quiz — Companion</title>
 
-    <link rel="stylesheet" type="text/css" href="core/templates/css/pq-tokens.css?v=10">
-
-    <style>
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        /* pq-tokens.css already declares these three on body.partyquiz (0,1,1) and is linked
-           first; matching that selector keeps this block authoritative instead of dead. */
-        body.partyquiz {
-            background-color: var(--pq-bg);
-            color: var(--pq-ink);
-            font-family: "partyquiz", Play, system-ui, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
-            min-height: 100vh;
-        }
-
-        /* Motion. pq-components.css is not linked here, so pq-in is copied verbatim: this
-           page has no other use for that file. */
-        @keyframes pq-in { 0% { opacity: 0; transform: scale(.94) translateY(10px); } 100% { opacity: 1; transform: none; } }
-
-        /* Parametrised exactly like the game's copy: a running keyframe outranks the declared
-           opacity for as long as it runs, so a hard-coded 0.7 here would blow the .14 accent
-           orb up to full strength and wash the card out. */
-        @keyframes orb-pulse {
-            0%, 100% { opacity: var(--orb-opacity, 0.7); }
-            50% { opacity: calc(var(--orb-opacity, 0.7) * 0.6); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .card, .orb { animation: none !important; }
-            *, *::before, *::after { transition-duration: .001ms !important; }
-        }
-
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(42px);
-            animation: orb-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .orb-1 {
-            top: -90px;
-            inset-inline-end: -70px;
-            width: 230px;
-            height: 230px;
-            background-color: var(--pq-soft);
-            --orb-opacity: .9;
-            opacity: var(--orb-opacity);
-        }
-
-        .orb-2 {
-            bottom: -80px;
-            inset-inline-start: -70px;
-            width: 210px;
-            height: 210px;
-            background-color: var(--pq-accent);
-            --orb-opacity: .14;
-            opacity: var(--orb-opacity);
-            animation-delay: 2s;
-        }
-
-        .card {
-            /* The orbs are positioned elements; an unpositioned card paints underneath them. */
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 28rem;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            padding: 22px 20px;
-            box-sizing: border-box;
-            background: var(--pq-panel);
-            border: var(--pq-border);
-            border-radius: var(--pq-radius);
-            box-shadow: var(--pq-shadow);
-            animation: pq-in .4s cubic-bezier(.34, 1.56, .64, 1) both;
-        }
-
-        .logo-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-
-        .logo-img { height: 68px; max-width: 80vw; object-fit: contain; display: block; }
-
-        .page-subtitle { font-size: 12px; color: var(--pq-muted); text-align: center; }
-
-        .form-group { width: 100%; display: flex; flex-direction: column; gap: 14px; }
-
-        .field { display: flex; flex-direction: column; gap: 6px; }
-
-        .field-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--pq-muted); }
-
-        .select-wrap { position: relative; width: 100%; }
-
-        .select-wrap::after {
-            content: "";
-            position: absolute;
-            inset-inline-end: 1.25rem;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            width: 0;
-            height: 0;
-            border-inline: 6px solid transparent;
-            border-top: 7px solid var(--pq-muted);
-            transition: border-top-color 150ms;
-        }
-
-        .select-wrap:focus-within::after { border-top-color: var(--pq-accent); }
-
-        .select-input {
-            width: 100%; box-sizing: border-box;
-            font-family: "partyquiz", Play, system-ui, sans-serif;
-            font-size: 17px; font-weight: 700;
-            /* inline-end padding leaves room for the arrow drawn by .select-wrap::after */
-            padding-block: 13px; padding-inline: 16px 44px;
-            border-radius: 16px;
-            border: 2px solid var(--pq-line);
-            background: var(--pq-field); color: var(--pq-ink);
-            outline: none; appearance: none; -webkit-appearance: none; -moz-appearance: none;
-            cursor: pointer;
-            transition: border-color 150ms;
-        }
-
-        .select-input:focus { border-color: var(--pq-accent); }
-
-        /* The native option list paints on the select's own background, and --pq-field is a
-           7%-white wash on night: composited against the browser default it comes out almost
-           white, i.e. near-white ink on near-white. Give the list an opaque surface. */
-        .select-input option { background-color: var(--pq-menu); color: var(--pq-ink); }
-
-        .btn-primary {
-            width: 100%;
-            font-family: "partyquiz", Play, system-ui, sans-serif;
-            font-size: 19px; font-weight: 700; color: var(--pq-on-accent);
-            border: none; cursor: pointer;
-            padding: 17px; border-radius: var(--pq-radius);
-            background: var(--pq-accent); box-shadow: var(--pq-btn-shadow);
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: transform .1s ease-out;
-        }
-
-        .btn-primary:active { transform: translateY(2px); }
-
-        .btn-primary svg { width: 20px; height: 20px; }
-
-        @media (max-width: 425px) {
-            .card {
-                padding: 18px 16px;
-            }
-            .logo-img {
-                height: 58px;
-            }
-        }
-    </style>
+    <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"/>
+    <link rel="manifest" href="manifest.webmanifest"/>
+    <link rel="preload" href="assets/fonts/party-quiz-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="assets/fonts/party-quiz-sans-700.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="core/templates/css/pq-tokens.css?v=10"/>
 
     <script>
+        // Apply the stored theme before the first paint to avoid a flash.
         (function () {
             var t = null;
             try { t = localStorage.getItem('pq_theme'); } catch (e) { t = null; }
             if (t === 'studio' || t === 'night') document.documentElement.setAttribute('data-pq-theme', t);
         })();
     </script>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            min-height: 100dvh;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+            background-color: var(--pq-bg);
+            background-image: var(--pq-spot);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: var(--pq-ink);
+            font-family: "partyquiz", "Play", system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(54px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .orb--one {
+            width: 240px; height: 240px;
+            top: -90px; inset-inline-end: -70px;
+            background: var(--pq-soft);
+            opacity: .85;
+        }
+
+        .orb--two {
+            width: 220px; height: 220px;
+            bottom: -100px; inset-inline-start: -70px;
+            background: color-mix(in srgb, var(--pq-primary) 22%, transparent);
+            opacity: .75;
+        }
+
+        .shell {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 520px);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            letter-spacing: .02em;
+            color: var(--pq-muted);
+            font-size: .85rem;
+            text-transform: uppercase;
+        }
+
+        .brand::before {
+            content: "";
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--pq-primary);
+            box-shadow: 0 0 0 4px var(--pq-soft);
+        }
+
+        .theme-toggle {
+            appearance: none;
+            border: var(--pq-border);
+            background: var(--pq-panel);
+            color: var(--pq-ink);
+            border-radius: 14px;
+            width: 44px;
+            height: 44px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: var(--pq-btn-shadow);
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+
+        .theme-toggle:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--pq-line); }
+
+        .card {
+            background: var(--pq-panel);
+            border: var(--pq-border);
+            border-radius: calc(var(--pq-radius) + 6px);
+            box-shadow: var(--pq-shadow);
+            padding: 28px 22px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: rise .35s cubic-bezier(.2, .7, .2, 1) both;
+        }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(12px) scale(.985); }
+            to { opacity: 1; transform: none; }
+        }
+
+        .logo {
+            width: min(100%, 340px);
+            height: auto;
+            margin: 0 auto;
+            display: block;
+            filter: drop-shadow(0 6px 14px rgba(29, 18, 53, .16));
+        }
+
+        .subtitle {
+            margin: 0;
+            text-align: center;
+            color: var(--pq-muted);
+            font-size: 1rem;
+            line-height: 1.45;
+        }
+
+        .section-label {
+            margin: 0 0 10px;
+            font-size: .78rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--pq-muted);
+            font-weight: 700;
+        }
+
+        .languages {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            max-height: min(46vh, 420px);
+            overflow-y: auto;
+            padding: 2px;
+            scrollbar-width: thin;
+            overscroll-behavior: contain;
+        }
+
+        .lang {
+            appearance: none;
+            border: 2px solid transparent;
+            background: var(--pq-soft);
+            color: var(--pq-ink);
+            border-radius: 12px;
+            min-height: 44px;
+            padding: 10px 12px;
+            font: inherit;
+            font-size: .95rem;
+            font-weight: 700;
+            text-align: start;
+            cursor: pointer;
+            transition: background .12s ease, border-color .12s ease, transform .12s ease;
+        }
+
+        .lang:hover { background: color-mix(in srgb, var(--pq-primary) 16%, transparent); }
+        .lang[aria-pressed="true"] {
+            background: var(--pq-primary);
+            border-color: var(--pq-line);
+            color: var(--pq-on-accent);
+            box-shadow: 2px 2px 0 var(--pq-line);
+        }
+
+        .lang .suggested {
+            display: inline-block;
+            margin-inline-start: 6px;
+            font-size: .62rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: var(--pq-gold);
+            color: var(--pq-gold-ink);
+            vertical-align: middle;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .start {
+            appearance: none;
+            border: var(--pq-border);
+            border-radius: 16px;
+            background: var(--pq-primary);
+            color: var(--pq-on-accent);
+            font: inherit;
+            font-size: 1.05rem;
+            font-weight: 700;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: var(--pq-btn-shadow);
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+
+        .start:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--pq-line); }
+        .start svg { width: 20px; height: 20px; }
+
+        .meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            color: var(--pq-muted);
+            font-size: .8rem;
+            text-align: center;
+        }
+
+        .meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+        .meta .dot { opacity: .5; }
+
+        @media (min-width: 480px) {
+            .languages { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 360px) {
+            .card { padding: 22px 16px 18px; }
+            .lang { font-size: .88rem; padding: 9px 10px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+        }
+    </style>
 </head>
-<body class="partyquiz" ontouchstart="">
+<body ontouchstart="">
+<div class="orb orb--one" aria-hidden="true"></div>
+<div class="orb orb--two" aria-hidden="true"></div>
 
-<div class="orb orb-1" aria-hidden="true"></div>
-<div class="orb orb-2" aria-hidden="true"></div>
-
-<div class="card">
-    <div class="logo-wrap">
-        <img class="logo-img" src="assets/party_quiz_logo_wordmark.png" alt="Party Quiz"/>
-        <p class="page-subtitle" id="subtitle_text">Choose your language to begin</p>
+<main class="shell">
+    <div class="topbar">
+        <span class="brand">Companion</span>
+        <button class="theme-toggle" id="theme_toggle" type="button" aria-label="Switch theme" title="Switch theme">☾</button>
     </div>
 
-    <div class="form-group">
-        <div class="field">
-            <label class="field-label" for="language_select" id="language_label">Language</label>
-            <div class="select-wrap">
-                <select class="select-input" id="language_select" aria-label="Select language">
-                    <option value="english">English</option>
-                    <option value="russian">Русский</option>
-                    <option value="spanish">Español (España)</option>
-                    <option value="spanishlatinamerica">Español (Latinoamérica)</option>
-                    <option value="german">Deutsch</option>
-                    <option value="portuguese">Português</option>
-                    <option value="french">Français</option>
-                    <option value="polish">Polska</option>
-                    <option value="italian">Italiano</option>
-                    <option value="ukrainian">Українська</option>
-                    <option value="turkish">Türkçe</option>
-                    <option value="simplifiedchinese">简体中文</option>
-                    <option value="arabic">العربية</option>
-                    <option value="czech">Čeština</option>
-                    <option value="kazakh">Қазақша</option>
-                    <option value="swedish">Svenska</option>
-                    <option value="korean">한국어</option>
-                    <option value="japanese">日本語</option>
-                </select>
-            </div>
+    <section class="card">
+        <img class="logo" src="assets/party_quiz_logo_wordmark.png" alt="Party Quiz" width="340" height="96"/>
+        <p class="subtitle" id="subtitle">Choose your language to begin</p>
+
+        <div>
+            <p class="section-label" id="language_label">Language</p>
+            <div class="languages" id="languages" role="group" aria-labelledby="language_label"></div>
         </div>
 
-        <button class="btn-primary" id="language_start_button" type="button">
-            Start
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m9 18 6-6-6-6"/>
-            </svg>
+        <button class="start" id="start" type="button">
+            <span id="start_label">Start</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
         </button>
-    </div>
-</div>
+    </section>
 
-<script type="text/javascript" src="js/language_load.js?v=3"></script>
+    <p class="meta">
+        <span>Unofficial companion for Party Quiz</span>
+        <span class="dot">·</span>
+        <a href="https://github.com/muxira/PQRevamped" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </p>
+</main>
+
 <script>
     (function () {
-        const STORAGE_KEY = 'pq_lang';
-        const select = document.getElementById('language_select');
-        const startBtn = document.getElementById('language_start_button');
-        if (!select || !startBtn) return;
+        'use strict';
 
-        function safeGetStoredLang() {
-            try {
-                return localStorage.getItem(STORAGE_KEY);
-            } catch (e) {
-                return null;
-            }
-        }
+        var STORAGE_KEY = 'pq_lang';
 
-        function normalizeLangId(v) {
-            return String(v || '').trim().toLowerCase();
-        }
+        var LANGS = [
+            ['english', 'English'], ['russian', 'Русский'], ['ukrainian', 'Українська'],
+            ['spanish', 'Español'], ['spanishlatinamerica', 'Español (LatAm)'],
+            ['german', 'Deutsch'], ['portuguese', 'Português'], ['french', 'Français'],
+            ['polish', 'Polski'], ['italian', 'Italiano'], ['turkish', 'Türkçe'],
+            ['czech', 'Čeština'], ['swedish', 'Svenska'], ['kazakh', 'Қазақша'],
+            ['simplifiedchinese', '简体中文'], ['japanese', '日本語'], ['korean', '한국어'],
+            ['arabic', 'العربية']
+        ];
 
-        const START_LABELS = {
-            english: 'Start',
-            russian: 'Начать',
-            spanish: 'Comenzar',
-            spanishlatinamerica: 'Comenzar',
-            german: 'Starten',
-            portuguese: 'Começar',
-            french: 'Commencer',
-            polish: 'Rozpocznij',
-            italian: 'Inizia',
-            ukrainian: 'Почати',
-            turkish: 'Başla',
-            simplifiedchinese: '开始',
-            arabic: 'ابدأ',
-            czech: 'Začít',
-            kazakh: 'Бастау',
-            swedish: 'Starta',
-            korean: '시작',
-            japanese: '始める'
+        var START_LABELS = {
+            english: 'Start', russian: 'Начать', spanish: 'Comenzar', spanishlatinamerica: 'Comenzar',
+            german: 'Starten', portuguese: 'Começar', french: 'Commencer', polish: 'Rozpocznij',
+            italian: 'Inizia', ukrainian: 'Почати', turkish: 'Başla', simplifiedchinese: '开始',
+            arabic: 'ابدأ', czech: 'Začít', kazakh: 'Бастау', swedish: 'Starta',
+            korean: '시작', japanese: '始める'
         };
 
-        const SUBTITLE_LABELS = {
+        var SUBTITLE_LABELS = {
             english: 'Choose your language to begin',
             russian: 'Выберите язык, чтобы начать',
             spanish: 'Elige tu idioma para comenzar',
@@ -298,94 +348,132 @@
             japanese: '言語を選択して始めましょう'
         };
 
-        const LANGUAGE_LABELS = {
-            english: 'Language',
-            russian: 'Язык',
-            spanish: 'Idioma',
-            spanishlatinamerica: 'Idioma',
-            german: 'Sprache',
-            portuguese: 'Idioma',
-            french: 'Langue',
-            polish: 'Język',
-            italian: 'Lingua',
-            ukrainian: 'Мова',
-            turkish: 'Dil',
-            simplifiedchinese: '语言',
-            arabic: 'اللغة',
-            czech: 'Jazyk',
-            kazakh: 'Тіл',
-            swedish: 'Språk',
-            korean: '언어',
-            japanese: '言語'
+        var LANGUAGE_LABELS = {
+            english: 'Language', russian: 'Язык', spanish: 'Idioma', spanishlatinamerica: 'Idioma',
+            german: 'Sprache', portuguese: 'Idioma', french: 'Langue', polish: 'Język',
+            italian: 'Lingua', ukrainian: 'Мова', turkish: 'Dil', simplifiedchinese: '语言',
+            arabic: 'اللغة', czech: 'Jazyk', kazakh: 'Тіл', swedish: 'Språk',
+            korean: '언어', japanese: '言語'
         };
 
-        function detectLang() {
-            const stored = normalizeLangId(safeGetStoredLang());
-            if (stored) return stored;
+        var LANG_TAGS = {
+            arabic: 'ar', czech: 'cs', english: 'en', french: 'fr', german: 'de', italian: 'it',
+            japanese: 'ja', kazakh: 'kk', korean: 'ko', polish: 'pl', portuguese: 'pt', russian: 'ru',
+            simplifiedchinese: 'zh-Hans', spanish: 'es', spanishlatinamerica: 'es-419', swedish: 'sv',
+            turkish: 'tr', ukrainian: 'uk'
+        };
+        var RTL = { arabic: true };
+        var SUGGESTED = {};
 
-            const nav = normalizeLangId(navigator.language || navigator.userLanguage || '');
-            const map = [
-                {re: /^ru\b/, id: 'russian'},
-                {re: /^es\b/, id: 'spanish'},
-                {re: /^de\b/, id: 'german'},
-                {re: /^pt\b/, id: 'portuguese'},
-                {re: /^fr\b/, id: 'french'},
-                {re: /^pl\b/, id: 'polish'},
-                {re: /^it\b/, id: 'italian'},
-                {re: /^uk\b/, id: 'ukrainian'},
-                {re: /^tr\b/, id: 'turkish'},
-                {re: /^zh\b/, id: 'simplifiedchinese'},
-                {re: /^ar\b/, id: 'arabic'},
-                {re: /^cs\b/, id: 'czech'},
-                {re: /^kk\b/, id: 'kazakh'},
-                {re: /^sv\b/, id: 'swedish'},
-                {re: /^ko\b/, id: 'korean'},
-                {re: /^ja\b/, id: 'japanese'}
+        function stored(key) {
+            try { return localStorage.getItem(key); } catch (e) { return null; }
+        }
+
+        function store(key, value) {
+            try { localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+        }
+
+        function normalize(value) {
+            return String(value || '').trim().toLowerCase();
+        }
+
+        function detectLang() {
+            var fromQuery = null;
+            try { fromQuery = new URLSearchParams(location.search).get('lang'); } catch (e) { /* ignore */ }
+            if (fromQuery && START_LABELS[normalize(fromQuery)]) return normalize(fromQuery);
+
+            var saved = normalize(stored(STORAGE_KEY));
+            if (START_LABELS[saved]) return saved;
+
+            var nav = normalize(navigator.language || navigator.userLanguage || '');
+            var map = [
+                [/^ru\b/, 'russian'], [/^uk\b/, 'ukrainian'], [/^es-419\b/, 'spanishlatinamerica'],
+                [/^es\b/, 'spanish'], [/^de\b/, 'german'], [/^pt\b/, 'portuguese'], [/^fr\b/, 'french'],
+                [/^pl\b/, 'polish'], [/^it\b/, 'italian'], [/^tr\b/, 'turkish'], [/^zh\b/, 'simplifiedchinese'],
+                [/^ar\b/, 'arabic'], [/^cs\b/, 'czech'], [/^kk\b/, 'kazakh'], [/^sv\b/, 'swedish'],
+                [/^ko\b/, 'korean'], [/^ja\b/, 'japanese']
             ];
-            for (let i = 0; i < map.length; i++) {
-                if (map[i].re.test(nav)) return map[i].id;
+            for (var i = 0; i < map.length; i++) {
+                if (map[i][0].test(nav)) { SUGGESTED[map[i][1]] = true; return map[i][1]; }
             }
             return 'english';
         }
 
-        const subtitleEl = document.getElementById('subtitle_text');
-        const langLabel = document.getElementById('language_label');
+        var grid = document.getElementById('languages');
+        var subtitle = document.getElementById('subtitle');
+        var languageLabel = document.getElementById('language_label');
+        var startLabel = document.getElementById('start_label');
+        var startButton = document.getElementById('start');
+        var selected = detectLang();
 
-        function updateStartButton() {
-            const lang = normalizeLangId(select.value);
-            const label = START_LABELS[lang] || START_LABELS.english;
-            startBtn.innerHTML = label +
-                ' <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" ' +
-                'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-                '<path d="m9 18 6-6-6-6"/></svg>';
-            if (subtitleEl) subtitleEl.textContent = SUBTITLE_LABELS[lang] || SUBTITLE_LABELS.english;
-            if (langLabel) langLabel.textContent = LANGUAGE_LABELS[lang] || LANGUAGE_LABELS.english;
-        }
+        LANGS.forEach(function (entry) {
+            var id = entry[0];
+            var label = entry[1];
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'lang';
+            button.dataset.lang = id;
+            button.setAttribute('lang', id === 'simplifiedchinese' ? 'zh-Hans' : id);
+            button.innerHTML = label + (SUGGESTED[id] ? '<span class="suggested">auto</span>' : '');
+            button.addEventListener('click', function () { select(id); });
+            grid.appendChild(button);
+        });
 
-        const initial = detectLang();
-        for (let i = 0; i < select.options.length; i++) {
-            if (normalizeLangId(select.options[i].value) === initial) {
-                select.value = select.options[i].value;
-                break;
-            }
+        function select(id) {
+            selected = START_LABELS[id] ? id : 'english';
+            Array.prototype.forEach.call(grid.children, function (button) {
+                button.setAttribute('aria-pressed', String(button.dataset.lang === selected));
+            });
+            subtitle.textContent = SUBTITLE_LABELS[selected] || SUBTITLE_LABELS.english;
+            languageLabel.textContent = LANGUAGE_LABELS[selected] || LANGUAGE_LABELS.english;
+            startLabel.textContent = START_LABELS[selected] || START_LABELS.english;
+            document.documentElement.lang = LANG_TAGS[selected] || 'en';
+            document.documentElement.dir = RTL[selected] ? 'rtl' : 'ltr';
+            store(STORAGE_KEY, selected);
         }
-        updateStartButton();
 
         function go() {
-            const lang = normalizeLangId(select.value);
-            if (typeof LoadLanguage === 'function') {
-                LoadLanguage(lang);
-            } else {
-                try {
-                    parent.location = 'core/templates/game.html?lang=' + encodeURIComponent(lang);
-                } catch (e) {
-                    window.location.href = 'core/templates/game.html?lang=' + encodeURIComponent(lang);
-                }
-            }
+            var server = null;
+            try { server = new URLSearchParams(location.search).get('server'); } catch (e) { /* ignore */ }
+            var url = 'core/templates/game.html?lang=' + encodeURIComponent(selected);
+            if (server) url += '&server=' + encodeURIComponent(server);
+            location.href = url;
         }
 
-        startBtn.addEventListener('click', go);
-        select.addEventListener('change', updateStartButton);
+        startButton.addEventListener('click', go);
+
+        // Theme -------------------------------------------------------------
+        var themeButton = document.getElementById('theme_toggle');
+        var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+        function currentTheme() {
+            var explicit = stored('pq_theme');
+            if (explicit === 'studio' || explicit === 'night') return explicit;
+            return mq && mq.matches ? 'night' : 'studio';
+        }
+
+        function paintTheme() {
+            var theme = currentTheme();
+            document.documentElement.setAttribute('data-pq-theme', theme);
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', theme === 'night' ? '#140f28' : '#7b3fe4');
+            themeButton.textContent = theme === 'night' ? '☀' : '☾';
+            themeButton.setAttribute('aria-label', theme === 'night' ? 'Switch to light theme' : 'Switch to dark theme');
+        }
+
+        themeButton.addEventListener('click', function () {
+            store('pq_theme', currentTheme() === 'night' ? 'studio' : 'night');
+            paintTheme();
+        });
+
+        if (!stored('pq_theme') && mq) {
+            // No explicit choice: follow the OS for as long as the tab is open.
+            var onScheme = function () { if (!stored('pq_theme')) paintTheme(); };
+            if (mq.addEventListener) mq.addEventListener('change', onScheme);
+            else if (mq.addListener) mq.addListener(onScheme);
+        }
+        paintTheme();
+        select(selected);
     })();
 </script>
 </body>

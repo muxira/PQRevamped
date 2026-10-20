@@ -56,6 +56,8 @@ function PlayClap() {
 }
 
 function LeaveGame() {
+    // The close guard exists to stop an ACCIDENT. This is not one.
+    window.pqLeaveIntentional = true;
     window.pqStore.removeItem('state');
 
     // send() still throws if the socket dies between the readyState check and the call; the reload
@@ -309,7 +311,15 @@ function PlayEmoji(emojiType) {
 }
 
 function CallNextRound() {
+    // The round-result board is left by this button, never by the transition sequence:
+    // the SequenceStarted handler keeps the board up until the host has seen it.
+    window.pqNextRoundRequested = true;
     SendMessage({'NextRound': 'true'});
+    if (window.pqSequencePending) {
+        // A sequence had already started behind the board; the screen is simply late.
+        window.pqSequencePending = false;
+        goTo('SEQUENCE_HOST');
+    }
 }
 
 const BUZZ_MIN_INTERVAL_MS = 100;

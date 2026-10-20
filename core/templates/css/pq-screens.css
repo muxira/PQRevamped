@@ -1810,3 +1810,52 @@ body[data-pq-fit] .pq-standing { padding-block: 6px; }
 body[data-pq-fit] .pq-rank { font-size: 44px; }
 body[data-pq-fit] #all_questions_answered_host_group:not([hidden]),
 body[data-pq-fit] #all_questions_answered_player_group:not([hidden]) { gap: 8px; }
+
+/* === PQRevamped: avatars, final board, session recovery ============================== */
+
+/* An avatar is a circle that exists before its picture does: the initials are the
+   placeholder, the <img> is layered on top, and a lost request leaves the initials
+   instead of a hole (main.js pqAvatarNode / teamAvatarEl). */
+.pq-avatar { position: relative; }
+.pq-avatar__initials { line-height: 1; }
+.pq-avatar__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    background: var(--pq-soft);
+}
+/* The dashed ring is the initials' placeholder treatment; a loaded picture replaces it. */
+.pq-avatar:has(> .pq-avatar__img) { border-color: transparent; background: transparent; }
+
+/* Team rows get the same wrapper, so the circle is sized by the wrapper, not the image. */
+.team-row .avatar-sm {
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--pq-accent);
+    overflow: hidden;
+}
+.team-row .avatar-sm .pq-avatar__img { border-radius: 50%; }
+
+/* The game-over ceremony table (main.js pqEnterApplause). */
+.pq-final-board {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    text-align: center;
+}
+.pq-final-board .pq-eyebrow { align-self: center; }
+#pq_standings_final .pq-standing { padding-block: 9px; }
+#pq_standings_final .pq-standing__rank { width: 26px; font-size: 16px; }
+.pq-standing.is-place-1 { box-shadow: inset 0 0 0 2px #e8b923; }
+.pq-standing.is-place-2 { box-shadow: inset 0 0 0 2px #b9c1cc; }
+.pq-standing.is-place-3 { box-shadow: inset 0 0 0 2px #c98a4b; }
+
+/* Short phones: the ceremony table is the tallest thing on the screen. */
+body[data-pq-fit] .pq-final-board { gap: 5px; }
+body[data-pq-fit] #applause_group .applause-emoji { font-size: 52px; }

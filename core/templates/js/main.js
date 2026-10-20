@@ -712,12 +712,35 @@ window.onload = () => runWhenI18nReady(() => {
         return names.slice(0, 3).join(' · ') + ' · +' + (names.length - 3);
     }
 
-    function teamAvatarEl(avatarFile) {
-        var img = document.createElement('img');
-        img.className = 'avatar avatar-sm';
-        if (avatarFile && avatarFile !== 'custom_avatar')
-            img.src = '../../avatars/' + avatarFile;
-        return img;
+    function teamAvatarEl(avatarFile, name) {
+        // Same contract as pqAvatarNode: a circle that is always there, a picture that
+        // replaces the initials when (and if) it arrives. A custom avatar has no file of
+        // its own, so it keeps the initials instead of an <img> with no src.
+        var wrap = document.createElement('span');
+        wrap.className = 'avatar avatar-sm pq-avatar pq-avatar--sm';
+
+        var initials = document.createElement('span');
+        initials.className = 'pq-avatar__initials';
+        initials.textContent = pqInitials(name || avatarFile || '');
+        wrap.appendChild(initials);
+
+        if (avatarFile && avatarFile !== 'custom_avatar') {
+            var file = String(avatarFile);
+            var list = window.PQ_AVATARS || [];
+            if (list.indexOf(file) === -1 && list.indexOf(file + '.png') !== -1) file += '.png';
+            var img = document.createElement('img');
+            img.className = 'pq-avatar__img';
+            img.alt = '';
+            img.decoding = 'async';
+            img.addEventListener('load', function () { initials.hidden = true; });
+            img.addEventListener('error', function () {
+                if (img.parentNode) img.parentNode.removeChild(img);
+                initials.hidden = false;
+            });
+            img.src = '../../avatars/' + file;
+            wrap.appendChild(img);
+        }
+        return wrap;
     }
 
     function renderTeamList() {
@@ -735,7 +758,7 @@ window.onload = () => runWhenI18nReady(() => {
 
             var card = document.createElement('div');
             card.className = 'team-row team-row-self';
-            card.appendChild(teamAvatarEl(window.myTeam.Avatar));
+            card.appendChild(teamAvatarEl(window.myTeam.Avatar, window.myTeam.Name));
 
             var cMeta = document.createElement('div');
             cMeta.className = 'meta';
@@ -788,7 +811,7 @@ window.onload = () => runWhenI18nReady(() => {
             (function (team) {
                 var row = document.createElement('div');
                 row.className = 'team-row';
-                row.appendChild(teamAvatarEl(team.Avatar));
+                row.appendChild(teamAvatarEl(team.Avatar, team.Name));
 
                 var meta = document.createElement('div');
                 meta.className = 'meta';
@@ -920,7 +943,8 @@ window.onload = () => runWhenI18nReady(() => {
         },
         RESUME_GAME: {
             title: () => t('resume_game'),
-            show: ['resume_game_group']
+            show: ['resume_game_group'],
+            onEnter: (d) => { pqResumeEnter(d); }
         },
         ROLE_SELECTION: {
             title: () => t('choose_your_role'),
@@ -1081,7 +1105,7 @@ window.onload = () => runWhenI18nReady(() => {
         },
         ALL_QUESTIONS_ANSWERED_HOST: {
             show: ['all_questions_answered_host_group'],
-            onEnter: () => { renderStandings(); }
+            onEnter: () => { pqNextRoundRequested = false; pqSequencePending = false; renderStandings(); }
         },
         ALL_QUESTIONS_ANSWERED_PLAYER: {
             show: ['all_questions_answered_player_group'],
@@ -1263,7 +1287,10 @@ window.onload = () => runWhenI18nReady(() => {
             title: () => t('clap_title'),
             undertitle: () => t('game_over_clap'),
             show: ['applause_group'],
-            onEnter: (d) => { document.getElementById('wishlist_link').hidden = !(d && d.gameOver); }
+            // PQRevamped: the game-over applause is also the final leaderboard. Upstream used
+            // to show a podium here, deleted it, and left DisplayFinalResult as a no-op — the
+            // result was that the last standings of the game were never on screen at all.
+            onEnter: (d) => { pqEnterApplause(!!(d && d.gameOver)); }
         }
     };
 
@@ -1314,6 +1341,15 @@ window.onload = () => runWhenI18nReady(() => {
     window.pqRoundStartScore = 0;
     // Baseline in force for the round-result screen currently on display; HideAll clears it.
     var pqDeltaBaseline = null;
+    // The round-result board is a screen of its own, not a flash between two sequence
+    // screens: SequenceStarted may arrive before the host has read it. See the handler.
+    // Cross-file flags: commands.js reads pqSequencePending and sets pqNextRoundRequested
+    // from CallNextRound(), so both live on window, not in this script's scope.
+    window.pqSequencePending = false;
+    window.pqNextRoundRequested = false;
+    // Session recovery: a closed tab tears the socket down while the matchmaker keeps the
+    // seat for a while; the stored player id is enough to ask for it back (see pqTryResume).
+    var pqResumeSent = false;
     // Confetti latch, one entry per layer. The celebration layer is re-armed by
     // pqCelebrateCorrect() itself rather than by HideAll, because the verdict is followed
     // immediately by a screen change and a HideAll re-arm would wipe the burst a few
@@ -1497,26 +1533,65 @@ window.onload = () => runWhenI18nReady(() => {
     // broadcast. Names come from other players, so every text node below is textContent
     // and the avatar file name is accepted only if it matches the generated allow-list.
 
-    function pqAvatarNode(player) {
-        var file = null;
-        var list = window.PQ_AVATARS || [];
-        if (player.Avatar) {
-            if (list.indexOf(player.Avatar + '.png') !== -1) file = player.Avatar + '.png';
-            else if (list.indexOf(player.Avatar) !== -1) file = player.Avatar;
-        }
-        if (file) {
-            var img = document.createElement('img');
-            img.className = 'pq-avatar pq-avatar--sm';
-            img.src = '../../avatars/' + file;
-            img.alt = '';
-            return img;
-        }
-        var span = document.createElement('span');
-        span.className = 'pq-avatar pq-avatar--sm';
-        span.textContent = String(player.Name || '?').trim().split(/[\s.]+/).filter(Boolean)
+    // Every avatar is a real <img>, so it can be slow, cache-missed or blocked, and the
+    // circle next to a name must never be an empty hole. The initials are painted first and
+    // the picture is layered on top: a lost request degrades to the placeholder the
+    // allow-list miss already used, and a slow one shows a letter instead of nothing.
+    function pqInitials(name) {
+        return String(name || '?').trim().split(/[\s.]+/).filter(Boolean)
             .map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
-        return span;
     }
+
+    function pqAvatarSrc(player) {
+        var list = window.PQ_AVATARS || [];
+        var avatar = player.Avatar ? String(player.Avatar) : '';
+        // Custom avatars never reach the server as an image: the payload is uploaded
+        // separately, so a roster row only knows the id. Own row can use the local
+        // thumbnail; everybody else's falls back to initials.
+        if (avatar === 'custom_avatar') {
+            if (window.customAvatar && window.customAvatar.thumbnailDataUrl
+                && String(player.Id) === String(window.playerId))
+                return window.customAvatar.thumbnailDataUrl;
+            return null;
+        }
+        if (list.indexOf(avatar) !== -1) return '../../avatars/' + avatar;
+        if (list.indexOf(avatar + '.png') !== -1) return '../../avatars/' + avatar + '.png';
+        return null;
+    }
+
+    function pqAvatarNode(player) {
+        var wrap = document.createElement('span');
+        wrap.className = 'pq-avatar pq-avatar--sm';
+
+        var initials = document.createElement('span');
+        initials.className = 'pq-avatar__initials';
+        initials.textContent = pqInitials(player.Name);
+        wrap.appendChild(initials);
+
+        var src = pqAvatarSrc(player);
+        if (src) {
+            var img = document.createElement('img');
+            img.className = 'pq-avatar__img';
+            img.alt = '';
+            img.decoding = 'async';
+            img.addEventListener('load', function () { initials.hidden = true; });
+            img.addEventListener('error', function () {
+                // Keep the initials: a 404 must leave a readable circle, not a broken icon.
+                if (img.parentNode) img.parentNode.removeChild(img);
+                initials.hidden = false;
+            });
+            img.src = src;
+            wrap.appendChild(img);
+        }
+        return wrap;
+    }
+
+    var PQ_MEDALS = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+
+    // True while the applause screen carries the end-of-game table; read by renderStandings
+    // so the same renderer can serve both the round result and the ceremony.
+    var pqGameOver = false;
+
 
     function pqSortedStandings() {
         return (window.pqStandings || []).filter(function (p) { return p.Role === 1; }).sort(function (a, b) {
@@ -1539,13 +1614,14 @@ window.onload = () => runWhenI18nReady(() => {
         var me = pqMyRosterId();
         var myIndex = rows.findIndex(function (p) { return p.Id === me; });
 
-        ['pq_standings_host', 'pq_standings_player'].forEach(function (containerId) {
+        ['pq_standings_host', 'pq_standings_player', 'pq_standings_final'].forEach(function (containerId) {
             var box = document.getElementById(containerId);
             if (!box) return;
             box.innerHTML = '';
             rows.forEach(function (p, i) {
                 var row = document.createElement('div');
-                row.className = 'pq-standing' + (p.Id === me ? ' is-me' : '');
+                row.className = 'pq-standing' + (p.Id === me ? ' is-me' : '')
+                    + (containerId === 'pq_standings_final' && places[i] <= 3 ? ' is-place-' + places[i] : '');
 
                 var bar = document.createElement('span');
                 bar.className = 'pq-standing__bar';
@@ -1558,7 +1634,10 @@ window.onload = () => runWhenI18nReady(() => {
 
                 var rank = document.createElement('span');
                 rank.className = 'pq-standing__rank';
-                rank.textContent = places[i];
+                // The final board is the ceremony, not the running order: the top three get
+                // medals, everyone else keeps the plain dense place.
+                rank.textContent = (containerId === 'pq_standings_final' && places[i] <= 3)
+                    ? PQ_MEDALS[places[i] - 1] : places[i];
                 line.appendChild(rank);
                 line.appendChild(pqAvatarNode(p));
 
@@ -1583,6 +1662,14 @@ window.onload = () => runWhenI18nReady(() => {
             if (el) el.textContent = rankText;
         });
 
+        // The ceremony panel only exists on the applause screen, and only once there is a
+        // table to put in it: an empty board reads as a bug, a hidden one does not.
+        var finalBoard = document.getElementById('pq_final_board');
+        if (finalBoard) {
+            var finalList = document.getElementById('pq_standings_final');
+            finalBoard.hidden = !pqGameOver || !finalList || !finalList.children.length;
+        }
+
         var delta = document.getElementById('pq_delta_player');
         if (delta) {
             var mine = myIndex >= 0 ? (rows[myIndex].Score || 0) : pqMyScore;
@@ -1600,6 +1687,30 @@ window.onload = () => runWhenI18nReady(() => {
         }
     }
     window.renderStandings = renderStandings;
+
+    // DisplayFinalResult and StartApplause arrive back to back, and only the second one is a
+    // screen that stays up. Upstream deleted the podium and then left DisplayFinalResult as a
+    // no-op, so the last standings of a game were never shown at all. The board now lives on
+    // the applause screen, where both messages land.
+    function pqEnterApplause(gameOver) {
+        pqGameOver = !!gameOver;
+
+        var wishlist = document.getElementById('wishlist_link');
+        if (wishlist) wishlist.hidden = !pqGameOver;
+
+        if (!pqGameOver) {
+            var hiddenBoard = document.getElementById('pq_final_board');
+            if (hiddenBoard) hiddenBoard.hidden = true;
+            return;
+        }
+
+        // The last roster broadcast can still be in flight; render what we have now and ask
+        // the host for a fresh list if there is nothing to show.
+        renderStandings();
+        var list = document.getElementById('pq_standings_final');
+        if ((!list || !list.children.length) && pqIsHost() && typeof RequestPlayersList === 'function')
+            setTimeout(RequestPlayersList, 1200);
+    }
 
 
     // The latch is per layer, so a repeated call on the same layer never restarts a burst.
@@ -2189,6 +2300,12 @@ window.onload = () => runWhenI18nReady(() => {
 
         var prev = currentState;
         currentState = stateName;
+        // PQRevamped: keep the last rendered screen so the no-reload language switch can
+        // replay it (titles, labels and dynamic rows are written from data, not templates).
+        lastGoToData = data;
+        window.pqGetScreenState = function () {
+            return { state: currentState, data: lastGoToData };
+        };
 
         // The host has ruled and it went your way. Nothing above this line waited for it.
         if (stateName === 'YOU_ANSWER' && window.pqBuzzPressed) {
@@ -2352,6 +2469,59 @@ window.onload = () => runWhenI18nReady(() => {
         return false;
     };
 
+    // ---------------------------------------------------------------- session recovery
+    //
+    // Closing the tab (or an iOS tab eviction, which fires no pagehide at all) kills the
+    // socket, and the matchmaker keeps the seat for a grace period. On the next load the
+    // client finds its stored player id, the server answers with the game that id belongs
+    // to, and upstream drops the player on a card whose only action is "leave the game".
+    // That is the "closed the site by accident and lost the session" report. ResumeGame is
+    // the same request the bot harness sends to get its seat back, so the card asks first
+    // and only offers to leave as the last resort.
+
+    function pqTryResume(force) {
+        if (force) pqResumeSent = false;
+        if (pqResumeSent) return;
+        if (currentState !== 'RESUME_GAME') return;
+        if (!socket || socket.readyState !== WebSocket.OPEN) return;
+        if (typeof ResumeGame !== 'function') return;
+
+        pqResumeSent = true;
+        var note = document.getElementById('resume_game_note');
+        if (note) note.hidden = true;
+        try { ResumeGame(); } catch (e) { /* the button below is the retry */ }
+
+        // Silence is the failure mode here: the server either starts replaying the game or
+        // says nothing at all. After a few seconds, admit it instead of showing a dead button.
+        setTimeout(function () {
+            var still = document.getElementById('resume_game_note');
+            if (still && currentState === 'RESUME_GAME') still.hidden = false;
+        }, 4000);
+    }
+    // The button in the markup calls this: an explicit tap always gets a fresh attempt.
+    window.pqTryResume = function () { pqTryResume(true); };
+
+    function pqResumeEnter(data) {
+        var note = document.getElementById('resume_game_note');
+        if (note) note.hidden = true;
+        pqResumeSent = false;
+        if (!(data && data.restored)) return;
+
+        // The server may still be delivering the page messages for the restored seat; asking
+        // on the next tick would race them and could land after the screen has moved on.
+        setTimeout(function () { pqTryResume(false); }, 250);
+    }
+
+    // A full close is exactly the accident this guard is for. Drag the tab to the bin and the
+    // browser asks first; the in-game leave buttons set the flag because they mean it.
+    window.pqLeaveIntentional = false;
+    window.addEventListener('beforeunload', function (event) {
+        if (!inGame || window.pqLeaveIntentional) return;
+        event.preventDefault();
+        event.returnValue = '';
+        return '';
+    });
+
     function createSocket() {
         if (socket) {
             // A replaced socket keeps its own onclose and drives its own setTimeout(createSocket)
@@ -2369,9 +2539,16 @@ window.onload = () => runWhenI18nReady(() => {
         let serverOverride = getQueryParam('server');
         if (serverOverride && ALLOWED_SERVERS.indexOf(serverOverride.toLowerCase()) === -1)
             serverOverride = null;
+        // PQRevamped: this bundle is also served from static hosts (GitHub Pages, LAN
+        // previews, a phone opening the file from a dev box). wss://<page-host>:3012 does
+        // not exist there, so only a real Party Quiz hostname is used as-is and anything
+        // else talks to the public matchmaker. ?server= still wins when allow-listed.
         let host = serverOverride || window.location.hostname;
 
-        if (!serverOverride && host == 'localhost')
+        if (!serverOverride && (host === 'localhost' || host === '127.0.0.1' || host === '::1'))
+            host = "partyquiz.club";
+
+        if (!serverOverride && !/\.?partyquiz\.(club|ru)$/i.test(host))
             host = "partyquiz.club";
 
         let port = 3012;
@@ -2565,6 +2742,10 @@ window.onload = () => runWhenI18nReady(() => {
                     hideQrPasswordPrompt();
                     clearGameQueryParam();
 
+                    // A fresh game always gets the close guard back, whatever the previous
+                    // session left behind.
+                    window.pqLeaveIntentional = false;
+
                     if (wasInGame) {
                         // keep the previous screen
                         return;
@@ -2572,7 +2753,9 @@ window.onload = () => runWhenI18nReady(() => {
                         window.pqStore.setItem('state', JSON.stringify({'id': playerId}));
                         goTo('ROLE_SELECTION');
                     } else {
-                        goTo('RESUME_GAME');
+                        // Stored id, in a game, and this page has no screen yet: ask the seat
+                        // back instead of showing the dead-end "server not responding" card.
+                        goTo('RESUME_GAME', { restored: true });
                     }
                 } else {
                     if (wasInGame) {
@@ -2988,6 +3171,13 @@ window.onload = () => runWhenI18nReady(() => {
                         // The host's sends are unordered: the round's SequenceStarted may arrive after
                         // DecideFinalPlayersGroup. The choice screen is left by the choice itself.
                         if (currentState === 'DECIDE_FINAL_PLAYERS') {
+                        } else if (currentState === 'ALL_QUESTIONS_ANSWERED_HOST' && !pqNextRoundRequested) {
+                            // The round result is a screen of its own and the host reads it with the
+                            // "next round" button in hand. Losing it here was the split-second flash:
+                            // the transition sequence starts a beat later than the standings do. The
+                            // button leaves it (CallNextRound), and a sequence that already started
+                            // behind the board is remembered so the button can leave immediately.
+                            pqSequencePending = true;
                         } else if (isHost)
                             goTo('SEQUENCE_HOST');
                         else if (isPlayer && currentState !== 'ALL_QUESTIONS_ANSWERED_PLAYER')
@@ -3050,8 +3240,11 @@ window.onload = () => runWhenI18nReady(() => {
                         if (isHost)
                             goTo('FINAL_ROUND_DECIDE_ANSWER', message.FinalRoundDecideAnswer);
                     } else if (command == "DisplayFinalResult") {
-                        // The podium screen is gone: StartApplause lands right behind this
-                        // message and replaced it on screen anyway.
+                        // Upstream deleted the podium and left this message a no-op because
+                        // StartApplause lands right behind it. The applause screen now carries
+                        // the final table, so the game-over standings cannot be lost: entering
+                        // it here is idempotent with the StartApplause below.
+                        goTo('APPLAUSE', { gameOver: true });
                     } else if (command == "StartApplause") {
                         goTo('APPLAUSE', { gameOver: true });
                     } else if (command == "StopApplause") {
@@ -3078,7 +3271,11 @@ window.onload = () => runWhenI18nReady(() => {
                         reconcileMyScoreFrom(window.pqStandings);
                         if (isHost)
                             CreatePlayersForScoreChange(message.Players);
-                        if (currentState === 'ALL_QUESTIONS_ANSWERED_HOST' || currentState === 'ALL_QUESTIONS_ANSWERED_PLAYER')
+                        // The ceremony's table is filled by the same broadcast: the roster often
+                        // lands after DisplayFinalResult, and without this the final board would
+                        // stay as empty as the list it was built from.
+                        if (currentState === 'ALL_QUESTIONS_ANSWERED_HOST' || currentState === 'ALL_QUESTIONS_ANSWERED_PLAYER'
+                            || currentState === 'APPLAUSE')
                             renderStandings();
                     } else if (command == "AnswerRevealed") {
                         if (isHost)
@@ -3318,6 +3515,10 @@ window.onload = () => runWhenI18nReady(() => {
         inGame = false;
         gameStarted = false;
         startedNewGame = false;
+        window.pqLeaveIntentional = false;
+        pqSequencePending = false;
+        pqNextRoundRequested = false;
+        pqResumeSent = false;
 
         window.teamMode = false;
         window.myTeam = null;
@@ -3365,6 +3566,8 @@ window.onload = () => runWhenI18nReady(() => {
     }
 
     function LeaveGameFromTerminal() {
+        // Deliberate exit: the beforeunload guard must not turn it into a prompt.
+        window.pqLeaveIntentional = true;
         try { window.pqStore.removeItem('state'); } catch (e) { /* ignore */ }
 
         if (socket && socket.readyState === WebSocket.OPEN) {
@@ -4161,6 +4364,8 @@ window.onload = () => runWhenI18nReady(() => {
         }, 0);
         // A new screen is coming up, so the next standings render starts a fresh baseline.
         pqDeltaBaseline = null;
+        // The end-of-game table belongs to the applause screen only.
+        pqGameOver = false;
         // The synergy layer is page-level, not screen-level: it keeps raining across a
         // screen change while synergy is on, and this is the guarantee that it can never
         // outlive it — no screen change ever leaves a spawn interval running.
