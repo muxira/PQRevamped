@@ -10,7 +10,7 @@
 [![Без сборки](https://img.shields.io/badge/сборка-не_нужна-2ea44f?style=for-the-badge)](#-быстрый-старт)
 [![Языки](https://img.shields.io/badge/языков-18-ff6fb7?style=for-the-badge)](#-языки)
 
-[![CI](https://img.shields.io/github/actions/workflow/status/muxira/PQRevamped/ci.yml?branch=master&label=checks&logo=github)](https://github.com/muxira/PQRevamped/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/muxira/PQRevamped/ci.yml?branch=main&label=checks&logo=github)](https://github.com/muxira/PQRevamped/actions/workflows/ci.yml)
 [![Лицензия](https://img.shields.io/github/license/muxira/PQRevamped?color=blue)](LICENSE)
 [![Синхронизация](https://img.shields.io/badge/upstream-2026--10--20-informational?logo=cloud&logoColor=white)](CHANGELOG.md)
 
@@ -240,7 +240,7 @@ python3 scripts/check.py
 
 ## 🌐 Деплой
 
-**GitHub Pages (уже настроен).** Пуш в `master` → `.github/workflows/pages.yml` прогоняет `scripts/check.py` и публикует корень репозитория. Вручную: *Settings → Pages → Deploy from branch → `master` / root*.
+**GitHub Pages (уже настроен).** Пуш в `main` → `.github/workflows/pages.yml` прогоняет `scripts/check.py` и публикует корень репозитория. Вручную: *Settings → Pages → Deploy from branch → `main` / root*.
 
 **Куда угодно ещё.** Это просто папка статики: команда сборки не нужна, каталог публикации — `/`. Все пути относительные, поэтому подкаталог (`/PQRevamped/`) работает без настроек.
 

@@ -10,7 +10,7 @@
 [![No build step](https://img.shields.io/badge/build_step-none-2ea44f?style=for-the-badge)](#-quick-start)
 [![Locales](https://img.shields.io/badge/locales-18-ff6fb7?style=for-the-badge)](#-languages)
 
-[![CI](https://img.shields.io/github/actions/workflow/status/muxira/PQRevamped/ci.yml?branch=master&label=checks&logo=github)](https://github.com/muxira/PQRevamped/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/muxira/PQRevamped/ci.yml?branch=main&label=checks&logo=github)](https://github.com/muxira/PQRevamped/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/muxira/PQRevamped?color=blue)](LICENSE)
 [![Last upstream sync](https://img.shields.io/badge/upstream_sync-2026--10--20-informational?logo=cloud&logoColor=white)](CHANGELOG.md)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -253,7 +253,7 @@ The fork deliberately keeps its own additions in **three places only** — `js/r
 
 ## 🌐 Deploying
 
-**GitHub Pages (included).** Push to `master`; `.github/workflows/pages.yml` runs `scripts/check.py` and publishes the repo root. For a manual setup: *Settings → Pages → Deploy from branch → `master` / root*.
+**GitHub Pages (included).** Push to `main`; `.github/workflows/pages.yml` runs `scripts/check.py` and publishes the repo root. For a manual setup: *Settings → Pages → Deploy from branch → `main` / root*.
 
 **Anywhere else.** It is a folder of static files:
 
