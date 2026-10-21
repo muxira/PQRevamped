@@ -1,0 +1,12 @@
+# Normalise every text file to LF so the bundle behaves the same on Windows clones.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.woff2 binary
+*.ttf binary
+*.obj binary
+
+# GitHub language bar: the client is hand-written JS/CSS, not generated output.
+core/templates/js/* linguist-language=JavaScript
+core/templates/css/* linguist-language=CSS

@@ -1,0 +1,37 @@
+name: Feature request
+description: Suggest a quality-of-life improvement.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is annoying today?
+      description: Describe the moment in a real game where this bites.
+      placeholder: "On a phone the answer field is covered by the keyboard when the room is noisy and I type slowly."
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you change?
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Where does it belong?
+      options:
+        - "Doesn't matter — your call"
+        - "Pure UI (revamped.js / pq-revamped.css)"
+        - "3D Try-On"
+        - "i18n / dictionaries"
+        - "Tooling or CI"
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Ground rules
+      options:
+        - label: This does not change game rules or give an advantage over other players
+          required: true
+        - label: I checked that it cannot be solved by a user setting instead

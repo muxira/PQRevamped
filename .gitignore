@@ -1,8 +1,16 @@
+# OS / editor noise
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 *.log
-# Browser-export leftovers (HAR dumps, saved-page folders) — never commit these,
-# the repo hosts only the ported client/.
+
+# Browser-export leftovers (HAR dumps, saved-page folders) — the repo hosts only the client.
 *.har
+
+# Upstream snapshot produced by scripts/fetch-upstream.py (input for a review, not a commit)
+_upstream/
+
+# Local Python tooling
+__pycache__/
+*.pyc

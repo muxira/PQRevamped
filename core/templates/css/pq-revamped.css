@@ -1,0 +1,655 @@
+/* PQRevamped layer.
+ *
+ * Every rule here is additive: upstream files keep their cascade order, this file
+ * loads last and only styles things upstream does not have (settings sheet, 3D
+ * Try-On) plus a short, clearly marked block of phone ergonomics.
+ */
+
+:root {
+    /* Live viewport height, refreshed by revamped.js (visualViewport aware). */
+    --pq-vvh: 100vh;
+    --pq-keyboard: 0px;
+}
+
+/* `hidden` must win over every display this file declares (pwa.css only has the
+   same specificity, and this sheet loads later). */
+.pq-sheet[hidden],
+.pq-sheet-overlay[hidden],
+.ca-view[hidden],
+.ca-3d-loading[hidden],
+.ca-3d-status[hidden],
+.ca-3d-reset[hidden],
+.ca-3d-hint[hidden] {
+    display: none !important;
+}
+
+/* ===================================================================== header */
+
+body.partyquiz .pq-icon-button {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--pq-soft);
+    color: var(--pq-accent);
+    box-shadow: var(--pq-btn-shadow);
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease;
+}
+
+body.partyquiz .pq-icon-button:hover { background: color-mix(in srgb, var(--pq-accent) 28%, transparent); }
+body.partyquiz .pq-icon-button:active { transform: translate(1px, 2px) scale(.97); }
+body.partyquiz .pq-icon-button:focus-visible { outline: 3px solid var(--pq-accent); outline-offset: 2px; }
+
+@media (max-width: 380px) {
+    body.partyquiz .pq-icon-button { width: 40px; height: 40px; }
+}
+
+@media (max-height: 560px) {
+    body.partyquiz .pq-icon-button { width: 36px; height: 36px; }
+}
+
+/* ============================================================ settings sheet */
+
+.pq-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    background: rgba(5, 2, 16, .5);
+    opacity: 0;
+    transition: opacity .16s ease;
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+}
+
+.pq-sheet-overlay.is-open { opacity: 1; }
+
+.pq-sheet {
+    position: fixed;
+    z-index: 121;
+    inset-inline: 0;
+    inset-block-end: 0;
+    margin-inline: auto;
+    width: min(100%, 30rem);
+    max-height: min(88dvh, 720px);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 18px calc(14px + env(safe-area-inset-bottom));
+    background: var(--pq-panel-solid);
+    color: var(--pq-ink);
+    border: var(--pq-border);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -10px 40px rgba(5, 2, 16, .28);
+    transform: translateY(18px);
+    opacity: 0;
+    transition: transform .18s cubic-bezier(.2, .8, .2, 1), opacity .18s ease;
+    font-family: "partyquiz", Play, system-ui, sans-serif;
+    overflow: hidden;
+}
+
+/* overflow:hidden still scrolls when something inside it is focused or scrolled to; clip
+   makes the sheet a non-scroll container, so no child can ever shift the panel. */
+@supports (overflow: clip) {
+    .pq-sheet { overflow: clip; }
+}
+
+.pq-sheet.is-open { transform: none; opacity: 1; }
+
+@media (min-width: 640px) {
+    .pq-sheet {
+        inset-block: 0;
+        margin-block: auto;
+        height: fit-content;
+        border-radius: 24px;
+        padding-bottom: 18px;
+    }
+}
+
+.pq-sheet__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-block-end: 10px;
+    border-block-end: 2px dashed var(--pq-track);
+    flex: none;
+}
+
+.pq-sheet__eyebrow {
+    margin: 0;
+    font-size: .68rem;
+    letter-spacing: .16em;
+    font-weight: 700;
+    color: var(--pq-primary);
+}
+
+.pq-sheet__title {
+    margin: 2px 0 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+.pq-sheet__close {
+    appearance: none;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: var(--pq-soft);
+    color: var(--pq-accent);
+    cursor: pointer;
+}
+
+.pq-sheet__close:hover { color: var(--pq-danger); }
+
+.pq-sheet__body {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-block: 14px 4px;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.pq-sheet__section { display: flex; flex-direction: column; gap: 10px; }
+
+.pq-sheet__label {
+    margin: 0;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--pq-muted);
+}
+
+.pq-lang-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.pq-lang {
+    appearance: none;
+    border: 2px solid transparent;
+    background: var(--pq-soft);
+    color: var(--pq-ink);
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 700;
+    min-height: 42px;
+    padding: 8px 6px;
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pq-lang:hover { background: color-mix(in srgb, var(--pq-primary) 18%, transparent); }
+.pq-lang.is-active {
+    background: var(--pq-primary);
+    border-color: var(--pq-line);
+    color: var(--pq-on-accent);
+}
+
+@media (max-width: 360px) {
+    .pq-lang-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pq-lang { font-size: .8rem; }
+}
+
+.pq-segmented {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 5px;
+    background: var(--pq-track);
+    border-radius: 14px;
+}
+
+.pq-segment {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--pq-muted);
+    font: inherit;
+    font-size: .84rem;
+    font-weight: 700;
+    min-height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease, box-shadow .12s ease;
+}
+
+.pq-segment.is-active {
+    background: var(--pq-panel-solid);
+    color: var(--pq-ink);
+    box-shadow: 0 2px 8px rgba(5, 2, 16, .16);
+}
+
+.pq-sheet__section--toggles { gap: 4px; }
+
+.pq-toggle {
+    /* Positioned so the checkbox below cannot escape this row. Without it the input is
+       positioned against .pq-sheet (the nearest positioned ancestor), lands outside the
+       sheet's visible box, and focusing it makes the browser scroll the sheet itself — the
+       whole panel then slides up by the distance to that speck and stays there. */
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-height: 48px;
+    padding: 6px 2px;
+    cursor: pointer;
+    border-block-end: 1px solid var(--pq-track);
+}
+
+.pq-toggle:last-child { border-block-end: none; }
+.pq-toggle__text { font-size: .95rem; font-weight: 600; }
+
+/* The control is the row's hit area, not a 1×1 speck: it stays inside the visible row at
+   every scroll position, so focus never asks for a scroll (and the thumb-sized target is
+   the whole row, as the label already implied). */
+.pq-toggle__input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.pq-toggle__switch {
+    position: relative;
+    flex: none;
+    width: 48px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--pq-track);
+    border: 2px solid var(--pq-line);
+    transition: background .15s ease;
+}
+
+.pq-toggle__switch::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    inset-inline-start: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--pq-panel-solid);
+    border: 2px solid var(--pq-line);
+    transform: translateY(-50%);
+    transition: inset-inline-start .15s ease, background .15s ease;
+}
+
+.pq-toggle__input:checked + .pq-toggle__switch { background: var(--pq-success-fill); }
+.pq-toggle__input:checked + .pq-toggle__switch::after { inset-inline-start: 23px; }
+.pq-toggle__input:focus-visible + .pq-toggle__switch { outline: 3px solid var(--pq-accent); outline-offset: 2px; }
+.pq-toggle__input:disabled + .pq-toggle__switch { opacity: .45; }
+
+.pq-sheet__foot {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-block-start: 10px;
+    border-block-start: 2px dashed var(--pq-track);
+    font-size: .76rem;
+    color: var(--pq-muted);
+}
+
+.pq-sheet__foot a { color: var(--pq-accent); font-weight: 700; text-decoration: none; }
+.pq-sheet__foot a:hover { text-decoration: underline; }
+
+body.pq-sheet-open { overflow: hidden; }
+
+/* ============================================================ 3D try-on tabs */
+
+body.partyquiz .ca-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    width: min(100%, 220px);
+    padding: 4px;
+    border-radius: 14px;
+    background: var(--pq-track);
+    margin-block-end: 2px;
+}
+
+body.partyquiz .ca-tab {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--pq-muted);
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 700;
+    min-height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+}
+
+body.partyquiz .ca-tab--active {
+    background: var(--pq-panel-solid);
+    color: var(--pq-ink);
+    box-shadow: 0 2px 6px rgba(5, 2, 16, .18);
+}
+
+body.partyquiz .ca-tab:focus-visible { outline: 3px solid var(--pq-accent); outline-offset: 1px; }
+
+/* .ca-preview-center is a shrink-to-fit flex *row* and upstream never gives it a width: the
+   flat canvas supplies one. With the flat view hidden, the 3D view's `width: min(100%,
+   260px)` has no definite percentage base and resolves to zero, leaving a 6px ring of
+   borders; and the hint that now sits under the circle became a second column beside it.
+   Pin the stage to the panel and stack its children. */
+body.partyquiz .ca-preview-center {
+    position: relative;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+.ca-view {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.ca-view--flat { flex-direction: column; }
+
+.ca-view--3d {
+    width: min(100%, 260px);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--pq-panel-solid);
+    background:
+        radial-gradient(120% 90% at 50% 8%, color-mix(in srgb, var(--pq-primary) 18%, transparent), transparent 62%),
+        var(--pq-soft);
+    box-shadow: 0 4px 16px hsl(258 90% 66% / .18);
+}
+
+.ca-3d-container {
+    position: absolute;
+    inset: 0;
+    touch-action: none;             /* the canvas owns the gesture, the page does not scroll */
+    cursor: grab;
+}
+
+.ca-3d-container:active { cursor: grabbing; }
+.ca-3d-canvas { display: block; width: 100% !important; height: 100% !important; }
+
+/* styles.css rounds every canvas inside the preview centre (it was written for the flat
+   one); the 3D canvas lives inside a round container already. */
+body.partyquiz .ca-preview-center .ca-3d-canvas {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+.ca-3d-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--pq-muted);
+    background: color-mix(in srgb, var(--pq-panel-solid) 72%, transparent);
+    text-align: center;
+    padding: 12px;
+}
+
+.ca-3d-spinner {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 3px solid var(--pq-track);
+    border-top-color: var(--pq-accent);
+    animation: pq-ca-spin .8s linear infinite;
+}
+
+@keyframes pq-ca-spin { to { transform: rotate(360deg); } }
+
+.ca-3d-status {
+    position: absolute;
+    inset-inline: 10px;
+    inset-block-end: 34px;
+    margin: 0;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: .74rem;
+    line-height: 1.3;
+    text-align: center;
+    background: color-mix(in srgb, var(--pq-panel-solid) 92%, transparent);
+    color: var(--pq-ink);
+    border: 1px solid var(--pq-track);
+}
+
+.ca-3d-status[data-kind="error"] { color: var(--pq-danger); border-color: var(--pq-danger); }
+.ca-3d-status[data-kind="warn"] { color: var(--pq-gold-ink); border-color: var(--pq-gold); }
+[data-pq-theme="night"] .ca-3d-status[data-kind="warn"],
+html:not([data-pq-theme="studio"]) .ca-3d-status[data-kind="warn"] { color: var(--pq-gold); }
+
+.ca-3d-hint {
+    /* Static, under the circle: the viewport itself is a clipped circle, so anything
+       anchored to its bottom edge loses its first and last words to the arc. */
+    position: static;
+    inset: auto;
+    margin: 10px 0 0;
+    width: 100%;
+    max-width: min(100%, 260px);
+    font-size: .72rem;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    padding-inline: 8px;
+    font-size: .66rem;
+    font-weight: 700;
+    color: var(--pq-muted);
+    pointer-events: none;
+    text-align: center;
+}
+
+.ca-3d-hint__sep { opacity: .45; }
+
+/* 14% keeps the button inside the circle: it is clipped by the round viewport, and the
+   corners of a square are outside that circle. */
+.ca-3d-reset {
+    position: absolute;
+    inset-block-start: 14%;
+    inset-inline-end: 14%;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--pq-track);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--pq-panel-solid) 86%, transparent);
+    color: var(--pq-accent);
+    cursor: pointer;
+    z-index: 3;
+}
+
+.ca-3d-reset:active { transform: scale(.94); }
+
+/* ============================================================== mobile polish */
+
+/* iOS zooms the whole page when a focused field is under 16px. Upstream inputs are
+   17px already; this covers the few number/tel inputs that are not. */
+body.partyquiz input,
+body.partyquiz textarea,
+body.partyquiz select {
+    font-size: max(16px, 1em);
+}
+
+/* Every interactive element gets a thumb-sized hit area without changing layout. */
+body.partyquiz button:not(.pq-ff-button),
+body.partyquiz [role="button"],
+body.partyquiz .avatar-nav {
+    touch-action: manipulation;
+}
+
+body.partyquiz .avatar-nav,
+body.partyquiz .modal-close,
+body.partyquiz .pq-lang,
+body.partyquiz .pq-segment {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Keep primary actions clear of the home indicator / gesture bar. */
+body.partyquiz .pq-bottom-bar {
+    inset-block-end: max(16px, calc(env(safe-area-inset-bottom) + 8px));
+}
+
+body.partyquiz .pq-sheet,
+body.partyquiz .pq-sheet-overlay { max-width: 100vw; }
+
+/* Short landscape phones (the "playing in bed" case): compact header + modal. */
+@media (max-height: 480px) and (orientation: landscape) {
+    body.partyquiz header.pq-header icon { height: 28px; }
+    body.partyquiz .pq-icon-button,
+    body.partyquiz .pq-theme-toggle,
+    body.partyquiz header.pq-header .refresh-button { width: 36px; height: 36px; }
+    body.partyquiz .modal-panel { max-height: 96vh; padding: 12px; }
+    body.partyquiz .ca-view--3d { width: min(46vw, 200px); }
+    body.partyquiz .ca-hints { gap: 8px; }
+
+    /* The profile card is the one screen that needs more than the 0.7 zoom floor can buy
+       on a 390px-tall viewport: the 118px avatar and the 76px intro field are most of it.
+       Shrink both here — at this height the fields are typed into once. */
+    body.partyquiz .avatar-current img { width: 78px; height: 78px; }
+    body.partyquiz .avatar-prev img,
+    body.partyquiz .avatar-next img { width: 46px; height: 46px; }
+    body.partyquiz .avatar-carousel { padding: 2px 0; }
+    /* Two lines of placeholder, not one and a half: the field is sized to its own hint. */
+    body.partyquiz #player_intro { font-size: 11.5px; padding: 8px 10px; min-height: 46px; height: 46px; }
+    body.partyquiz #set_info_group:not([hidden]) { gap: 8px; padding: 12px 14px; }
+    body.partyquiz #player_name { padding: 10px 12px; }
+}
+
+/* Height-constrained screens: the client already has a data-pq-fit pass; this only
+   stops the settings sheet from pushing its footer off screen. */
+@media (max-height: 520px) {
+    .pq-sheet { max-height: 96dvh; padding-block: 12px calc(10px + env(safe-area-inset-bottom)); }
+    .pq-sheet__body { gap: 12px; padding-block: 10px 2px; }
+    .pq-toggle { min-height: 42px; }
+}
+
+/* Use the dynamic viewport unit where it exists, so the address bar collapsing on a
+   phone does not clip the bottom bar. */
+@supports (height: 100dvh) {
+    body.partyquiz {
+        min-height: 100dvh;
+    }
+}
+
+/* The keyboard pushes fixed elements up; revamped.js publishes the inset. */
+body.partyquiz.pq-keyboard-open .pq-bottom-bar {
+    transform: translateY(calc(var(--pq-keyboard) * -1));
+    transition: transform .12s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pq-sheet,
+    .pq-sheet-overlay,
+    .pq-icon-button,
+    .pq-lang,
+    .pq-segment { transition: none !important; }
+    .ca-3d-spinner { animation: none; border-top-color: var(--pq-accent); }
+}
+
+/* ============================================================ sheet drag grip */
+
+.pq-sheet__grip {
+    flex: none;
+    display: grid;
+    place-items: center;
+    height: 18px;
+    margin-block-start: -6px;
+    cursor: grab;
+    touch-action: none;
+}
+
+.pq-sheet__grip span {
+    width: 44px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--pq-track);
+}
+
+.pq-sheet__head { touch-action: pan-y; }
+
+/* ============================================================ sheet actions */
+
+.pq-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pq-action {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 14px;
+    border: 2px solid var(--pq-track);
+    border-radius: 12px;
+    background: var(--pq-panel-solid);
+    color: var(--pq-ink);
+    font: inherit;
+    font-size: .92rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color .12s ease, background .12s ease;
+}
+
+.pq-action:hover { border-color: var(--pq-accent); }
+.pq-action:active { background: var(--pq-soft); }
+.pq-action__label { flex: 1 1 auto; text-align: start; }
+
+.pq-action__status {
+    margin: 4px 0 0;
+    min-height: 1.1em;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--pq-success);
+    overflow-wrap: anywhere;
+}

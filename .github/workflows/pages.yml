@@ -1,15 +1,19 @@
 name: Deploy to GitHub Pages
+
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
+
 jobs:
   deploy:
     environment:
@@ -18,8 +22,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # The site is static: refuse to publish a tree with a broken reference or a
+      # half-filled dictionary rather than shipping it to players mid-evening.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify the bundle
+        run: python3 scripts/check.py
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
-        with: { path: "." }
+        with:
+          path: "."
       - id: deployment
         uses: actions/deploy-pages@v4

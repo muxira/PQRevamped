@@ -1,0 +1,1861 @@
+/* Per-screen rules. One section per plan; keep screens in PAGE_STATES order. */
+
+/* === Shell: header, score strip, topic block === */
+
+body.partyquiz header.pq-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 20px 0;
+    padding-block-start: max(6px, env(safe-area-inset-top));
+    margin: 0;
+    margin-block-start: 10px;
+}
+
+/* The box is the logo's own aspect (1.75:1) at this height: the image is a contained,
+   centred background, so any width beyond it is dead space between the mark and the dot. */
+body.partyquiz header.pq-header icon { height: 40px; width: min(70px, 26vw); flex: none; }
+
+body.partyquiz .connection-dot { margin-inline-start: auto; margin-inline-end: 0; }
+
+body.partyquiz .pq-theme-toggle,
+body.partyquiz header.pq-header .refresh-button {
+    inset: auto;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: var(--pq-accent);
+    color: var(--pq-on-accent);
+    display: grid;
+    place-items: center;
+    box-shadow: var(--pq-btn-shadow);
+    padding: 0;
+    cursor: pointer;
+    font-size: 17px;
+    line-height: 1;
+}
+
+body.partyquiz .pq-theme-toggle { position: static; }
+
+body.partyquiz header.pq-header .refresh-button { position: relative; display: none; }
+body.partyquiz header.pq-header .refresh-button.active { display: grid; }
+
+body.partyquiz .pq-theme-toggle {
+    background: var(--pq-soft);
+    color: var(--pq-accent);
+    box-shadow: none;
+    border: var(--pq-border);
+}
+
+body.partyquiz .pq-theme-toggle:active,
+body.partyquiz header.pq-header .refresh-button:active {
+    transform: scale(.93);
+    box-shadow: 0 0 0 transparent;
+}
+
+/* The strip carries exactly one fact: the player's own score. The theme and the price left
+   for #question_selected_group, which is the one panel both roles see — with them here as
+   well the host was told the same thing twice on the same screen. The turn line and the
+   team line left earlier, for the topic block and #captain_badge. */
+
+#pq_score_strip:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 100%;
+    max-width: 21rem;
+    box-sizing: border-box;
+    margin: 10px auto 0;
+    padding: 7px 14px;
+    background: var(--pq-panel);
+    border: var(--pq-border);
+    border-radius: 16px;
+    box-shadow: var(--pq-shadow);
+    text-align: center;
+}
+
+/* The whole strip is hidden for the quiz host, who has no score of their own. */
+.pq-score-strip__own:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    line-height: 1;
+}
+
+.pq-score-strip__own .pq-eyebrow { font-size: 12px; }
+.pq-score-strip__value { font-size: 22px; font-weight: 700; color: var(--pq-accent); font-variant-numeric: tabular-nums; }
+
+/* The score is the only number a player cares about, and it used to change by textContent
+   swap. JS counts it up and adds .is-hit for the punch. */
+@keyframes pq-hit { 40% { transform: scale(1.3); } }
+.pq-score-strip__own.is-hit .pq-score-strip__value { animation: pq-hit .45s ease-out; }
+
+/* The delta falls from above onto the strip and lands on the number it just changed. It is a
+   child of the strip, not of <body>, so it follows the strip wherever the layout puts it. */
+.pq-score-strip__own { position: relative; }
+
+/* It comes to rest just above the strip and fades there: landing on the strip itself would
+   put the delta on top of the label and the number it is announcing. */
+@keyframes pq-score-drop {
+    0%   { opacity: 0; transform: translate(-50%, -74px) scale(.72); }
+    20%  { opacity: 1; }
+    75%  { opacity: 1; transform: translate(-50%, -16px) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -9px) scale(.95); }
+}
+
+.pq-score-delta {
+    position: absolute;
+    inset-inline-start: 50%;
+    inset-block-start: 0;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--pq-success);
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+    z-index: 30;
+    animation: pq-score-drop 1.05s cubic-bezier(.2, .8, .3, 1) forwards;
+}
+
+.pq-score-delta.is-loss { color: var(--pq-danger); }
+
+.topic-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    place-items: center;
+    text-align: center;
+    padding-inline: 16px;
+    margin-block-start: 10px;
+}
+.topic-block #title { font-size: 26px; font-weight: 700; letter-spacing: -.02em; color: var(--pq-ink); line-height: 1.05; }
+.topic-block #undertitle { font-size: 12px; font-weight: 400; color: var(--pq-muted); }
+
+/* === Onboarding: join, resume, role, profile, member name, teams === */
+
+/* Join. The :not([hidden]) form is mandatory on every group that needs a display value:
+   goTo() drives visibility with the hidden attribute, and a bare display:flex would beat it. */
+
+#enter_id_group { display: none; }
+
+#enter_id_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 22px 20px;
+    margin-block-start: 8px;
+}
+
+/* The only thing anyone does on this screen is type the code off the TV, so the code field
+   is the screen. The decorative magnifier above it was chrome and is gone. */
+#enter_id_group .card-header { display: none; }
+
+#enter_id_group .form-fields { display: flex; flex-direction: column; gap: 11px; }
+#enter_id_group .field-group { display: flex; flex-direction: column; gap: 6px; }
+
+#enter_id_group .field-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pq-muted);
+    margin: 0;
+}
+
+#enter_id_group .game-block-button-wrapper { margin: 0; }
+#enter_id_group #join_game_button { width: 100%; padding: 17px; font-size: 19px; }
+
+#game_id {
+    font-size: clamp(34px, 13vw, 50px);
+    letter-spacing: .18em;
+    /* The code fills the board from the start edge, the way it is read off the screen and
+       typed. `start`, not `left`: the arabic locale flips the whole page. */
+    text-align: start;
+    padding: 14px 16px;
+    border-width: 3px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    box-shadow: inset 0 3px 0 rgba(54, 38, 89, .07);
+}
+
+/* The placeholder reads at nearly the size of the code it stands in for - a hint, not a
+   footnote. It tracks the viewport one step below the field's own clamp so the longest
+   translation still fits on one line: measured in the shipped face, "ID de la partie" is
+   310px at 50px, and the field's inner width is 282px on a 360px phone, 370px on a wide one.
+   11vw keeps it inside both. */
+#game_id::placeholder {
+    font-size: clamp(28px, 11vw, 50px);
+    letter-spacing: normal;
+    font-weight: 400;
+}
+
+/* The password is the exception, not the task: it stays a normal field under the board. */
+#enter_id_group .field-group:has(#game_password) { opacity: .82; }
+#game_password { font-size: 16px; padding: 13px 16px; box-shadow: none; }
+
+#error_label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pq-danger);
+    text-align: center;
+    min-height: 16px;
+}
+
+.pq-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--pq-muted);
+}
+
+.pq-divider span { height: 1px; flex: 1; background: var(--pq-line); }
+
+/* Resume. */
+
+#resume_game_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+    text-align: center;
+}
+
+.resume-game-block-message { font-size: 13px; color: var(--pq-muted); line-height: 1.4; }
+#resume_game_group .resume-game-block-button { width: 100%; }
+
+/* Role. The design draws two separate cards, so the section itself is no longer a panel. */
+
+#role_selection_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 28rem;
+    margin-inline: auto;
+}
+
+.role-card {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 17px;
+    border-radius: var(--pq-radius);
+    background: var(--pq-panel);
+    border: var(--pq-border);
+    box-shadow: var(--pq-shadow);
+    font: inherit;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+    transition: transform .08s ease-out, box-shadow .08s ease-out;
+}
+
+/* The offset shadow is the card's depth: a press travels exactly that far and takes the
+   shadow with it, the same way the buttons do. */
+.role-card:hover { transform: none; box-shadow: var(--pq-shadow); }
+.role-card:active { transform: translate(5px, 5px); box-shadow: 0 0 0 transparent; }
+
+.role-card-icon {
+    flex: none;
+    width: 54px;
+    height: 54px;
+    border-radius: 17px;
+    display: grid;
+    place-items: center;
+}
+
+.role-card-icon--host { background: rgba(245, 197, 66, .18); color: var(--pq-gold-ink); }
+.role-card-icon--player { background: var(--pq-soft); color: var(--pq-accent); }
+
+.role-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.role-card-title { font-size: 18px; font-weight: 700; color: var(--pq-ink); }
+.role-card-desc { font-size: 12px; color: var(--pq-muted); line-height: 1.35; }
+.role-card-arrow { flex: none; color: var(--pq-ink); opacity: .4; }
+.role-card:hover .role-card-arrow { opacity: .4; transform: none; }
+
+#role_set_error { font-size: 12px; font-weight: 700; color: var(--pq-danger); text-align: center; }
+
+/* Profile. The carousel (#avatar_group) is a top-level element shared with TEAM_CREATE and
+   is styled in styles.css, next to its slide/fade rules. */
+
+#set_info_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    padding: 18px 16px;
+}
+
+#set_info_group .pq-eyebrow { letter-spacing: .12em; }
+
+#player_name { font-size: 19px; text-align: center; }
+#player_intro { font-size: 13px; padding: 12px; resize: none; min-height: 76px; }
+
+#info_set_error {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pq-danger);
+    min-height: 16px;
+    text-align: center;
+}
+
+#set_info_button { width: 100%; }
+
+/* The parent is a centred flex column, so a button sized by its content sits in a short
+   pill in the middle of the card. align-self: stretch alone is not enough — .button is
+   inline-flex, so it still shrink-wraps; the width goes with it.
+
+   `max-width: none` is the declaration that actually fixes this: styles.css's
+   `.custom-avatar-open-btn` capped the button at 260px, and because no other rule in the
+   client declared max-width on it, the cap was never in a specificity contest at all —
+   `width: 100%` resolved to 260px and `align-self: stretch` on a definite-width item
+   degrades to flex-start, which is why it sat against the inline-start edge. The cap is
+   also deleted at source; this is the belt to that braces, and at (1,0,0) it wins over
+   the (0,1,0) class rule if an old styles.css is still in a phone's cache. */
+#custom_avatar_open_btn {
+    align-self: stretch;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+/* Member name. */
+
+#enter_member_name_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    text-align: center;
+}
+
+/* Every card that carries these is a flex column with its own gap, so the browser's default
+   1em on a <p> is pure extra space — and it was only ever zeroed on the three groups named
+   here, which is why the team-mate card had ~19px of nothing above its headline. */
+body.partyquiz .pq-title,
+body.partyquiz .pq-sub { margin: 0; }
+
+#member_name_input { text-align: center; }
+
+/* Team lobby. The design draws the rows as separate panels, so the section itself is
+   no longer a card — same reasoning as the role screen. */
+
+#team_lobby_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 28rem;
+    margin-inline: auto;
+}
+
+.team-lobby-headline { display: flex; flex-direction: column; gap: 2px; text-align: center; }
+#team_lobby_group .pq-title { font-size: 22px; }
+
+#team_list { display: flex; flex-direction: column; gap: 10px; }
+
+.team-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 12px;
+    border-radius: 18px;
+    background: var(--pq-panel);
+    border: var(--pq-border);
+    box-shadow: var(--pq-shadow);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.team-row .meta { flex: 1; min-width: 0; text-align: start; display: flex; flex-direction: column; gap: 2px; }
+.team-row .name, .team-row .team-name-big { font-size: 15px; font-weight: 700; color: var(--pq-ink); margin: 0; }
+
+.team-row .members, .team-row .members-label {
+    font-size: 12px;
+    color: var(--pq-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.team-row .member { font-size: 12px; text-align: start; color: var(--pq-ink); }
+.team-row .member.captain::before { content: "\1F451"; margin-inline-end: 5px; }
+.team-row .member.me { color: var(--pq-accent); font-weight: 700; }
+
+.team-row img.avatar-sm {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--pq-soft);
+    border: 2px dashed var(--pq-dash);
+    object-fit: cover;
+}
+
+/* The self card stacks name, label and every member, so it aligns to the top of the row
+   instead of centring. It has to sit after .team-row: index.css loads earlier and at equal
+   specificity the later sheet wins. */
+.team-row-self { background: var(--pq-soft); align-items: flex-start; padding: 14px; }
+
+.team-join-btn { flex: none; font-size: 13px !important; padding: 9px 14px !important; border-radius: 13px !important; }
+
+#team_create_btn {
+    background: var(--pq-soft);
+    color: var(--pq-accent) !important;
+    border: 2px dashed var(--pq-dash) !important;
+    box-shadow: none !important;
+    border-radius: 18px;
+    padding: 14px;
+    font-size: 15px !important;
+}
+
+/* Team create. */
+
+#team_create_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    text-align: center;
+}
+
+.team-create-actions { display: flex; gap: 9px; width: 100%; }
+.team-create-actions .button { flex: 1; }
+#team_create_group .note { font-size: 12px; color: var(--pq-muted); line-height: 1.4; margin: 0; }
+
+/* === Board and buzzer === */
+
+/* Waiting player on the board screen: name over score. SELECT_QUESTION_PLAYER no longer
+   shows this group (show: []) — the score lives in the header strip and the panel read as an
+   empty box under the title. Markup, ids and these rules are kept so the two message handlers
+   that write the labels stay valid and the panel is one line away from coming back. */
+
+#select_question_player_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+}
+
+#select_question_player_group entry.column { gap: 4px; padding: 0; }
+
+#select_question_player_group_name {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--pq-ink);
+}
+
+#select_question_player_group_score {
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--pq-accent);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The question context: one line — "<theme> - <price>" — in a panel sized to it. Shown on
+   every in-question state of every question type, for both roles, and hidden on the board,
+   the lobby, the results and the standings.
+   the id selector carries the smaller inset. */
+
+#question_selected_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 11px 14px;
+}
+
+#question_selected_group entry.column { gap: 0; padding: 0; }
+
+.pq-qmeta {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    gap: 5px;
+}
+
+/* Both were <label>s, and entry.column label (0,1,1) paints a fixed pre-token colour that
+   is unreadable on the night theme. They are spans now and each declares its own ink. */
+#question_selected_theme {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--pq-ink);
+}
+
+#question_selected_price {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--pq-accent);
+    font-variant-numeric: tabular-nums;
+}
+
+#question_selected_price.is-synergy { color: var(--pq-gold-ink); }
+
+/* An empty price span still eats one .pq-qmeta gap and pushes the centred line off-centre. */
+#question_selected_price:empty { display: none; }
+
+/* The buzzer screens carry no meta of their own: #question_selected_group sits above the
+   button and is the single home for both facts. The .pq-buzz-meta line that used to sit
+   there is gone from the markup and from refreshQuestionMeta(). */
+
+/* Team-mate surfaces. The onEnter toggles hidden on #teammate_buzzer and
+   #teammate_suggest_entry, so the entry needs its display through :not([hidden]). */
+
+#teammate_suggest_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+/* The ring is the "you may press now" pulse. index.css hides it through
+   `#answer_button[hidden] ~ .pq-ring`, which names one id and so never covered the team
+   buzzer; the team-mate screen had no ring in the markup at all, which is why the
+   non-captain's button never waved while the captain's did. The shell is toggled from
+   onEnter as a whole, and this sibling rule is the second guard for the case where only
+   the button is hidden. */
+#teammate_buzzer[hidden] ~ .pq-ring { display: none; }
+
+/* .button is inline-flex, so it shrink-wraps its label and sat as a short pill in the
+   middle of the card. */
+#teammate_suggest_entry .button { width: 100%; max-width: none; box-sizing: border-box; }
+
+#teammate_suggest_entry:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    width: 100%;
+}
+
+#teammate_suggest_label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pq-muted);
+}
+
+.teammate-note {
+    font-size: 13px;
+    color: var(--pq-muted);
+    line-height: 1.4;
+    margin: 0;
+    text-align: center;
+}
+
+#teammate_readonly_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+/* === Answer and verdict === */
+
+/* The answering card: giant accent headline, one hint, one field, one green action.
+   the design's 20px/17px replaces .glass-card's own inset
+   or the declaration is dead. */
+
+#you_answer_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    padding: 20px 17px;
+    margin-block-start: 6px;
+}
+
+#you_answer_group > entry.column { gap: 9px; width: 100%; padding: 0; }
+
+#you_answer_group label {
+    font-size: 13px;
+    color: var(--pq-muted);
+    text-align: center;
+    line-height: 1.4;
+}
+
+#player_answer_input { font-size: 17px; font-weight: 700; padding: 15px; }
+
+#player_answer_input_button { width: 100%; }
+
+/* The verdict card: who answered, what the right answer was, then the decision row. */
+
+#player_answers_host_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    padding: 17px;
+}
+
+#player_answers_host_group > entry.column { gap: 9px; width: 100%; padding: 0; }
+
+#player_answers_host_group .explanatory_label,
+#right_answer_group .explanatory_label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--pq-muted);
+}
+
+#answering_player {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--pq-ink);
+}
+
+/* entry.column centres its children (place-items: center), so a grid without an explicit
+   width would shrink to content and the 1fr track would never expand. */
+
+body.partyquiz .answer-decision-row {
+    display: grid;
+    grid-template-columns: 4rem 1fr 4rem;
+    gap: 8px;
+    align-items: stretch;
+    width: 100%;
+}
+
+body.partyquiz .button.answer-decision-multiplier {
+    font-size: 15px;
+    padding: 16px 0;
+    border-radius: 16px;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+body.partyquiz .button.answer-decision-correct {
+    font-size: 19px;
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--pq-success-fill);
+}
+
+body.partyquiz .button.answer-decision-incorrect {
+    width: 100%;
+    font-size: 19px;
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--pq-danger-fill);
+}
+
+/* The right answer rides next to the verdict card as its own tinted box. It carries
+   .glass-card in the markup, whose background/radius/padding the id selector replaces. */
+
+#right_answer_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    text-align: center;
+    padding: 11px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--pq-success) 10%, transparent);
+    border: none;
+    box-shadow: none;
+    max-width: 28rem;
+    width: 100%;
+    margin-inline: auto;
+}
+
+/* entry.column already centres, but 1-1-1 is needed to state it here so nothing
+   downstream re-aligns the box: the host reads the right answer as a centred line
+   under the centred theme strip. */
+#right_answer_group > entry.column {
+    gap: 2px; width: 100%; padding: 0;
+    align-items: center; text-align: center;
+}
+
+#right_answer {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--pq-success);
+}
+
+/* Round 5, same complaint as the fact boxes and the same treatment, stated rather than
+   inherited: every line on the regular-round judge card is a <label> flex item, so both
+   the box placement and the text run are declared here. */
+#player_answers_host_group > entry.column { align-items: center; text-align: center; }
+
+#player_answers_host_group .explanatory_label,
+#right_answer_group .explanatory_label,
+#answering_player,
+#right_answer { width: 100%; text-align: center; }
+
+/* Skip question / replay audio are secondary host actions on no panel. */
+
+#dismiss_question_group:not([hidden]),
+#replay_question_audio_group:not([hidden]) {
+    display: flex;
+    padding: 0;
+    margin-block-start: 8px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    max-width: 28rem;
+    width: 100%;
+    margin-inline: auto;
+}
+
+#dismiss_question_group > entry.column,
+#replay_question_audio_group > entry.column { width: 100%; padding: 0; }
+
+#dismiss_question_group .button,
+#replay_question_audio_group .button { width: 100%; }
+
+/* === Auction and cat-in-a-poke === */
+
+/* Auction, player side. The id replaces .glass-card's own 18px 16px; entry.column's inline
+   1rem is zeroed so the inset is not doubled. */
+
+#auction_player_group:not([hidden]) {
+    display: flex;
+    padding: 16px;
+}
+
+#auction_player_group > entry.column {
+    gap: 12px;
+    width: 100%;
+    padding: 0;
+}
+
+/* Every horizontal row below needs width: 100%: entry.column centres its children,
+   so an auto-width child shrinks to its content instead of spanning the card. */
+
+.pq-bid-leader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 13px;
+    border-radius: 14px;
+    background: rgba(245, 197, 66, .16);
+}
+
+/* entry.column label paints a fixed pre-token var(--pq-ink); on the night
+   theme that is dark purple on near-black, so the leader name gets an explicit ink. */
+#highest_bidder { font-size: 13px; font-weight: 700; color: var(--pq-ink); }
+
+#highest_bid {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--pq-gold-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.pq-bid-stepper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.pq-bid-step {
+    flex: none;
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 17px;
+    background: var(--pq-soft);
+    color: var(--pq-accent);
+    font-family: "partyquiz", Play, system-ui, sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pq-bid-step:active { transform: scale(.93); }
+
+/* A step button at the end of the ladder is dead, and it has to look dead: the floor is
+   the first legal bid (1 when nobody has bid), the ceiling is the player's own score.
+   :active is excluded so a disabled button does not press. */
+.pq-bid-step:disabled {
+    opacity: .32;
+    cursor: default;
+}
+
+.pq-bid-step:disabled:active { transform: none; }
+
+.pq-bid-value {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+}
+
+#your_bid {
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    padding: 4px 0;
+    border: none;
+    background: transparent;
+    color: var(--pq-accent);
+    font-variant-numeric: tabular-nums;
+    width: 100%;
+    -moz-appearance: textfield;
+}
+
+#your_bid::-webkit-outer-spin-button,
+#your_bid::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.pq-bid-status {
+    min-height: 16px;
+    width: 100%;
+    text-align: center;
+}
+
+.pq-bid-status label { font-size: 12px; font-weight: 700; }
+
+#not_enough_points { color: var(--pq-danger); }
+#you_are_highest_bidder { color: var(--pq-gold-ink); }
+#passing { color: var(--pq-muted); }
+
+.pq-bid-actions {
+    display: flex;
+    gap: 9px;
+    width: 100%;
+}
+
+#button_bid { flex: 1; }
+#button_pass { flex: none; padding-inline: 22px; }
+
+/* Auction, host side: one quiet destructive action, no panel behind it.
+   padding replaces .glass-card's own, same as above. */
+
+#auction_host_group:not([hidden]) {
+    display: flex;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    max-width: 28rem;
+    width: 100%;
+    margin-inline: auto;
+}
+
+#button_end_auction {
+    width: 100%;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--pq-danger);
+    background: transparent;
+    border: 1.5px solid color-mix(in srgb, var(--pq-danger) 35%, transparent);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: none;
+}
+
+/* NOT_ENOUGH_POINTS, FINAL_BID_HOST, FINAL_BID_PLAYER, AUCTION_HOST and AUCTION_PLAYER
+   have their headline in the shared topic block; one accent rule covers all five. */
+body[data-pq-screen="bid"] .topic-block #title { color: var(--pq-accent); }
+
+/* Cat in a poke, host side: the rows are the panels, so the group paints nothing.
+   The row classes themselves live next to their siblings in styles.css. */
+
+#cat_in_poke_host_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+/* Cat in a poke, player side: a quiet waiting line. */
+
+#cat_in_poke_player_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+#cat_in_poke_player_group label { font-size: 13px; color: var(--pq-muted); }
+
+/* === Multiple choice, number guess, revealing clues === */
+
+/* Multiple choice, player side: the option rows are the panels, so the group paints
+   nothing, so the id reclaims .glass-card's padding and background.
+   The row shape itself is .final-round-question-wrapper in styles.css, shared with the
+   three final-round lists. */
+
+#multiple_choice_options_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+/* The three host controls of this batch: one quiet action each, on no panel. */
+
+#multiple_choice_host_group:not([hidden]),
+#number_guess_host_group:not([hidden]),
+#stop_guessing_or_end_question_group:not([hidden]) {
+    display: flex;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    max-width: 28rem;
+    width: 100%;
+    margin-inline: auto;
+}
+
+#multiple_choice_host_group > entry.column,
+#number_guess_host_group > entry.column { width: 100%; padding: 0; }
+
+#multiple_choice_host_group .button,
+#number_guess_host_group .button { width: 100%; }
+
+/* Number guess, player side. Round 5: the field is the "your suggestion" field
+   (#teammate_suggest_input) and nothing else — same card padding, same entry inset, same
+   type scale. Two uncontested declarations, not specificity, made it the odd one out:
+   this group zeroed entry.column's padding while the team-suggestion entry keeps the
+   `body.partyquiz .column` 0 20px inset (0,2,0 — it outranks entry.column's own 0 1rem),
+   which alone made the field 40px wider than every other field in the client; and the
+   34px accent number had no counterpart anywhere else. Both are gone: the group now takes
+   .glass-card's own 18px 16px and the entry its own inset, so the width matches by
+   construction rather than by a number copied across files. What stays is only what a
+   numeric field needs — centred tabular digits and no native spinners. */
+
+#number_guess_player_group:not([hidden]) {
+    display: flex;
+}
+
+#number_guess_player_group > entry.column {
+    gap: 10px;
+    width: 100%;
+    align-items: center;
+}
+
+#number_guess_input {
+    text-align: start;
+    width: 100%;
+    font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield;
+}
+
+#number_guess_input::-webkit-outer-spin-button,
+#number_guess_input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+#number_guess_button { width: 100%; }
+
+/* Accepted-answer states. Six states exist only as a headline
+   in the shared topic block, and all six sit in the ackwait accent family, so one rule
+   dresses them as the design's answerSent confirmation. The check mark is a CSS symbol,
+   not translatable copy. pq-pop is already muted under prefers-reduced-motion. */
+
+body[data-pq-screen="ackwait"] .topic-block #title {
+    color: var(--pq-success);
+    animation: pq-pop .35s cubic-bezier(.2, .9, .25, 1) both;
+}
+
+body[data-pq-screen="ackwait"] .topic-block #title::before {
+    content: "\2713";
+    margin-inline-end: 8px;
+}
+
+body[data-pq-screen="ackwait"] .topic-block #undertitle { color: var(--pq-muted); }
+
+/* Four ackwait states are waiting, not confirmation. The three that own a group can be
+   excluded by selector; SEQUENCE_PLAYER owns nothing and keeps the mark — a known
+   cosmetic edge. The :has() specificity beats the rule above regardless of order, and a
+   browser without :has() simply drops these two rules and shows the extra mark. */
+
+body[data-pq-screen="ackwait"]:has(#everyone_answers_group:not([hidden])) .topic-block #title::before,
+body[data-pq-screen="ackwait"]:has(#fast_forward_group:not([hidden])) .topic-block #title::before,
+body[data-pq-screen="ackwait"]:has(#teammate_readonly_group:not([hidden])) .topic-block #title::before {
+    content: none;
+}
+
+body[data-pq-screen="ackwait"]:has(#everyone_answers_group:not([hidden])) .topic-block #title,
+body[data-pq-screen="ackwait"]:has(#fast_forward_group:not([hidden])) .topic-block #title,
+body[data-pq-screen="ackwait"]:has(#teammate_readonly_group:not([hidden])) .topic-block #title {
+    color: var(--pq-ink);
+}
+
+/* The fourth waiting state, SEQUENCE_PLAYER ("look at the screen"), owns no group, so
+   :has() has nothing to test and it kept the check mark of a confirmation it never made.
+   goTo() now writes the state name itself to body[data-pq-state], which is what these two
+   rules read. At (1,3,2) they beat the ackwait pair above (1,2,2) whatever the order, and
+   a browser that does not know the attribute simply never matches — the same graceful
+   failure the :has() exclusions have. */
+
+body[data-pq-screen="ackwait"][data-pq-state="SEQUENCE_PLAYER"] .topic-block #title::before {
+    content: none;
+}
+
+body[data-pq-screen="ackwait"][data-pq-state="SEQUENCE_PLAYER"] .topic-block #title {
+    color: var(--pq-ink);
+}
+
+/* Revealing clues, player side: one green guess action and one quiet pass that cannot be
+   confused. The pass button carries .pq-btn-ghost instead of .color-red. */
+
+#guess_or_pass_player_group:not([hidden]) {
+    display: flex;
+    padding: 18px 16px;
+}
+
+#guess_or_pass_player_group > entry.column { gap: 10px; width: 100%; padding: 0; }
+
+#guess_or_pass_player_group .button,
+#revealing_clues_button { width: 100%; }
+
+/* The clue text arrives as the state's title, and every screen in the answer family
+   carries a question rather than a label, so the headline drops to a readable size. */
+
+body[data-pq-screen="answer"] .topic-block #title { font-size: 22px; line-height: 1.15; }
+
+/* Revealing clues, host side: two different actions, no longer two identical red blocks.
+   Stop the round is the primary destructive one, end the question is the ghost. */
+
+#stop_guessing_or_end_question_group > entry.column { gap: 9px; width: 100%; padding: 0; }
+
+#stop_guessing_or_end_question_group .button { width: 100%; }
+
+/* The verdict card, shared with the final round's identical screen (which adds the
+   matching .pq-fact wrappers there and needs no CSS of its own). */
+
+#revealing_clues_decide_answer_group:not([hidden]),
+#final_round_decide_answer_group:not([hidden]) {
+    display: flex;
+    padding: 17px;
+}
+
+#revealing_clues_decide_answer_group > entry.column,
+#final_round_decide_answer_group > entry.column { gap: 9px; width: 100%; padding: 0; }
+
+/* entry.column .explanatory_label is 0-2-1 and paints a pre-token colour, so the eyebrow
+   has to be reclaimed at id specificity like the answer/verdict judge card. */
+#revealing_clues_decide_answer_group .explanatory_label,
+#final_round_decide_answer_group .explanatory_label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--pq-muted);
+}
+
+/* Round 5: the two fact boxes are the host's judge screen — "their answer" and "the right
+   answer" — and both read as left-aligned, because .pq-fact below declared text-align:
+   start and this rule pulled the eyebrows to start with it. Nothing contested either
+   declaration, which is why no amount of specificity elsewhere moved them. Both are
+   centred now, in one place: the box (below) and the eyebrow (here). */
+.pq-fact .explanatory_label { text-align: center; }
+
+#revealing_clues_answering_player,
+#final_round_answering_player {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--pq-ink);
+}
+
+.pq-fact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    text-align: center;
+    padding: 11px;
+    border-radius: 14px;
+    background: var(--pq-soft);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* The value is a <label>, so it is a flex item: without a width it shrinks to its content
+   and align-items alone would decide where the box sits. Stating both means a wrapped
+   answer centres line by line and a short one still sits in the middle. */
+.pq-fact > * { width: 100%; }
+
+.pq-fact--right { background: color-mix(in srgb, var(--pq-success) 10%, transparent); }
+
+/* entry.column label (0-1-1) wins over a bare .pq-fact > :last-child, so the value
+   colours are declared at 0-2-1 as well. */
+entry.column .pq-fact > :last-child,
+.pq-fact > :last-child {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--pq-ink);
+}
+
+entry.column .pq-fact--right > :last-child,
+.pq-fact--right > :last-child { color: var(--pq-success); }
+
+#revealing_clues_decide_answer_group .button,
+#final_round_decide_answer_group .button { width: 100%; }
+
+/* === Final round === */
+
+/* The three theme lists. FINAL_ROUND_THEMES_HOST and CURIOSITY share one group with two
+   different renderers, INTRODUCE_THEMES has its own; all three build the same
+   .final-round-question-wrapper rows (styles.css), so the rows are the panels and the
+   group paints nothing, so padding/background are reclaimed from .glass-card.
+   This gap is what replaces the per-row margin the old rules had to leave
+   behind as a stopgap; that stopgap is deleted in styles.css. */
+
+#final_round_themes_group:not([hidden]),
+#themes_to_introduce_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    max-width: 28rem;
+    width: 100%;
+    margin-inline: auto;
+}
+
+/* Removing a theme is subtraction, not selection: inside the removal/curiosity group the
+   picked row reads as struck out on top of the shared accent treatment. */
+#final_round_themes_group .final-round-question-wrapper.is-picked .final-round-question {
+    text-decoration: line-through;
+}
+
+/* Final bid, player side: the auction's big tabular number, so the two bidding surfaces
+   feel like one mechanic. The player's ceiling arrives as the state's undertitle. */
+
+#final_bid_player_group:not([hidden]) {
+    display: flex;
+    padding: 16px;
+}
+
+#final_bid_player_group > entry.column {
+    gap: 10px;
+    width: 100%;
+    align-items: center;
+    padding: 0;
+}
+
+/* entry.column label paints a fixed pre-token colour; the theme name needs its own ink. */
+#final_bid_label {
+    font-size: 19px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--pq-ink);
+}
+
+/* The 42px borderless number read as a label, not as something you can tap and type into.
+   It now keeps the plain field of .info-block-input — the same surface as the suggestion
+   box — and only the tabular digits are its own. */
+#final_bid_input {
+    text-align: start;
+    width: 100%;
+    font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield;
+}
+
+#final_bid_input::-webkit-outer-spin-button,
+#final_bid_input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+#final_bid_button, #final_bid_all_in_button { width: 100%; }
+
+/* Final answer, player side: the YOU_ANSWER card without the giant headline — here the
+   question is carried by the topic block, not by the card. */
+
+#final_round_answer_group:not([hidden]) {
+    display: flex;
+    padding: 18px 16px;
+}
+
+#final_round_answer_group > entry.column { gap: 10px; width: 100%; padding: 0; }
+
+#final_round_answer_group label {
+    font-size: 13px;
+    color: var(--pq-muted);
+    text-align: center;
+    line-height: 1.4;
+}
+
+#final_answer_input { font-size: 17px; font-weight: 700; padding: 15px; }
+
+#final_round_answer_group .button { width: 100%; }
+
+/* The two host controls that stop a phase early: quiet destructive, like the auction's,
+   so a mis-tap during a tense final round is less likely. */
+
+#everyone_bids_group:not([hidden]),
+#everyone_answers_group:not([hidden]) {
+    display: flex;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    max-width: 28rem;
+    width: 100%;
+    margin-inline: auto;
+}
+
+#everyone_bids_group > entry.column,
+#everyone_answers_group > entry.column { width: 100%; padding: 0; }
+
+#everyone_bids_group .button,
+#everyone_answers_group .button { width: 100%; }
+
+/* The two-way decisions. CONTINUE_OR_END and DECIDE_FINAL_PLAYERS both pick one of two
+   paths, which the design draws as two tappable option cards rather than two coloured
+   alarms. Both cards clear the 44px touch target by their padding alone. */
+
+.pq-choice {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 17px;
+    border-radius: var(--pq-radius);
+    background: var(--pq-panel);
+    border: var(--pq-border);
+    box-shadow: var(--pq-shadow);
+    text-align: start;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    font-family: "partyquiz", Play, system-ui, sans-serif;
+    color: var(--pq-ink);
+    transition: transform .08s ease-out, box-shadow .08s ease-out;
+}
+
+.pq-choice:active { transform: translate(5px, 5px); box-shadow: 0 0 0 transparent; }
+
+.pq-choice-title { font-size: 18px; font-weight: 700; }
+
+.pq-choice-desc { font-size: 12px; color: var(--pq-muted); line-height: 1.35; font-weight: 400; }
+
+.pq-choice--danger .pq-choice-title { color: var(--pq-danger); }
+
+#curiosity_or_end_group:not([hidden]),
+#decide_final_players_group:not([hidden]) {
+    display: flex;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#curiosity_or_end_group > entry.column,
+#decide_final_players_group > entry.column { gap: 11px; width: 100%; padding: 0; }
+
+/* These two carry a title and nothing else, so the start alignment .pq-choice needs for
+   its title+description pairs just left them hanging off one edge. */
+#curiosity_or_end_group .pq-choice { align-items: center; text-align: center; }
+
+/* DISPLAY_CURIOSITY_ANSWER is a single reveal action on no panel. */
+
+#curiosity_answer_group:not([hidden]) {
+    display: flex;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    max-width: 28rem;
+    width: 100%;
+    margin-inline: auto;
+}
+
+#curiosity_answer_group > entry.column { width: 100%; padding: 0; }
+
+#curiosity_answer_group .button { width: 100%; }
+
+/* === Round result and game over === */
+
+/* The two round-result groups paint no panel of their own: the standings rows are the
+   panels, so the id reclaims .glass-card's padding, background and radius. */
+
+#all_questions_answered_host_group:not([hidden]),
+#all_questions_answered_player_group:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.pq-result-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    text-align: center;
+}
+
+.pq-rank {
+    font-size: 58px;
+    font-weight: 700;
+    line-height: .92;
+    letter-spacing: -.04em;
+    color: var(--pq-accent);
+    animation: pq-pop .4s cubic-bezier(.2, .9, .25, 1) both;
+}
+
+.pq-delta { font-size: 14px; font-weight: 700; color: var(--pq-success); }
+.pq-delta.is-negative { color: var(--pq-danger); }
+
+/* The waiting note under the player's standings is a hint, not a heading. */
+#all_questions_answered_player_group > label {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--pq-muted);
+    text-align: center;
+}
+
+#all_questions_answered_host_group .button { width: 100%; }
+
+/* .pq-avatar's dashed ring is the design's placeholder treatment for initials. This is the
+   class's first consumer, and half of its output is a real PNG - drop the ring there. */
+img.pq-avatar { border: none; }
+
+.pq-standings { display: flex; flex-direction: column; gap: 7px; }
+
+.pq-standing {
+    position: relative;
+    overflow: hidden;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: var(--pq-panel);
+    border: var(--pq-border);
+    box-shadow: var(--pq-shadow);
+    box-sizing: border-box;
+}
+
+.pq-standing.is-me { background: var(--pq-soft); }
+
+/* pq-bar animates width from 0 to var(--w); --w is set inline as a clamped integer
+   percentage, and the keyframe's own fallback keeps the bar sane if it is ever absent. */
+.pq-standing__bar {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    background: var(--pq-track);
+    animation: pq-bar .9s cubic-bezier(.2, .9, .2, 1) both;
+}
+
+.pq-standing.is-me .pq-standing__bar { background: var(--pq-soft); }
+
+.pq-standing__line { position: relative; display: flex; align-items: center; gap: 10px; }
+
+.pq-standing__rank {
+    flex: none;
+    width: 22px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--pq-muted);
+}
+
+/* min-width: 0 is what actually lets the ellipsis happen: a flex item will not shrink
+   below its content width without it, so a long name would overflow the row instead. */
+.pq-standing__name {
+    flex: 1;
+    min-width: 0;
+    text-align: start;
+    font-size: 14.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pq-standing__score {
+    flex: none;
+    font-size: 17px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.pq-standing.is-me .pq-standing__score { color: var(--pq-accent); }
+
+.pq-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 2; }
+
+/* The synergy rain is not tied to a screen: it falls the height of the page for as long as
+   synergy is on, behind everything. `z-index: 0` is what puts it behind: the layer is a
+   sibling of <bb>, and index.css gives `body.partyquiz bb { position: relative; z-index: 1 }`,
+   so the entire application — header, strip, every card, both FABs, every overlay — paints
+   in a layer above this one. It still paints above the two orbs, which are z-index 0 and
+   earlier in the DOM. pointer-events are off, so it never eats a tap. --fall carries the
+   pieces the whole viewport height instead of the podium layer's fixed 620px. */
+.pq-confetti--page { position: fixed; z-index: 0; }
+.pq-confetti--page .pq-confetti__piece { --fall: 105vh; }
+
+/* "Your answer was accepted" celebrates over the screen rather than behind it. The layer is
+   a sibling of <bb>, and index.css makes <bb> a stacking context at z-index 1, so the whole
+   application is one layer here: any positive index above 1 paints over all of it, including
+   the overlays whose indices are local to <bb>. That is accepted — the pieces are sparse,
+   .pq-confetti turns pointer events off so nothing underneath stops responding, and the
+   layer empties itself after 3.6s. It is a third layer, not a third implementation:
+   burstConfetti()/clearConfetti() drive it unchanged. */
+.pq-confetti--celebrate { position: fixed; z-index: 45; }
+.pq-confetti--celebrate .pq-confetti__piece { --fall: 105vh; }
+
+.pq-confetti__piece {
+    position: absolute;
+    top: -30px;
+    inset-inline-start: var(--x);
+    width: var(--w2);
+    height: var(--h);
+    border-radius: 2px;
+    background: var(--c);
+    opacity: 0;
+    animation: pq-fall var(--d) linear var(--delay) forwards;
+}
+
+/* === Overlays and service states === */
+
+/* Stacking order for everything that floats above the screens. Written down once so a
+   later plan does not have to guess: FABs 20, emoji floaters 30, toasts 40, the
+   reconnect overlay 60, the two modals 70/71, the change-points popup 99/100 (dead),
+   the error popup 150/160, the central-information overlay 9000. Anything that must
+   cover the reconnect overlay is above 60; the FABs are below it on purpose. */
+
+/* SEQUENCE_HOST's fast-forward. The headline pair of both SEQUENCE_* states is already
+   dressed by the ackwait rules above, including the :has() exclusion that keeps
+   the confirmation check mark off SEQUENCE_HOST. Only the control needs a home.
+   .glass-card's padding and background are both reclaimed. */
+
+#fast_forward_group:not([hidden]) {
+    display: flex;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    max-width: 28rem;
+    width: 100%;
+    margin-inline: auto;
+    margin-block-start: 8px;
+}
+
+#fast_forward_group .button { width: 100%; }
+
+/* INTRODUCE_THEMES: the control sits under the theme list, not above it. */
+.column:has(> #themes_to_introduce_group:not([hidden])) > #fast_forward_group { order: 1; }
+
+/* Reconnect overlay. The design has no analog, so it inherits the panel language: a
+   near-opaque wash of the page ground with the countdown as the one loud thing on it.
+   The plain var(--pq-bg) declaration is the fallback for browsers without color-mix —
+   they get an opaque overlay, which still hides the stale screen underneath. */
+
+#reconnection_screen:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--pq-bg);
+    background: color-mix(in srgb, var(--pq-bg) 88%, transparent);
+    text-align: center;
+    padding-inline: 24px;
+}
+
+#reconnection_screen label {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--pq-ink);
+}
+
+/* #reconnect_countdown is itself a <label>, so the rule above (1,0,1) outranks a bare
+   #reconnect_countdown (1,0,0) and would have kept the countdown at 18px. Declared
+   inside the overlay to get to (2,0,0). */
+
+#reconnection_screen #reconnect_countdown {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--pq-accent);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+/* Terminal state of the reconnect overlay: the ceiling has been hit, so the countdown gives way to
+   an explicit choice. The overlay is inset:0 / z-index:60, so without these buttons it is a
+   blocking screen with no way out. */
+
+#reconnect_terminal:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 320px;
+}
+
+#reconnection_screen #reconnect_terminal .button {
+    width: 100%;
+}
+
+/* Emoji stack (design 350-355), rebuilt end to end and described only here — index.css
+   and styles.css no longer carry a rule for it. The design mounts the six buttons when
+   the stack opens and unmounts them when it closes; emoji.js reproduces that with one
+   .emoji-open class on the layer, so `display` is what hides them, not opacity. That
+   matters twice over: an opacity-only hide left a full-height column of invisible tap
+   targets up the right-hand edge of every screen, and it made the closed state depend on
+   a rule that any filled keyframe could out-shout.
+
+   The seven ids belong to emoji.js, which binds them at load time. */
+
+/* Bottom bar: camera FAB | control game | emoji FAB. Fixed columns, so a hidden item
+   does not shift the others. */
+
+.pq-bottom-bar {
+    position: fixed;
+    inset-inline: max(14px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-right));
+    inset-block-end: max(16px, env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 10px;
+    z-index: 20;
+    pointer-events: none;
+}
+
+.pq-bottom-bar > .camera_control { grid-column: 1; justify-self: start; pointer-events: auto; }
+.pq-bottom-bar > #manage_players_button { grid-column: 2; pointer-events: auto; }
+.pq-bottom-bar > #emoji_layer { grid-column: 3; justify-self: end; }
+
+body.partyquiz #manage_players_button.button {
+    height: 56px;
+    padding: 0 20px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    border-radius: 28px;
+}
+
+overlay#emoji_layer {
+    position: relative;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 7px;
+    transform: scale(var(--overlay-scale, 1));
+    transform-origin: bottom right;
+    /* main.js writes display: flex / none on this element inline, so the display above is
+       a fallback. The layer's own box must not eat taps meant for the screen behind it —
+       only the buttons do. */
+    pointer-events: none;
+}
+
+/* An emoji-capable family has to be in the stack: the "partyquiz" webfont carries no
+   pictographs, and a family list that ends at a text-only font renders them as boxes on
+   some Android builds. Per-glyph fallback picks the app font for the ✕ and the system
+   emoji font for the six faces. */
+
+body.partyquiz #emoji_layer .emojis-block-button {
+    pointer-events: auto;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 50%;
+    background: var(--pq-menu);
+    color: var(--pq-ink);
+    box-shadow: 0 5px 14px rgba(10, 4, 26, .22);
+    font-family: "partyquiz", Play, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+    font-size: 23px;
+    line-height: 1;
+    text-shadow: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* (2,1,1) — beats the rule above (1,2,1) whatever the order. */
+
+body.partyquiz #emoji_layer #controls,
+body.partyquiz #button_main.button {
+    width: 56px;
+    height: 56px;
+    max-height: none;
+    padding: 0;
+    box-sizing: border-box;
+    border: var(--pq-border);
+    border-radius: 50%;
+    box-shadow: 0 6px 18px rgba(54, 38, 89, .18);
+}
+
+body.partyquiz #emoji_layer #controls { font-size: 24px; }
+
+/* The toggle carries no markup glyph, so the state can swap it without touching the DOM:
+   a face while the stack is closed, a cross while it is open.
+
+   `margin: 0` and `position: static` are load-bearing. index.css declares
+   `body.partyquiz .button::after { margin: auto 10px 0 10px; position: relative; top: .1em }`
+   for the sprite icons, and #controls carries .button, so it matched here too. Neither of
+   those properties was re-declared by any later rule, so both applied unopposed — and an
+   auto margin in the alignment axis overrides the grid's `place-items: center` outright,
+   which parked the glyph on the floor of the button with another .1em of nudge on top.
+   The pseudo-element is also made its own centring box (grid + place-items + line-height 1)
+   so the emoji's low baseline cannot pull it off centre again. */
+
+body.partyquiz #emoji_layer #controls::after {
+    content: "😄";
+    margin: 0;
+    position: static;
+    display: grid;
+    place-items: center;
+    inline-size: 100%;
+    block-size: 100%;
+    font-size: 30px;
+    line-height: 1;
+}
+
+body.partyquiz #emoji_layer.emoji-open #controls::after {
+    content: "✕";
+    font-size: 24px;
+    font-weight: 700;
+}
+
+/* Closed: the six are not in the layout at all, so the layer is exactly the 56px toggle.
+   (2,2,0) — #controls inside :not() still counts as an id, which is what puts this above
+   the paint rules and makes the closed state unconditional. */
+
+#emoji_layer:not(.emoji-open) > .emojis-block-button:not(#controls) { display: none; }
+
+/* Open: the design's pq-pop, deliberately with NO fill mode. `both` would hold the
+   keyframe's closing `transform: scale(1)` forever and permanently outrank the :active
+   rule below, so a tap would stop reading as a press the moment the pop finished. The
+   keyframe's 100% frame is identical to the button's resting state (opacity 1, no
+   transform), so dropping the fill costs nothing. Muted by the global
+   prefers-reduced-motion block in pq-components.css. */
+
+#emoji_layer.emoji-open > .emojis-block-button:not(#controls) {
+    animation: pq-pop .22s cubic-bezier(.2, .9, .25, 1);
+}
+
+body.partyquiz #emoji_layer .emojis-block-button:active { transform: scale(.9); }
+body.partyquiz #emoji_layer #controls:active { transform: scale(.92); }
+
+/* A tapped emoji flies up the screen. The node is created by pqFloatEmoji() on the body,
+   not inside the layer, so the layer's own transform cannot become its containing
+   block. --x is a number of pixels computed locally, never a server string. */
+
+.pq-floater {
+    position: fixed;
+    inset-inline-end: var(--x, 32px);
+    inset-block-end: 88px;
+    font-size: 34px;
+    line-height: 1;
+    pointer-events: none;
+    z-index: 30;
+    animation: pq-float 1.6s ease-out forwards;
+}
+
+/* Host camera stack (design 357-373): labelled chips above a round FAB. The chips are
+   the <b> elements ShowCameraButton() creates with class
+   "button color-blue camera-secondary-button" — the creation code is untouched. */
+
+/* ShowCameraButton() gives every chip `button color-blue camera-secondary-button`, and
+   `body.partyquiz .button.color-blue` (0,3,1) in pq-components.css declares
+   `background: var(--pq-soft)` — a 16% violet — plus `color: var(--pq-accent)` and
+   `box-shadow: none`. It outranked the chip rule when that rule was written as
+   `body.partyquiz .camera-secondary-button` (0,2,1), so the chips shipped see-through,
+   unshadowed and accent-coloured over whatever the studio was showing. Qualified with
+   the roster and with .button to reach (0,4,1); nothing here is !important. */
+
+body.partyquiz .camera_roster .button.camera-secondary-button {
+    min-width: 132px;
+    width: auto;
+    height: auto;
+    max-height: none;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: start;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 10px 13px;
+    border-radius: 14px;
+    background: var(--pq-menu);
+    color: var(--pq-ink);
+    border: var(--pq-border);
+    box-shadow: 0 5px 14px rgba(54, 38, 89, .16);
+    text-shadow: none;
+    word-break: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    /* No fill mode, same reason as the emoji buttons: `both` holds the closing
+       `transform: scale(1)` for as long as the chip lives and the :active press below
+       could never be seen. The chips are created on show and removed on hide, so the pop
+       still plays exactly once, when they appear. */
+    animation: pq-pop .22s cubic-bezier(.2, .9, .25, 1);
+}
+
+body.partyquiz .camera_roster .button.camera-secondary-button:active { transform: scale(.96); }
+
+body.partyquiz #button_main.button {
+    background: var(--pq-accent);
+    display: grid;
+    place-items: center;
+}
+
+/* The shipped icon is bright green on transparent — legible on the white square it used
+   to sit on, but not on the accent circle the design asks for, and invisible on the
+   .color-green background the button would otherwise inherit. Flattened to white. */
+
+#button_main .video-camera-image {
+    width: 26px;
+    height: 26px;
+    filter: brightness(0) invert(1);
+}
+
+#fast_forward_button { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
+#fast_forward_button.is-held { transform: scale(0.97); filter: brightness(0.9); }
+.pq-ff-hint { font-size: 0.75rem; opacity: 0.7; }
+.pq-ff-scale { font-variant-numeric: tabular-nums; margin-left: 0.25rem; }
+.pq-ff-plaque { position: fixed; top: 0.75rem; left: 50%; transform: translateX(-50%); z-index: 50; pointer-events: none; padding: 0.4rem 0.9rem; border-radius: var(--pq-radius); background: var(--pq-panel); border: var(--pq-border); box-shadow: var(--pq-shadow); color: var(--pq-ink); font-weight: 600; }
+.pq-ff-plaque[hidden] { display: none; }
+
+.inherit-candidates { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.75rem 0; }
+body.partyquiz .inherit-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 0.6rem; row-gap: 2px; width: 100%; box-sizing: border-box; text-align: start; }
+.inherit-card > .pq-avatar { grid-row: span 2; }
+.inherit-card__name { grid-row: span 2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.inherit-card__score { font-size: 15px; font-weight: 700; text-align: end; white-space: nowrap; }
+.inherit-card__source { grid-column: 3; font-size: 0.75rem; color: var(--pq-muted); text-align: end; }
+
+/* Appeal */
+#appeal_vote_group { display: flex; flex-direction: column; gap: 24px; max-width: 28rem; margin: 0 auto; padding: 16px; }
+#appeal_vote_group[hidden] { display: none; }
+.appeal-banner { font-size: 32px; font-weight: 700; line-height: 1.2; text-transform: uppercase; letter-spacing: .04em; text-align: center; color: var(--pq-on-accent); background: var(--pq-fam-buzz); border-radius: var(--pq-radius); padding: 8px 16px; margin-bottom: 8px; animation: pq-appeal-shake .4s ease-out 1; }
+@keyframes pq-appeal-shake { 0% { transform: translateX(0) scale(1); } 20% { transform: translateX(-6px) scale(1.04); } 40% { transform: translateX(6px) scale(1.04); } 60% { transform: translateX(-3px) scale(1.02); } 80% { transform: translateX(3px) scale(1.01); } 100% { transform: translateX(0) scale(1); } }
+.appeal-who { display: flex; align-items: center; gap: 8px; }
+.appeal-who-text { font-size: 24px; font-weight: 700; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.appeal-answer, .appeal-correct { font-size: 18px; font-weight: 400; line-height: 1.5; background: var(--pq-field); border-radius: var(--pq-radius); padding: 0 16px; border-block: 8px solid transparent; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.appeal-correct { color: var(--pq-success); }
+.appeal-answer[hidden], .appeal-correct[hidden] { display: none; }
+.appeal-buttons { display: flex; flex-direction: column; gap: 16px; }
+.appeal-buttons[hidden] { display: none; }
+body.partyquiz .appeal-buttons .button { width: 100%; min-height: 56px; font-size: 18px; font-weight: 700; }
+body.partyquiz .appeal-buttons .button[aria-pressed="true"][disabled] { opacity: 1; outline: 3px solid var(--pq-ink); outline-offset: 2px; }
+body.partyquiz .appeal-buttons .button:focus-visible, body.partyquiz .appeal-float:focus-visible { outline: 3px solid var(--pq-ink); outline-offset: 2px; }
+.appeal-status { font-size: 18px; font-weight: 400; line-height: 1.5; text-align: center; }
+.appeal-status:focus { outline: none; }
+.appeal-status--upheld { color: var(--pq-success); font-weight: 700; animation: pq-pop .25s cubic-bezier(.2, .9, .25, 1) both; }
+.appeal-status--rejected { color: var(--pq-danger); font-weight: 700; }
+.appeal-timer { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.appeal-timer-num { font-size: 24px; font-weight: 700; line-height: 1.2; }
+.appeal-timer-bar { width: 100%; height: 8px; background: var(--pq-track); border-radius: 4px; overflow: hidden; }
+.appeal-timer-bar[hidden] { display: none; }
+.appeal-timer-fill { height: 100%; background: var(--pq-soft); width: 100%; }
+.appeal-timer-fill.is-draining { transition: width .5s ease-out; }
+.appeal-timer.is-urgent .appeal-timer-num { color: var(--pq-fam-buzz); }
+.appeal-timer.is-urgent .appeal-timer-fill { background: var(--pq-fam-buzz); }
+.appeal-timer.is-pulsing .appeal-timer-fill { animation: pq-appeal-pulse 1s ease-in-out infinite; }
+@keyframes pq-appeal-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+.appeal-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+body.partyquiz .appeal-float { width: 100%; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: var(--pq-fam-buzz); color: var(--pq-on-accent); font-size: 18px; font-weight: 700; animation: pq-pop .25s cubic-bezier(.2, .9, .25, 1) both, pq-appeal-btn-pulse 1.2s ease-in-out .25s infinite, pq-appeal-halo 1.2s ease-out .25s infinite; }
+@keyframes pq-appeal-btn-pulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.04); filter: brightness(1.15); } }
+@keyframes pq-appeal-halo { 0% { box-shadow: var(--pq-btn-shadow), 0 0 0 0 color-mix(in srgb, var(--pq-fam-buzz) 70%, transparent); } 100% { box-shadow: var(--pq-btn-shadow), 0 0 0 18px transparent; } }
+.appeal-label { font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; line-height: 1.1; }
+.appeal-left { font-size: 11px; font-weight: 700; color: rgba(30, 24, 48, .55); }
+body.partyquiz .appeal-float[hidden] { display: none; }
+.appeal-toast { position: fixed; inset-inline-end: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100% - 32px); padding: 8px 16px; background: var(--pq-panel); color: var(--pq-ink); border: var(--pq-border); box-shadow: var(--pq-shadow); border-radius: var(--pq-radius); font-size: 18px; font-weight: 400; line-height: 1.5; z-index: 55; }
+.appeal-toast[hidden] { display: none; }
+.pq-appeal-flash { position: fixed; inset: 0; pointer-events: none; background: var(--pq-fam-buzz); opacity: 0; z-index: 55; animation: pq-appeal-flash 450ms ease-out 1 forwards; }
+@keyframes pq-appeal-flash { 0% { opacity: 0; } 30% { opacity: .5; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+    .appeal-banner, .appeal-float, .appeal-status--upheld, .appeal-timer.is-pulsing .appeal-timer-fill, .pq-appeal-flash { animation: none; }
+    .pq-appeal-flash { display: none; }
+}
+
+/* Fit: one phone screen, no scroll. 100vh is the screen with the browser bars hidden, so
+   the shell measures the visible area instead. main.js pqFit() sets data-pq-fit when the
+   natural layout runs past it; this step only tightens the shell shared by every screen,
+   and the zoom that follows (if still needed) scales the rest evenly. */
+@supports (height: 100dvh) {
+    html, body { height: 100dvh; max-height: 100dvh; }
+}
+
+body[data-pq-fit] header.pq-header { margin-block-start: 4px; padding-block-start: max(2px, env(safe-area-inset-top)); }
+body[data-pq-fit] header.pq-header icon { height: 30px; }
+body[data-pq-fit] .pq-theme-toggle,
+body[data-pq-fit] header.pq-header .refresh-button { width: 36px; height: 36px; }
+body[data-pq-fit] #pq_score_strip:not([hidden]) { margin-block-start: 6px; padding: 5px 14px; }
+body[data-pq-fit] .pq-score-strip__own:not([hidden]) { flex-direction: row; align-items: baseline; gap: 8px; }
+body[data-pq-fit] .pq-score-strip__value { font-size: 18px; }
+body[data-pq-fit] .topic-block { margin-block-start: 4px; }
+body[data-pq-fit] .topic-block #title { font-size: 21px; }
+body[data-pq-fit] bb.column { gap: 8px; }
+/* The two longest lists go past the zoom floor on a 320px phone; tightening their own
+   padding buys the rest without shrinking the text further. */
+body[data-pq-fit] .questions-block-table { gap: 6px; }
+body[data-pq-fit] .questions-row { gap: 4px; padding-block: 6px; }
+body[data-pq-fit] .questions-row-item { padding-block: 8px; }
+body[data-pq-fit] .pq-standings { gap: 5px; }
+body[data-pq-fit] .pq-standing { padding-block: 6px; }
+body[data-pq-fit] .pq-rank { font-size: 44px; }
+body[data-pq-fit] #all_questions_answered_host_group:not([hidden]),
+body[data-pq-fit] #all_questions_answered_player_group:not([hidden]) { gap: 8px; }
+
+/* === PQRevamped: avatars, final board, session recovery ============================== */
+
+/* An avatar is a circle that exists before its picture does: the initials are the
+   placeholder, the <img> is layered on top, and a lost request leaves the initials
+   instead of a hole (main.js pqAvatarNode / teamAvatarEl). */
+.pq-avatar { position: relative; }
+.pq-avatar__initials { line-height: 1; }
+.pq-avatar__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    background: var(--pq-soft);
+}
+/* The dashed ring is the initials' placeholder treatment; a loaded picture replaces it. */
+.pq-avatar:has(> .pq-avatar__img) { border-color: transparent; background: transparent; }
+
+/* Team rows get the same wrapper, so the circle is sized by the wrapper, not the image. */
+.team-row .avatar-sm {
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--pq-accent);
+    overflow: hidden;
+}
+.team-row .avatar-sm .pq-avatar__img { border-radius: 50%; }
+
+/* The game-over ceremony table (main.js pqEnterApplause). */
+.pq-final-board {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    text-align: center;
+}
+.pq-final-board .pq-eyebrow { align-self: center; }
+#pq_standings_final .pq-standing { padding-block: 9px; }
+#pq_standings_final .pq-standing__rank { width: 26px; font-size: 16px; }
+.pq-standing.is-place-1 { box-shadow: inset 0 0 0 2px #e8b923; }
+.pq-standing.is-place-2 { box-shadow: inset 0 0 0 2px #b9c1cc; }
+.pq-standing.is-place-3 { box-shadow: inset 0 0 0 2px #c98a4b; }
+
+/* Short phones: the ceremony table is the tallest thing on the screen. */
+body[data-pq-fit] .pq-final-board { gap: 5px; }
+body[data-pq-fit] #applause_group .applause-emoji { font-size: 52px; }
