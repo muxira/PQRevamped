@@ -58,14 +58,32 @@ let customAvatarPreviewRenderToken = 0;
 let customAvatarMaskImg = null;
 
 
+var customAvatarMaskRequest = null;
+
+// Resolves to the mask image (or null). A failed request is remembered as null rather
+// than retried on every repaint, and `crossOrigin` keeps the canvas clean if the file is
+// ever served from a CDN instead of this repo.
 function loadCustomAvatarMask() {
-    if (customAvatarMaskImg) return;
-    var img = new Image();
-    img.src = '../../assets/custom_avatar_background.png';
-    img.onload = function () {
-        customAvatarMaskImg = img;
-        renderCustomAvatarPreview().catch(function (err) { console.error(err); });
-    };
+    if (customAvatarMaskImg) return Promise.resolve(customAvatarMaskImg);
+    if (customAvatarMaskRequest) return customAvatarMaskRequest;
+
+    customAvatarMaskRequest = new Promise(function (resolve) {
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function () {
+            customAvatarMaskImg = img;
+            resolve(img);
+            renderCustomAvatarPreview().catch(function (err) { console.error(err); });
+        };
+        img.onerror = function () {
+            // Remember the failure so a broken deploy paints once, not once per frame.
+            customAvatarMaskImg = null;
+            customAvatarMaskRequest = null;
+            resolve(null);
+        };
+        img.src = '../../assets/custom_avatar_background.png';
+    });
+    return customAvatarMaskRequest;
 }
 
 function InitAvatars() {
@@ -557,6 +575,15 @@ async function renderCustomAvatarPreview() {
     var payload = window.customAvatar && window.customAvatar.payload;
     var hasPayload = payload && payload.Data && window.customAvatar.dataUrl;
 
+    // The placeholder artwork is part of the preview, not a decoration: without it the
+    // user's drawing covers the whole circle and there is no silhouette to line it up
+    // against. Load it on demand, then repaint once it lands instead of rendering the
+    // first frame without it.
+    if (hasPayload && !customAvatarMaskImg) {
+        await Promise.race([loadCustomAvatarMask().catch(function () { return null; }), new Promise(function (r) { setTimeout(r, 400); })]);
+        if (token !== customAvatarPreviewRenderToken) return;
+    }
+
     if (!hasPayload) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#7EAFEC';
@@ -604,9 +631,19 @@ async function renderCustomAvatarPreview() {
     ctx.drawImage(img, baseDrawX, baseDrawY, drawW, drawH);
     ctx.restore();
 
-    // Draw mask overlay on top (un-rotated) — transparent area shows user image
+    // Draw the mask/background on top (un-rotated): its transparent areas are the
+    // silhouette cut-out, so the drawing reads as a body instead of a square photo.
     if (customAvatarMaskImg) {
         ctx.drawImage(customAvatarMaskImg, 0, 0, cw, ch);
+    } else {
+        // Never leave a silent square: say what the picture is missing.
+        ctx.save();
+        ctx.fillStyle = 'rgba(29, 18, 53, .55)';
+        ctx.font = '600 12px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        var missingMask = (typeof t === 'function' ? t('ca_mask_failed') : '');
+        ctx.fillText(missingMask && missingMask !== 'ca_mask_failed' ? missingMask : 'Silhouette unavailable', cw / 2, ch - 12);
+        ctx.restore();
     }
 }
 

@@ -6,7 +6,8 @@
 // players can see how their drawing wraps around the avatar before confirming.
 //
 // Mobile-first details:
-//  - Three.js (~600 KB) is dynamically imported only when the 3D tab is opened.
+//  - Three.js ships in assets/vendor/three and is dynamically imported only when the
+//    3D tab is opened, so the page itself never pays for it.
 //  - One finger orbits, pinch zooms; `touch-action: none` keeps the page still.
 //  - The device pixel ratio is capped and frames are drawn on demand, not in a
 //    permanent requestAnimationFrame loop, so a phone does not heat up in a modal.
@@ -403,8 +404,6 @@ async function init3d() {
     if (!hasWebGL()) {
         setLoading(false);
         setStatus(t('ca_unavailable', '3D preview is not available in this browser.'), 'error');
-        const tab = document.getElementById('ca_tab_3d');
-        if (tab) tab.hidden = true;
         return;
     }
 
@@ -413,7 +412,7 @@ async function init3d() {
     } catch (error) {
         console.warn('[3D] Three.js failed to load', error);
         setLoading(false);
-        setStatus(t('ca_library_failed', 'Could not load the 3D engine. Check your connection and try again.'), 'error');
+        setStatus(t('ca_library_failed', 'Could not load the 3D engine. Reload the page to try again.'), 'error');
         return;
     }
 
@@ -459,6 +458,8 @@ function setView(view, options) {
 
     flat.hidden = is3d;
     three.hidden = !is3d;
+    const hint = document.getElementById('ca_3d_hint');
+    if (hint) hint.hidden = !is3d;
 
     if (is3d) start3d();
     else stop3d();
@@ -564,12 +565,8 @@ function boot() {
     resetButton = document.getElementById('ca_3d_reset');
     if (!container) return;
 
-    if (!hasWebGL()) {
-        const tab = document.getElementById('ca_tab_3d');
-        if (tab) tab.hidden = true;
-        return;
-    }
-
+    // The tab stays visible without WebGL: opening it explains why there is no preview
+    // instead of quietly removing a control the player has already seen.
     installTabs();
     installModalHooks();
     installPayloadHooks();

@@ -9,9 +9,9 @@
  *   - navigation (HTML): network first, cache as fallback (a stale UI is worse than
  *     no UI when upstream ships a protocol change);
  *   - static assets: stale-while-revalidate, cache keyed without the ?v= buster;
- *   - cross-origin (Three.js CDN, Steam link): untouched, straight to the network.
+ *   - cross-origin (the Steam wishlist link): untouched, straight to the network.
  */
-const VERSION = 'pqrevamped-v3';
+const VERSION = 'pqrevamped-v5';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -46,6 +46,9 @@ const PRECACHE = [
   './core/templates/js/emoji.js',
   './core/templates/js/custom_avatar_3d.js',
   './core/templates/js/revamped.js',
+  './assets/vendor/three/three.module.js',
+  './assets/vendor/three/addons/loaders/OBJLoader.js',
+  './assets/vendor/three/addons/controls/OrbitControls.js',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/party_quiz_logo_wordmark.png',

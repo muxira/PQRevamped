@@ -10,7 +10,9 @@ It verifies, without a browser:
      actually exists;
   2. every {{template}} and data-i18n key appears in localized/english/lang.json;
   3. all 18 dictionaries have the same key set as English;
-  4. every JSON file parses and every page is valid UTF-8;
+  4. every JSON file parses, every page is valid UTF-8, and every binary asset still
+     starts with its format's magic bytes (a 404 page saved as .png looks fine to a
+     path check and renders as nothing);
   5. no leftover TODO/FIXME markers or scratch files in the tree.
 """
 
@@ -31,6 +33,18 @@ TEMPLATE_RE = re.compile(r"\{\{([^{}\r\n]+)\}\}")
 DATA_I18N_RE = re.compile(r'data-i18n(?:-[a-z-]+)?\s*=\s*"([^"]+)"')
 LOCAL_ORIGIN_RE = re.compile(r"^(?:\.{0,2}/|[A-Za-z0-9_-]+/)")
 
+# extension -> (offset, magic bytes, what it is)
+MAGIC = {
+    ".png": (0, b"\x89PNG\r\n\x1a\n", "PNG"),
+    ".jpg": (0, b"\xff\xd8\xff", "JPEG"),
+    ".jpeg": (0, b"\xff\xd8\xff", "JPEG"),
+    ".gif": (0, b"GIF8", "GIF"),
+    ".ico": (0, b"\x00\x00\x01\x00", "ICO"),
+    ".woff2": (0, b"wOF2", "WOFF2"),
+    ".woff": (0, b"wOFF", "WOFF"),
+    ".ttf": (0, b"\x00\x01\x00\x00", "TrueType"),
+}
+
 errors: list[str] = []
 warnings: list[str] = []
 
@@ -48,7 +62,29 @@ def iter_files():
         yield path
 
 
-def check_references(path: Path, text: str) -> None:
+def script_bases(files: dict[Path, str]) -> dict[Path, list[Path]]:
+    """Map every <script src> file to the directories of the pages that load it.
+
+    A relative URL inside a script is resolved against the *document*, not against the
+    script file, so `../../assets/…` in core/templates/js/avatars.js means
+    /assets/… on the page and core/assets/… next to the script. Checking it against the
+    script's own folder would flag a path that works in the browser.
+    """
+    bases: dict[Path, list[Path]] = {}
+    for page, text in files.items():
+        if page.suffix not in {".html", ".htm"}:
+            continue
+        for match in re.finditer(r"""<script[^>]*\bsrc\s*=\s*["']([^"']+)["']""", text):
+            src = match.group(1).split("?")[0].split("#")[0]
+            if not LOCAL_ORIGIN_RE.match(src):
+                continue
+            resolved = (page.parent / src).resolve()
+            if resolved.suffix == ".js" and resolved.exists():
+                bases.setdefault(resolved, []).append(page.parent)
+    return bases
+
+
+def check_references(path: Path, text: str, bases: list[Path] | None = None) -> None:
     refs = list(REF_RE.finditer(text))
     if path.suffix == ".md":
         refs += list(MD_IMAGE_RE.finditer(text))
@@ -63,11 +99,26 @@ def check_references(path: Path, text: str) -> None:
         target = raw.split("?")[0].split("#")[0]
         if not target or target.endswith("/") or " " in target:
             continue  # a directory prefix concatenated at runtime, not a real file
-        # Paths are written relative to the file that owns them (HTML/CSS/JS alike
-        # enough for this tree: one level of ../ is already the convention).
-        resolved = (path.parent / target).resolve()
-        if not resolved.exists():
+        candidates = [base for base in (bases or [path.parent])]
+        if not any((base / target).resolve().exists() for base in candidates):
             errors.append(f"{relative(path)}: missing reference {raw}")
+
+
+def check_binary(path: Path) -> None:
+    spec = MAGIC.get(path.suffix.lower())
+    if not spec:
+        return
+    offset, magic, label = spec
+    try:
+        with path.open("rb") as fh:
+            fh.seek(offset)
+            head = fh.read(len(magic))
+    except OSError as exc:
+        errors.append(f"{relative(path)}: unreadable ({exc})")
+        return
+    if head != magic:
+        hint = " (looks like an HTML error page)" if head[:1] in (b"<", b"{") else ""
+        errors.append(f"{relative(path)}: not a {label} file{hint}")
 
 
 def check_i18n(files: dict[Path, str], english: dict[str, str]) -> None:
@@ -107,9 +158,13 @@ def main() -> int:
             continue
         files[path] = text
 
+    for path in iter_files():
+        check_binary(path)
+
+    bases = script_bases(files)
     for path, text in files.items():
         if path.suffix in {".html", ".css", ".js", ".webmanifest", ".md"}:
-            check_references(path, text)
+            check_references(path, text, bases.get(path))
         if path.suffix == ".json":
             try:
                 json.loads(text)

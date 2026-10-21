@@ -92,6 +92,12 @@ body.partyquiz .pq-icon-button:focus-visible { outline: 3px solid var(--pq-accen
     overflow: hidden;
 }
 
+/* overflow:hidden still scrolls when something inside it is focused or scrolled to; clip
+   makes the sheet a non-scroll container, so no child can ever shift the panel. */
+@supports (overflow: clip) {
+    .pq-sheet { overflow: clip; }
+}
+
 .pq-sheet.is-open { transform: none; opacity: 1; }
 
 @media (min-width: 640px) {
@@ -240,6 +246,11 @@ body.partyquiz .pq-icon-button:focus-visible { outline: 3px solid var(--pq-accen
 .pq-sheet__section--toggles { gap: 4px; }
 
 .pq-toggle {
+    /* Positioned so the checkbox below cannot escape this row. Without it the input is
+       positioned against .pq-sheet (the nearest positioned ancestor), lands outside the
+       sheet's visible box, and focusing it makes the browser scroll the sheet itself — the
+       whole panel then slides up by the distance to that speck and stays there. */
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -252,7 +263,19 @@ body.partyquiz .pq-icon-button:focus-visible { outline: 3px solid var(--pq-accen
 
 .pq-toggle:last-child { border-block-end: none; }
 .pq-toggle__text { font-size: .95rem; font-weight: 600; }
-.pq-toggle__input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+
+/* The control is the row's hit area, not a 1×1 speck: it stays inside the visible row at
+   every scroll position, so focus never asks for a scroll (and the thumb-sized target is
+   the whole row, as the label already implied). */
+.pq-toggle__input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
 
 .pq-toggle__switch {
     position: relative;
@@ -335,6 +358,19 @@ body.partyquiz .ca-tab--active {
 }
 
 body.partyquiz .ca-tab:focus-visible { outline: 3px solid var(--pq-accent); outline-offset: 1px; }
+
+/* .ca-preview-center is a shrink-to-fit flex *row* and upstream never gives it a width: the
+   flat canvas supplies one. With the flat view hidden, the 3D view's `width: min(100%,
+   260px)` has no definite percentage base and resolves to zero, leaving a 6px ring of
+   borders; and the hint that now sits under the circle became a second column beside it.
+   Pin the stage to the panel and stack its children. */
+body.partyquiz .ca-preview-center {
+    position: relative;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
 
 .ca-view {
     position: relative;
@@ -425,10 +461,15 @@ body.partyquiz .ca-preview-center .ca-3d-canvas {
 html:not([data-pq-theme="studio"]) .ca-3d-status[data-kind="warn"] { color: var(--pq-gold); }
 
 .ca-3d-hint {
-    position: absolute;
-    inset-inline: 0;
-    inset-block-end: 6px;
-    margin: 0;
+    /* Static, under the circle: the viewport itself is a clipped circle, so anything
+       anchored to its bottom edge loses its first and last words to the arc. */
+    position: static;
+    inset: auto;
+    margin: 10px 0 0;
+    width: 100%;
+    max-width: min(100%, 260px);
+    font-size: .72rem;
+    line-height: 1.3;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -444,10 +485,12 @@ html:not([data-pq-theme="studio"]) .ca-3d-status[data-kind="warn"] { color: var(
 
 .ca-3d-hint__sep { opacity: .45; }
 
+/* 14% keeps the button inside the circle: it is clipped by the round viewport, and the
+   corners of a square are outside that circle. */
 .ca-3d-reset {
     position: absolute;
-    inset-block-start: 8px;
-    inset-inline-end: 8px;
+    inset-block-start: 14%;
+    inset-inline-end: 14%;
     width: 34px;
     height: 34px;
     display: grid;
@@ -503,6 +546,18 @@ body.partyquiz .pq-sheet-overlay { max-width: 100vw; }
     body.partyquiz .modal-panel { max-height: 96vh; padding: 12px; }
     body.partyquiz .ca-view--3d { width: min(46vw, 200px); }
     body.partyquiz .ca-hints { gap: 8px; }
+
+    /* The profile card is the one screen that needs more than the 0.7 zoom floor can buy
+       on a 390px-tall viewport: the 118px avatar and the 76px intro field are most of it.
+       Shrink both here — at this height the fields are typed into once. */
+    body.partyquiz .avatar-current img { width: 78px; height: 78px; }
+    body.partyquiz .avatar-prev img,
+    body.partyquiz .avatar-next img { width: 46px; height: 46px; }
+    body.partyquiz .avatar-carousel { padding: 2px 0; }
+    /* Two lines of placeholder, not one and a half: the field is sized to its own hint. */
+    body.partyquiz #player_intro { font-size: 11.5px; padding: 8px 10px; min-height: 46px; height: 46px; }
+    body.partyquiz #set_info_group:not([hidden]) { gap: 8px; padding: 12px 14px; }
+    body.partyquiz #player_name { padding: 10px 12px; }
 }
 
 /* Height-constrained screens: the client already has a data-pq-fit pass; this only

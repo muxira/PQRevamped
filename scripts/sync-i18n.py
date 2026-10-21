@@ -49,7 +49,8 @@ REVAMPED_KEYS = {
     "ca_hint_pinch": "Pinch to zoom",
     "ca_reset_view": "Reset view",
     "ca_unavailable": "3D preview is not available in this browser.",
-    "ca_library_failed": "Could not load the 3D engine. Check your connection and try again.",
+    "ca_library_failed": "Could not load the 3D engine. Reload the page to try again.",
+    "ca_mask_failed": "Silhouette unavailable",
     "ca_model_failed": "Body model unavailable — showing a placeholder.",
     "ca_texture_failed": "Could not load that image for the 3D preview.",
     "ca_context_lost": "The 3D preview stopped. Reopen the avatar editor to try again.",
@@ -62,6 +63,26 @@ REVAMPED_KEYS = {
 
 # Short, hand-written translations for the strings the settings sheet shows.
 TRANSLATIONS = {
+    "ca_mask_failed": {
+        "english": "Silhouette unavailable",
+        "russian": "Силуэт недоступен",
+        "ukrainian": "Силует недоступний",
+        "german": "Silhouette nicht verfügbar",
+        "french": "Silhouette indisponible",
+        "spanish": "Silueta no disponible",
+        "spanishlatinamerica": "Silueta no disponible",
+        "portuguese": "Silhueta indisponível",
+        "polish": "Sylwetka niedostępna",
+        "italian": "Silhouette non disponibile",
+        "turkish": "Silüet kullanılamıyor",
+        "czech": "Silueta není k dispozici",
+        "swedish": "Silhuetten är inte tillgänglig",
+        "kazakh": "Сұлба қолжетімсіз",
+        "simplifiedchinese": "剪影不可用",
+        "japanese": "シルエットを利用できません",
+        "korean": "실루엣을 사용할 수 없습니다",
+        "arabic": "الصورة الظلية غير متاحة",
+    },
     "resume_server_unreachable": {
         "english": "Game found, but the server is not answering. You can try to reconnect or leave the game.",
         "russian": "Игра найдена, но сервер не отвечает. Можно попробовать подключиться снова или выйти из игры.",
@@ -323,6 +344,13 @@ def main() -> int:
             english[key] = value
             changed = True
 
+    # A rewritten default has to reach the locales that still carry the old copy:
+    # they inherit English verbatim, so a stale string would survive the fix.
+    for key, value in REVAMPED_KEYS.items():
+        if english.get(key) != value:
+            english[key] = value
+            changed = True
+
     if changed:
         dump(english_path, english)
 
@@ -334,10 +362,11 @@ def main() -> int:
         before = len(data)
 
         for key in english:
-            if key in data:
+            if key in data and not (key in REVAMPED_KEYS and key not in TRANSLATIONS.get(key, {})):
                 continue
             value = TRANSLATIONS.get(key, {}).get(lang) or english[key]
-            data[key] = value
+            if data.get(key) != value:
+                data[key] = value
 
         for key, table in TRANSLATIONS.items():
             if lang in table and data.get(key) != table[lang]:
