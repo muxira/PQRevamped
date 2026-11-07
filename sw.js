@@ -11,7 +11,7 @@
  *   - static assets: stale-while-revalidate, cache keyed without the ?v= buster;
  *   - cross-origin (the Steam wishlist link): untouched, straight to the network.
  */
-const VERSION = 'pqrevamped-v5';
+const VERSION = 'pqrevamped-v6';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -36,6 +36,7 @@ const PRECACHE = [
   './core/templates/css/pq-revamped.css',
   './core/templates/js/i18n.js',
   './core/templates/js/avatars_list.js',
+  './core/templates/js/host_avatars.js',
   './core/templates/js/avatars.js',
   './core/templates/js/commands.js',
   './core/templates/js/main.js',
@@ -53,6 +54,9 @@ const PRECACHE = [
   './assets/icons/icon-512.png',
   './assets/party_quiz_logo_wordmark.png',
   './assets/video-camera.png',
+  './assets/custom_avatar_background.png',
+  './assets/arrow_left_above.png',
+  './assets/taunts/sound.png',
   './localized/english/lang.json',
 ];
 

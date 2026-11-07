@@ -7,7 +7,7 @@
 (() => {
     'use strict';
 
-    const VERSION = '2.0.0';
+    const VERSION = '2.1.0';
     const SETTINGS_KEY = 'pq_settings_v1';
     const THEME_KEY = 'pq_theme';
     const LAST_GAME_KEY = 'pq_last_game';

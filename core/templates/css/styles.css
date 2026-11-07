@@ -192,18 +192,22 @@
     margin: 0;
 }
 
+/* Five cells to a row, left to right, so a 5x5 board reads as a square instead of a
+   centred pyramid that reshuffles its rows as questions are answered. */
 .questions-items {
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start;
     flex-wrap: wrap;
-    gap: 6px;
+    --questions-gap: 6px;
+    gap: var(--questions-gap);
     width: 100%;
 }
 
 .questions-row-item {
     flex: 1;
     min-width: 46px;
+    max-width: calc((100% - 4 * var(--questions-gap)) / 5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -560,7 +564,7 @@ body.partyquiz .players-ready-block .button.start-game-button { width: 100%; fle
         padding: 10px 5px;
     }
     .questions-items {
-        gap: 5px;
+        --questions-gap: 5px;
     }
 }
 
@@ -1129,7 +1133,8 @@ entry.column .explanatory_label {
 
 /* The group paints no panel; .glass-card declares its padding and background with
    !important, so both have to be beaten with !important at id specificity. */
-#applause_group:not([hidden]) {
+#applause_group:not([hidden]),
+#statistics_group:not([hidden]) {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1164,11 +1169,11 @@ entry.column .explanatory_label {
 }
 
 /* body.partyquiz .button is (0,2,1) and forces 18px/16px padding, so a bare .clap-button
-   would never be read. Declared at (0,3,1) to win. */
+   would never be read. Declared at (0,3,1) to win. The fill is no longer forced here:
+   1.7.1328 gives the applause buttons their family colours. */
 body.partyquiz .button.clap-button {
     padding: 17px 44px;
     font-size: 20px;
-    background: var(--pq-danger-fill);
 }
 
 body.partyquiz .button.wishlist-button {

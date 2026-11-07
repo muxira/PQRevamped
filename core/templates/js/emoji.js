@@ -40,6 +40,8 @@ function setEmojiOpen(open) {
 
 function onFirstEmojiClick() {
     setEmojiOpen(!isEmojiOpen);
+    // The two stacks share the same edge of the screen; only one can be open.
+    if (isEmojiOpen) setTauntsOpen(false);
 }
 
 if (firstEmoji) firstEmoji.addEventListener('click', onFirstEmojiClick);
@@ -51,10 +53,41 @@ sendEmojiButtons.forEach(function (button) {
     button.addEventListener('click', function () { setEmojiOpen(false); });
 });
 
+const tauntLayer = document.querySelector('#taunt_layer');
+const tauntsToggle = document.querySelector('#taunts_toggle');
+
+function setTauntsOpen(open) {
+    if (tauntLayer) tauntLayer.classList.toggle('taunts-open', open);
+    if (tauntsToggle) tauntsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+if (tauntsToggle) tauntsToggle.addEventListener('click', function () {
+    var open = !tauntLayer.classList.contains('taunts-open');
+    setTauntsOpen(open);
+    if (open) setEmojiOpen(false);
+});
+
+// Sound reactions (1.7.1328): the same fly-up feedback as an emoji, with the taunt art.
+document.querySelectorAll('.taunt-button').forEach(function (button) {
+    button.addEventListener('click', function () {
+        pqFloatEmoji(null, button.querySelector('img').src);
+        if (window.pqTaunts.cooldownMs > 0) setTauntsOpen(false);
+    });
+});
+
 setEmojiOpen(false);
+setTauntsOpen(false);
+
+window.pqSetTaunts = function (enabled, cooldownSeconds) {
+    window.pqTaunts.enabled = enabled === true;
+    window.pqTaunts.cooldownMs = (cooldownSeconds || 0) * 1000;
+};
 
 // main.js collapses the stack from HideAll(), so a screen change never leaves it open.
-window.pqCloseEmojiStack = function () { setEmojiOpen(false); };
+window.pqCloseEmojiStack = function () {
+    setEmojiOpen(false);
+    setTauntsOpen(false);
+};
 
 function onMainButtonClick() {
     isMainButtonClick = !isMainButtonClick;

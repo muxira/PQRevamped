@@ -286,12 +286,12 @@ def eyebrow(d, y, label):
 # --- screens -----------------------------------------------------------------------------
 
 ROSTER = [
-    (1, "Anna", 380, "avatars/Knight_Male.png"),
-    (2, "Maks", 300, "avatars/GoldenKnight_Male.png"),
-    (3, "Ben", 260, "avatars/Chef_Male.png"),
-    (4, "You", 240, "avatars/Casual_Female.png"),
-    (5, "Cleo", 180, "avatars/Witch_Female.png"),
-    (6, "Dana", 120, "avatars/Viking_Female.png"),
+    (1, "Anna", 380, "avatars/Knight.png"),
+    (2, "Maks", 300, "avatars/GoldenKnight.png"),
+    (3, "Ben", 260, "avatars/Chef.png"),
+    (4, "You", 240, "avatars/CasualGirl.png"),
+    (5, "Cleo", 180, "avatars/Witch.png"),
+    (6, "Dana", 120, "avatars/Viking.png"),
 ]
 
 
@@ -318,11 +318,11 @@ def final_result():
     header(img, d)
     score_strip(d, 300, top=76)
     eyebrow(d, 142, "Game result")
-    rows = [(1, "Anna", 380, "avatars/Knight_Male.png", 380),
-            (2, "You", 300, "avatars/Casual_Female.png", 380),
-            (3, "Ben", 260, "avatars/Chef_Male.png", 380),
-            (4, "Cleo", 180, "avatars/Witch_Female.png", 380),
-            (5, "Dana", 120, "avatars/Viking_Female.png", 380)]
+    rows = [(1, "Anna", 380, "avatars/Knight.png", 380),
+            (2, "You", 300, "avatars/CasualGirl.png", 380),
+            (3, "Ben", 260, "avatars/Chef.png", 380),
+            (4, "Cleo", 180, "avatars/Witch.png", 380),
+            (5, "Dana", 120, "avatars/Viking.png", 380)]
     y = standings(d, img, rows, 162, final=True)
     emoji(img, "clap.png", 195, y + 46, 54)
     button(d, (px(84), px(y + 80), px(306), px(y + 132)), "Clap!", DANGER, size=20, shadow=4)
@@ -338,9 +338,9 @@ def team_lobby():
 
     text(d, (px(195), px(104)), "Join a team or create your own", 12, MUTED, anchor="ma")
     teams = [
-        ("Golden Knights", "avatars/Knight_Male.png", "Members", ["Anna  (captain)", "Ben", "You"], True),
-        ("Kitchen Crew", "avatars/Chef_Male.png", "Members", ["Cleo  (captain)", "Dana"], False),
-        ("The Coven", "avatars/Witch_Female.png", "Members", ["Liv  (captain)", "Ada", "Max"], False),
+        ("Golden Knights", "avatars/Knight.png", "Members", ["Anna  (captain)", "Ben", "You"], True),
+        ("Kitchen Crew", "avatars/Chef.png", "Members", ["Cleo  (captain)", "Dana"], False),
+        ("The Coven", "avatars/Witch.png", "Members", ["Liv  (captain)", "Ada", "Max"], False),
     ]
     y = 128
     for name, av, label, members, mine in teams:

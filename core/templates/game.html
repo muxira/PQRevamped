@@ -23,14 +23,14 @@
     <link rel="stylesheet" type="text/css" href="./css/pwa.css?v=7"/>
     <link rel="stylesheet" type="text/css" href="./css/input.css?v=9"/>
     <link rel="stylesheet" type="text/css" href="./css/normalize.css?v=7">
-    <link rel="stylesheet" type="text/css" href="./css/index.css?v=26">
-    <link rel="stylesheet" type="text/css" href="./css/styles.css?v=32">
+    <link rel="stylesheet" type="text/css" href="./css/index.css?v=27">
+    <link rel="stylesheet" type="text/css" href="./css/styles.css?v=35">
     <link rel="stylesheet" type="text/css" href="./css/popup.css?v=16">
     <link rel="stylesheet" type="text/css" href="./css/mobile-ux.css?v=9">
     <link rel="stylesheet" type="text/css" href="./css/pq-tokens.css?v=10">
-    <link rel="stylesheet" type="text/css" href="./css/pq-components.css?v=14">
+    <link rel="stylesheet" type="text/css" href="./css/pq-components.css?v=15">
     <link rel="stylesheet" type="text/css" href="./css/pq-bonus.css?v=5">
-    <link rel="stylesheet" type="text/css" href="./css/pq-screens.css?v=52">
+    <link rel="stylesheet" type="text/css" href="./css/pq-screens.css?v=64">
     <!-- PQRevamped additions, kept last so they win the cascade. -->
     <link rel="stylesheet" type="text/css" href="./css/pq-revamped.css?v=3">
 
@@ -101,7 +101,7 @@
         </div>
     </div>
 
-    <button type="button" class="button appeal-float" id="appeal_button" hidden>
+    <button type="button" class="button appeal-float pq-wide-button" id="appeal_button" hidden>
         <span class="appeal-label" id="appeal_button_label">{{appeal_im_right}}</span>
         <span class="appeal-left" id="appeal_button_left"></span>
     </button>
@@ -270,12 +270,12 @@
     <section class="info-block glass-card" id="inherit_offer_group" hidden>
         <span class="pq-eyebrow">{{inherit_prompt}}</span>
         <div id="inherit_candidates" class="inherit-candidates"></div>
-        <button type="button" id="inherit_not_me_button" class="button pq-btn-ghost" onclick="InheritDecline()">{{inherit_not_me}}</button>
+        <button type="button" id="inherit_not_me_button" class="button color-blue" onclick="InheritDecline()"><span class="pq-back-icon" aria-hidden="true"></span>{{inherit_not_me}}</button>
     </section>
 
     <section class="info-block glass-card" id="inherit_wait_group" hidden>
         <p id="inherit_wait_text" class="pq-title">{{inherit_waiting}}</p>
-        <button type="button" class="button color-red" onclick="InheritCancel()">{{inherit_cancel}}</button>
+        <button type="button" class="button color-blue" onclick="InheritCancel()"><span class="pq-back-icon" aria-hidden="true"></span>{{inherit_cancel}}</button>
     </section>
 
     <section class="info-block glass-card" id="set_info_group" hidden>
@@ -335,7 +335,7 @@
                placeholder="{{team_name}}" maxlength="24" />
         <div class="team-create-actions">
             <button id="team_create_button" type="button" class="button color-green" onclick="ConfirmCreateTeam()">{{create_team}}</button>
-            <button class="button color-red" onclick="goTo('TEAM_LOBBY')">{{back}}</button>
+            <button class="button color-blue" onclick="goTo('TEAM_LOBBY')"><span class="pq-back-icon" aria-hidden="true"></span>{{back}}</button>
         </div>
         <p class="note">{{create_team_hint}}</p>
     </section>
@@ -386,7 +386,7 @@
     </section>
 
     <section class="players-ready-block" id="all_here_host_group" hidden>
-        <button class="button color-green primary-button start-game-button" onclick="CallAllHere()">
+        <button class="button color-green primary-button start-game-button" onclick="ConfirmStartGame()">
             {{start_game}}
         </button>
     </section>
@@ -404,6 +404,7 @@
     </div>
 
     <div class="center glass-card" id="can_answer_player_group" hidden>
+        <button type="button" id="pass_question_button" class="button color-red pq-pass-button" onclick="PassQuestion()" hidden>{{pass}}</button>
         <div class="pq-buzz-shell">
             <button type="button" class="select-button" id="answer_button" onpointerdown="if(event.button===0)AnswerButtonPressed()" onkeydown="if((event.key==='Enter'||event.key===' ')&&!event.repeat){event.preventDefault();AnswerButtonPressed();}"></button>
             <span class="pq-ring" aria-hidden="true"></span>
@@ -411,6 +412,7 @@
     </div>
 
     <div class="center glass-card" id="get_ready_player_group" hidden>
+        <button type="button" id="get_ready_pass_button" class="button color-red pq-pass-button" onclick="PassQuestion()">{{pass}}</button>
         <div class="pq-buzz-shell">
             <button type="button" class="select-button-blocked" onpointerdown="if(event.button===0)AnswerButtonPressed()" onkeydown="if((event.key==='Enter'||event.key===' ')&&!event.repeat){event.preventDefault();AnswerButtonPressed();}"></button>
         </div>
@@ -465,6 +467,7 @@
 
     <section id="you_answer_group" class="info-block glass-card" hidden>
         <entry class="column">
+            <span class="clarify-hint" id="clarify_hint" hidden></span>
             <label>{{enter_answer_or_tell_host}}</label>
             <input
                     class="info-block-input"
@@ -541,8 +544,11 @@
             <div id="pq_standings_final" class="pq-standings"></div>
         </div>
         <div class="applause-emoji" id="applause_emoji" role="button" tabindex="0" onclick="PlayClap()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PlayClap();}">👏</div>
-        <button type="button" class="button color-pink clap-button" onclick="PlayClap()">{{clap_button}}</button>
-        <a id="wishlist_link" class="button color-white wishlist-button" hidden href="https://store.steampowered.com/app/2024070/?utm_source=partyquiz_client" target="_blank" rel="noopener noreferrer">{{wishlist_button}}</a>
+        <button type="button" class="button color-blue clap-button pq-wide-button" onclick="PlayClap()">{{clap_button}}</button>
+    </div>
+
+    <div class="glass-card column" id="statistics_group" hidden>
+        <button type="button" id="statistics_next_button" class="button color-green pq-wide-button" hidden onclick="StatisticsNext()"></button>
     </div>
 
     <div id="reconnection_screen" hidden>
@@ -854,8 +860,8 @@
                     <path d="m9 18 6-6-6-6"/>
                 </svg>
             </button>
-            <button type="button" class="button color-red game-block-button" onclick="cancelQrPassword()">
-                {{qr_enter_manually}}
+            <button type="button" class="button color-blue game-block-button" onclick="cancelQrPassword()">
+                <span class="pq-back-icon" aria-hidden="true"></span>{{qr_enter_manually}}
             </button>
         </div>
     </div>
@@ -864,6 +870,15 @@
     <div id="system_notice_modal" class="modal-panel glass-card" role="alertdialog" aria-modal="true" aria-labelledby="system_notice_text" hidden>
         <p id="system_notice_text" class="system-notice-text"></p>
         <button id="system_notice_ok" type="button" class="button color-green game-block-button">OK</button>
+    </div>
+
+    <div id="other_server_overlay" class="modal-overlay" hidden onclick="hideOtherServerModal()"></div>
+    <div id="other_server_modal" class="modal-panel glass-card" role="dialog" aria-modal="true" aria-labelledby="other_server_text" hidden>
+        <p id="other_server_text" class="system-notice-text"></p>
+        <div class="qr-password-actions">
+            <button type="button" class="button color-green game-block-button" onclick="goToOtherServer()">{{switch_server}}</button>
+            <button type="button" class="button color-blue game-block-button" onclick="hideOtherServerModal()"><span class="pq-back-icon" aria-hidden="true"></span>{{close}}</button>
+        </div>
     </div>
 
     <div id="custom_avatar_modal_overlay" class="modal-overlay" hidden onclick="CloseCustomAvatarModal()"></div>
@@ -985,6 +1000,7 @@
     </div>
 
     <div class="pq-bottom-bar">
+        <a id="wishlist_link" class="button color-white wishlist-button pq-wide-button" hidden href="https://store.steampowered.com/app/2024070/?utm_source=partyquiz_client" target="_blank" rel="noopener noreferrer">{{wishlist_button}}</a>
         <div class="camera-block camera_control">
             <button id="button_main" type="button" class="button color-green video-camera-image-wrapper">
                 <img src="../../assets/video-camera.png" alt="video_camera" class="video-camera-image">
@@ -997,6 +1013,26 @@
                 onclick="ToggleChangeScoreListPopup()">
             {{change_points}}
         </button>
+
+        <!-- Emoji stack. The layer is column-reverse, so the toggle is first in the DOM and
+             sits at the bottom; the six run upwards in the design's order. emoji.js owns the
+             .emoji-open class. -->
+        <overlay class="emojis-block" id="taunt_layer">
+            <button class="button color-white emojis-block-button" id="taunts_toggle" type="button"
+                    aria-expanded="false" aria-label="{{sounds}}"></button>
+            <button class="button color-white emojis-block-button taunt-button" type="button" aria-label="{{sound_sad_trombone}}"
+                    onclick="PlayTaunt('SadTrombone')"><img src="../../assets/taunts/sad_trombone.png" alt=""></button>
+            <button class="button color-white emojis-block-button taunt-button" type="button" aria-label="{{sound_vine_boom}}"
+                    onclick="PlayTaunt('VineBoom')"><img src="../../assets/taunts/vine_boom.png" alt=""></button>
+            <button class="button color-white emojis-block-button taunt-button" type="button" aria-label="{{sound_metal_pipe}}"
+                    onclick="PlayTaunt('MetalPipe')"><img src="../../assets/taunts/metal_pipe.png" alt=""></button>
+            <button class="button color-white emojis-block-button taunt-button" type="button" aria-label="{{sound_bruh}}"
+                    onclick="PlayTaunt('Bruh')"><img src="../../assets/taunts/bruh.png" alt=""></button>
+            <button class="button color-white emojis-block-button taunt-button" type="button" aria-label="{{sound_crickets}}"
+                    onclick="PlayTaunt('Crickets')"><img src="../../assets/taunts/crickets.png" alt=""></button>
+            <button class="button color-white emojis-block-button taunt-button" type="button" aria-label="{{sound_rimshot}}"
+                    onclick="PlayTaunt('Rimshot')"><img src="../../assets/taunts/rimshot.png" alt=""></button>
+        </overlay>
 
         <!-- Emoji stack. The layer is column-reverse, so the toggle is first in the DOM and
              sits at the bottom; the six run upwards in the design's order. emoji.js owns the
@@ -1050,8 +1086,8 @@
     <section id="confirm_popup" class="error-popup confirm-popup" role="alertdialog" aria-modal="true" aria-hidden="true">
         <p id="confirm_popup_message" class="error-popup__message"></p>
         <div class="confirm-popup__buttons">
-            <button id="confirm_popup_cancel" type="button" class="button color-red">{{back}}</button>
-            <button id="confirm_popup_ok" type="button" class="button color-blue">{{confirm}}</button>
+            <button id="confirm_popup_cancel" type="button" class="button color-blue"><span class="pq-back-icon" aria-hidden="true"></span>{{back}}</button>
+            <button id="confirm_popup_ok" type="button" class="button color-green">{{confirm}}</button>
         </div>
     </section>
 
@@ -1072,7 +1108,7 @@
                 <button type="button" class="button color-red adjust-score__btn" onclick="AdjustScore(-1)">&minus;</button>
                 <button type="button" class="button color-green adjust-score__btn" onclick="AdjustScore(1)">+</button>
             </div>
-            <button type="button" class="button pq-btn-ghost" onclick="CloseAdjustScore()">{{back}}</button>
+            <button type="button" class="button color-blue" onclick="CloseAdjustScore()"><span class="pq-back-icon" aria-hidden="true"></span>{{back}}</button>
         </div>
     </div>
 
@@ -1102,15 +1138,16 @@
 </div>
 <div id="fast_forward_plaque" class="pq-ff-plaque" hidden>{{fast_forwarding}} &#x25B6;&#xFE0E;&#x25B6;&#xFE0E;</div>
 <script type="text/javascript" src="./js/i18n.js?v=8"></script>
-<script type="text/javascript" src="./js/avatars_list.js?v=7"></script>
-<script type="text/javascript" src="./js/avatars.js?v=13"></script>
-<script type="text/javascript" src="./js/commands.js?v=36"></script>
-<script type="text/javascript" src="./js/main.js?v=110"></script>
+<script type="text/javascript" src="./js/avatars_list.js?v=8"></script>
+<script type="text/javascript" src="./js/host_avatars.js?v=2"></script>
+<script type="text/javascript" src="./js/avatars.js?v=14"></script>
+<script type="text/javascript" src="./js/commands.js?v=43"></script>
+<script type="text/javascript" src="./js/main.js?v=124"></script>
 <script type="text/javascript" src="./js/bonus-lootbox.js?v=2"></script>
 <script type="text/javascript" src="./js/bonus.js?v=5"></script>
 <script type="text/javascript" src="./js/selection.js?v=7"></script>
 <script type="text/javascript" src="./js/utils.js?v=8"></script>
-<script src="js/emoji.js?v=9"></script>
+<script src="js/emoji.js?v=13"></script>
 <!-- PQRevamped: 3D Try-On (ES module, Three.js is fetched on demand) and the
      settings / mobile QOL layer. Both are additive and never patch upstream state. -->
 <script type="module" src="./js/custom_avatar_3d.js?v=3"></script>

@@ -9,6 +9,10 @@ const SERVICE_RESTART_RETRY_MS = 250;
 const SERVICE_RESTART_WINDOW_MS = 5000;
 const SERVICE_RESTART_QUEUE_MAX_AGE_MS = 2000;
 const ALLOWED_SERVERS = ['partyquiz.club', 'partyquiz.ru', 'stage.partyquiz.club', 'localhost', '127.0.0.1'];
+// Statistics are numbered from 0; this is the "show is over" sentinel the host sends instead.
+const STATISTICS_DONE = 2147483647;
+const OTHER_SERVER = {'partyquiz.club': 'partyquiz.ru', 'partyquiz.ru': 'partyquiz.club'};
+let currentServerHost = null;
 let reconnectExhausted = false;
 let reconnectStableTimerId = null;
 let serviceRestart = false;
@@ -105,6 +109,26 @@ function pqBurst() {
 function pqBuzzFeedback() {
     window.pqBuzzPressed = true;
     pqHaptic(12);
+    // Pressing the buzzer spends the question: passing is the option you have *instead*.
+    if (!isInAnsweringState) {
+        window.pqPressedThisQuestion = true;
+        pqUpdatePassButtons(false);
+    }
+}
+
+// "Pass" is offered only on the two screens where a player may decline the question, and
+// only until they have pressed the buzzer for it.
+function pqUpdatePassButtons(canPass) {
+    if (canPass !== undefined) window.pqScreenAllowsPass = canPass;
+    ['pass_question_button', 'get_ready_pass_button'].forEach(function (id) {
+        var b = document.getElementById(id);
+        if (b) b.hidden = !window.pqScreenAllowsPass || !!window.pqPressedThisQuestion;
+    });
+}
+
+function pqReleasePress() {
+    window.pqPressedThisQuestion = false;
+    pqUpdatePassButtons();
 }
 
 window.pqHaptic = pqHaptic;
@@ -222,10 +246,20 @@ function hideFastForwardPlaqueNow() {
 // AI-host games: the host names one player who may fast-forward in its place.
 function applyDeputyFastForward() {
     const group = document.getElementById('fast_forward_group');
-    if (group && window.pqDeputyCanFastForward) group.hidden = false;
+    if (group && (window.pqDeputyCanFastForward || window.pqHostCanFastForward)) group.hidden = false;
 }
 
 function onFastForwardState(state, isHost, isPlayer) {
+    // 1.7.1328 also speeds up host sequences, so the host itself gets the button.
+    if (state && isHost) {
+        const wasAllowed = window.pqHostCanFastForward;
+        window.pqHostCanFastForward = state.Allowed === true;
+        if (window.pqHostCanFastForward) applyDeputyFastForward();
+        else if (wasAllowed) {
+            document.getElementById('fast_forward_group').hidden = true;
+            stopFastForwardHold();
+        }
+    }
     if (state && !isHost) {
         const wasDeputy = window.pqDeputyCanFastForward;
         window.pqDeputyCanFastForward = state.Allowed === true && !!state.DeputyId && state.DeputyId === window.playerId;
@@ -497,6 +531,11 @@ window.onload = () => runWhenI18nReady(() => {
     }
     window.tf = tf;
 
+    // Pack text may carry a literal "\n" typed by the author; turn it into a real line break.
+    function packText(s) {
+        return s == null ? '' : String(s).replace(/\\r\\n|\\n/g, '\n');
+    }
+
     function recomputeMyTeam() {
         var me = window.playerId;
         window.myTeam = (window.teams || []).find(function (t) {
@@ -724,7 +763,15 @@ window.onload = () => runWhenI18nReady(() => {
         initials.textContent = pqInitials(name || avatarFile || '');
         wrap.appendChild(initials);
 
-        if (avatarFile && avatarFile !== 'custom_avatar') {
+        if (avatarFile && avatarFile !== 'custom_avatar' && window.isHostAvatarId && window.isHostAvatarId(avatarFile)) {
+            var hostImg = document.createElement('img');
+            hostImg.className = 'pq-avatar__img';
+            hostImg.alt = '';
+            hostImg.decoding = 'async';
+            hostImg.addEventListener('load', function () { initials.hidden = true; });
+            hostImg.src = window.hostAvatarSrc(avatarFile) || CUSTOM_AVATAR_PLACEHOLDER_SRC;
+            wrap.appendChild(hostImg);
+        } else if (avatarFile && avatarFile !== 'custom_avatar') {
             var file = String(avatarFile);
             var list = window.PQ_AVATARS || [];
             if (list.indexOf(file) === -1 && list.indexOf(file + '.png') !== -1) file += '.png';
@@ -1056,6 +1103,7 @@ window.onload = () => runWhenI18nReady(() => {
         QUESTION_SELECTED: {
             show: ['question_selected_group'],
             onEnter: (d) => {
+                window.pqPressedThisQuestion = false;
                 if (window.pqStore.getItem('role') === 'host')
                     document.getElementById('right_answer_group').hidden = false;
                 setQuestionMeta(d && d.Theme, d && d.Price);
@@ -1064,12 +1112,14 @@ window.onload = () => runWhenI18nReady(() => {
         GET_READY: {
             title: () => t('READY...STEADY...'),
             show: ['question_selected_group', 'get_ready_player_group'],
-            onEnter: () => { disarmBuzzer(); }
+            onEnter: () => { disarmBuzzer(); pqUpdatePassButtons(true); }
         },
         CAN_ANSWER: {
             show: ['question_selected_group', 'can_answer_player_group'],
             onEnter: (d) => {
-                if (d && (d.triedToAnswer || d.wasCorrect)) {
+                var cantAnswer = d && (d.triedToAnswer || d.wasCorrect);
+                pqUpdatePassButtons(!cantAnswer);
+                if (cantAnswer) {
                     document.getElementById('title').textContent = t("you_cant_answer_now");
                     // The buzzer slumps in place rather than vanishing: the card keeps its
                     // shape, and losing the race is something you watch happen.
@@ -1095,13 +1145,13 @@ window.onload = () => runWhenI18nReady(() => {
                 SetAnswerDecisionButtonsEnabled(true);
 
                 if (d.answer)
-                    document.getElementById('right_answer').textContent = d.answer;
+                    document.getElementById('right_answer').textContent = packText(d.answer);
             }
         },
         YOU_ANSWER: {
             title: () => t('YOU ANSWER!'),
             show: ['question_selected_group', 'you_answer_group'],
-            onEnter: () => { renderSuggestions(); }
+            onEnter: () => { document.getElementById('clarify_hint').hidden = true; renderSuggestions(); }
         },
         ALL_QUESTIONS_ANSWERED_HOST: {
             show: ['all_questions_answered_host_group'],
@@ -1185,7 +1235,7 @@ window.onload = () => runWhenI18nReady(() => {
             onEnter: (d) => {
                 document.getElementById('final_round_answering_player').textContent = d.PlayerName;
                 document.getElementById('final_round_player_answer').textContent = d.PlayerAnswer;
-                document.getElementById('final_round_answer').textContent = d.RightAnswer;
+                document.getElementById('final_round_answer').textContent = packText(d.RightAnswer);
             }
         },
         FINAL_BID_HOST: {
@@ -1216,7 +1266,7 @@ window.onload = () => runWhenI18nReady(() => {
             show: ['question_selected_group', 'multiple_choice_host_group']
         },
         MULTIPLE_CHOICE_PLAYER: {
-            title: (d) => d && d.question ? d.question : '',
+            title: (d) => d && d.question ? packText(d.question) : '',
             show: ['question_selected_group', 'multiple_choice_options_group'],
             onEnter: (d) => {
                 window._mcOptions = (d && d.options) || [];
@@ -1274,7 +1324,7 @@ window.onload = () => runWhenI18nReady(() => {
             onEnter: (d) => {
                 document.getElementById('revealing_clues_answering_player').textContent = d.player;
                 document.getElementById('revealing_clues_player_answer').textContent = d.playerAnswer;
-                document.getElementById('revealing_clues_right_answer').textContent = d.rightAnswer;
+                document.getElementById('revealing_clues_right_answer').textContent = packText(d.rightAnswer);
             }
         },
         REVEALING_CLUES_CHOICE_MADE: {
@@ -1286,11 +1336,16 @@ window.onload = () => runWhenI18nReady(() => {
         APPLAUSE: {
             title: () => t('clap_title'),
             undertitle: () => t('game_over_clap'),
-            show: ['applause_group'],
+            show: ['applause_group', 'statistics_group'],
             // PQRevamped: the game-over applause is also the final leaderboard. Upstream used
             // to show a podium here, deleted it, and left DisplayFinalResult as a no-op — the
             // result was that the last standings of the game were never on screen at all.
-            onEnter: (d) => { pqEnterApplause(!!(d && d.gameOver)); }
+            onEnter: (d) => { pqEnterApplause(!!(d && d.gameOver)); renderStatisticsNextButton(); }
+        },
+        STATISTICS: {
+            title: () => t('LOOK AT THE SCREEN'),
+            show: ['statistics_group'],
+            onEnter: () => { renderStatisticsNextButton(); }
         }
     };
 
@@ -1316,7 +1371,7 @@ window.onload = () => runWhenI18nReady(() => {
         CAT_IN_POKE_HOST: 'pick', CAT_IN_POKE_PLAYER: 'pick', FINAL_ROUND_THEMES_HOST: 'pick',
         FINAL_ROUND_THEMES_PLAYER: 'pick', CURIOSITY: 'pick', DECIDE_FINAL_PLAYERS: 'pick',
         ALL_QUESTIONS_ANSWERED_HOST: 'results', ALL_QUESTIONS_ANSWERED_PLAYER: 'results',
-        APPLAUSE: 'results'
+        APPLAUSE: 'results', STATISTICS: 'results'
     };
 
     // States whose "theme + value" plaque must be filled: exactly the question types listed in
@@ -1447,6 +1502,7 @@ window.onload = () => runWhenI18nReady(() => {
         pqMetaSource = 'none';
         setSynergy(false, 1);
         if (window.pqBonus) window.pqBonus.HideHint();
+        window.pqPressedThisQuestion = false;
     }
 
     // Displayed price: base while synergy is off, base x multiplier while it is on. Rounded,
@@ -1552,6 +1608,14 @@ window.onload = () => runWhenI18nReady(() => {
             if (window.customAvatar && window.customAvatar.thumbnailDataUrl
                 && String(player.Id) === String(window.playerId))
                 return window.customAvatar.thumbnailDataUrl;
+            return null;
+        }
+        // 1.7.1328: a host may publish its own avatar set; those rows carry an id and the
+        // bytes arrive separately, so they never appear in the generated list.
+        if (window.isHostAvatarId && window.isHostAvatarId(avatar)) {
+            var hostSrc = window.hostAvatarSrc(avatar);
+            if (hostSrc) return hostSrc;
+            if (window.refreshHostAvatarImages) setTimeout(window.refreshHostAvatarImages, 0);
             return null;
         }
         if (list.indexOf(avatar) !== -1) return '../../avatars/' + avatar;
@@ -2317,6 +2381,11 @@ window.onload = () => runWhenI18nReady(() => {
         var manage = document.getElementById('manage_players_button');
         if (manage) manage.hidden = !pqIsHost() || !gameStarted || PQ_LOBBY_STATES.indexOf(stateName) !== -1;
 
+        // The wishlist link moved into the bottom bar in 1.7.1328, so it is visible on the
+        // end-of-game screens rather than only inside the applause card.
+        var wishlist = document.getElementById('wishlist_link');
+        if (wishlist) wishlist.hidden = !((stateName === 'APPLAUSE' || stateName === 'STATISTICS') && data && data.gameOver);
+
         // After show:[] revealed the panel and after onEnter had its chance to set the meta:
         // repaints both labels for the current question and hides the panel if there is none.
         // Runs once currentState is the new one, because that is what it tests against.
@@ -2551,6 +2620,8 @@ window.onload = () => runWhenI18nReady(() => {
         if (!serverOverride && !/\.?partyquiz\.(club|ru)$/i.test(host))
             host = "partyquiz.club";
 
+        currentServerHost = host;
+
         let port = 3012;
 
         if (host == "stage.partyquiz.club")
@@ -2595,6 +2666,7 @@ window.onload = () => runWhenI18nReady(() => {
 
     function onSocketOpen() {
         resetGameState();
+        if (window.hostAvatars) window.hostAvatars.requested.clear();
 
         // Clear disconnect toast and countdown
         if (disconnectCountdownIntervalId) {
@@ -2713,6 +2785,8 @@ window.onload = () => runWhenI18nReady(() => {
                     autoJoinSent = false;
                     goTo('ENTER_ID');
                     reportError(mmMessage);
+
+                    if (mmErrorText === 'Game not found') checkOtherServer(window.lastJoinGameId);
                 }
             }
         } else {
@@ -2826,6 +2900,11 @@ window.onload = () => runWhenI18nReady(() => {
                         // (the host shouldn't send this in team mode, but guard defensively).
                         if (!window.teamMode)
                             goTo('SET_INFO');
+                    } else if (command == "HostAvatars") {
+                        applyHostAvatars(message.HostAvatars);
+                    } else if (command == "HostAvatarImage") {
+                        addHostAvatarImage(message.HostAvatarImage);
+                        if (currentState === 'TEAM_LOBBY') renderTeamList();
                     } else if (command == "SetRoleResult") {
                         if (message.SetRoleResult.IsRoleSet) {
                             window.pqStore.setItem('role', message.SetRoleResult.Role);
@@ -2988,14 +3067,14 @@ window.onload = () => runWhenI18nReady(() => {
                         if (currentState === 'PLAYER_ANSWERS_HOST' || currentState === 'YOU_ANSWER') {
                             setQuestionMeta(message.QuestionSelected.Theme, message.QuestionSelected.Price);
                             if (isHost) {
-                                document.getElementById('right_answer').textContent = message.QuestionSelected.Answer;
+                                document.getElementById('right_answer').textContent = packText(message.QuestionSelected.Answer);
                             }
                         } else {
                             goTo('QUESTION_SELECTED', message.QuestionSelected);
 
                             if (isHost) {
                                 showOverlay('fast_forward_group');
-                                document.getElementById('right_answer').textContent = message.QuestionSelected.Answer;
+                                document.getElementById('right_answer').textContent = packText(message.QuestionSelected.Answer);
                             }
                         }
                     } else if (command == "ScoreChanged") {
@@ -3029,6 +3108,8 @@ window.onload = () => runWhenI18nReady(() => {
                         // A new game clears the answering latch and sequence tracker
                         resetAnsweringTracking();
                         clearQuestionContext();
+                        window.pqAppeal.lastId = 0;
+                        window.pqAppeal.resolvedIds = {};
 
                         pqSelectorName = message.StartGame.Selector || pqSelectorName;
 
@@ -3061,6 +3142,8 @@ window.onload = () => runWhenI18nReady(() => {
 
                         if (message.PlayerStartedAnswering.IsYou)
                             _answerEpoch = message.PlayerStartedAnswering.QuestionEpoch;
+                        else
+                            pqReleasePress();
 
                         if (isHost)
                             goTo('PLAYER_ANSWERS_HOST', { player: message.PlayerStartedAnswering.AnsweringPlayer, answer: message.PlayerStartedAnswering.Answer });
@@ -3184,6 +3267,8 @@ window.onload = () => runWhenI18nReady(() => {
                             goTo('SEQUENCE_PLAYER'); // standings stay up through the round-transition sequence
                     } else if (command == "AllHere") {
                         gameStarted = true;
+                        window.pqSetTaunts(message.AllHere.TauntsEnabled, message.AllHere.TauntCooldownSeconds);
+                        ShowEmojiGroup();
 
                         goTo('APPLAUSE');
 
@@ -3245,6 +3330,8 @@ window.onload = () => runWhenI18nReady(() => {
                         // the final table, so the game-over standings cannot be lost: entering
                         // it here is idempotent with the StartApplause below.
                         goTo('APPLAUSE', { gameOver: true });
+                    } else if (command == "StatisticsStep") {
+                        showStatisticsStep(message.StatisticsStep || {}, isHost);
                     } else if (command == "StartApplause") {
                         goTo('APPLAUSE', { gameOver: true });
                     } else if (command == "StopApplause") {
@@ -3348,8 +3435,12 @@ window.onload = () => runWhenI18nReady(() => {
                     } else if (command == "CentralInformation") {
                         setCentralInformation(message.CentralInformation && message.CentralInformation.State);
                     } else if (command == "AIHostLine") {
-                        if (message.AIHostLine.Line === "Clarify" && currentState === 'YOU_ANSWER')
+                        if (message.AIHostLine.Line === "Clarify" && currentState === 'YOU_ANSWER') {
                             restoreLastPlayerAnswer();
+                            var clarifyHint = document.getElementById('clarify_hint');
+                            clarifyHint.textContent = message.AIHostLine.Text || '';
+                            clarifyHint.hidden = !message.AIHostLine.Text;
+                        }
                     } else if (command == "GamePaused") {
                         setHostPaused(message.GamePaused === true);
                     } else if (typeof command === 'string' && command.indexOf('Bonus') === 0) {
@@ -3503,8 +3594,35 @@ window.onload = () => runWhenI18nReady(() => {
      * preserves across a RECONNECT must be cleared here — a reconnect returns to the same game, this
      * does not, and a carried-over role starts the next game as somebody else.
      */
+    // Step 0 is "view stats" on the applause screen; from step 1 the stats are on screen and
+    // nobody claps. int.MaxValue marks the end of the show.
+    function showStatisticsStep(step, isHost) {
+        var value = step.Step || 0;
+        var target = value > 0 && value < STATISTICS_DONE ? 'STATISTICS' : 'APPLAUSE';
+
+        window.pqStatisticsStep = isHost && step.Waiting ? value : null;
+
+        if (currentState !== target)
+            goTo(target, { gameOver: true });
+        else
+            renderStatisticsNextButton();
+    }
+
+    function renderStatisticsNextButton() {
+        var button = document.getElementById('statistics_next_button');
+        var step = window.pqStatisticsStep;
+        if (!button) return;
+
+        button.hidden = step == null;
+
+        if (step != null)
+            button.textContent = t(step === 0 ? 'view_stats' : 'continue');
+    }
+
     function onGameEnded(reason) {
         console.log('Game ended (' + reason + ')');
+
+        window.pqStatisticsStep = null;
 
         window.pqInheritRequests = [];
         renderInheritRequests();
@@ -4373,9 +4491,12 @@ window.onload = () => runWhenI18nReady(() => {
         document.getElementById('title').textContent = "";
         document.getElementById('undertitle').textContent = "";
         document.querySelector('#emoji_layer').style.display = 'none';
+        document.querySelector('#taunt_layer').style.display = 'none';
         document.getElementById('player_answer_input').value = "";
         document.getElementById('revealing_clues_input').value = "";
         document.getElementById('number_guess_input').value = "";
+        document.getElementById('final_answer_input').value = "";
+        document.getElementById('final_bid_input').value = "";
 
         [
             'enter_id_group', 'resume_game_group', 'role_selection_group', 'avatar_group', 'set_info_group',
@@ -4393,7 +4514,7 @@ window.onload = () => runWhenI18nReady(() => {
             'curiosity_answer_group', 'players_list_host_group', 'multiple_choice_options_group', 'appeal_vote_group',
             'multiple_choice_host_group', 'number_guess_host_group', 'number_guess_player_group',
             'decide_final_players_group', 'stop_guessing_or_end_question_group',
-            'guess_or_pass_player_group', 'revealing_clues_decide_answer_group', 'applause_group',
+            'guess_or_pass_player_group', 'revealing_clues_decide_answer_group', 'applause_group', 'statistics_group',
             'teammate_suggest_group', 'teammate_readonly_group'
         ].forEach(id => {
             let el = document.getElementById(id);
@@ -4562,6 +4683,56 @@ window.onload = () => runWhenI18nReady(() => {
     }
 
     window.showSystemNoticeModal = showSystemNoticeModal;
+
+    // The .club and .ru matchmakers do not share games, and players often open the wrong
+    // site. "Game not found" is therefore probed against the other server before the player
+    // is left to guess.
+    function checkOtherServer(gameId) {
+        var otherHost = OTHER_SERVER[currentServerHost];
+        if (!otherHost || !gameId) return;
+
+        fetch('https://' + otherHost + ':3012/game-exists?name=' + encodeURIComponent(gameId), {cache: 'no-store'})
+            .then(function (res) {
+                if (res.status === 204 && !inGame) showOtherServerModal(otherHost, gameId);
+            })
+            .catch(function () { });
+    }
+
+    function showOtherServerModal(otherHost, gameId) {
+        var overlay = document.getElementById('other_server_overlay');
+        var modal = document.getElementById('other_server_modal');
+        var textEl = document.getElementById('other_server_text');
+        if (!overlay || !modal || !textEl) return;
+
+        hideErrorPopup();
+        textEl.textContent = t('mm_game_on_other_server').replace('{game}', gameId).replace('{server}', otherHost);
+        modal.dataset.host = otherHost;
+        modal.dataset.game = gameId;
+        overlay.hidden = false;
+        modal.hidden = false;
+    }
+
+    function hideOtherServerModal() {
+        var overlay = document.getElementById('other_server_overlay');
+        var modal = document.getElementById('other_server_modal');
+        if (overlay) overlay.hidden = true;
+        if (modal) modal.hidden = true;
+    }
+
+    function goToOtherServer() {
+        var modal = document.getElementById('other_server_modal');
+        if (!modal || !modal.dataset.host) return;
+
+        var url = new URL(window.location.href);
+        url.hostname = modal.dataset.host;
+        url.port = '';
+        url.searchParams.delete('server');
+        url.searchParams.set('game', modal.dataset.game);
+        window.location.href = url.toString();
+    }
+
+    window.hideOtherServerModal = hideOtherServerModal;
+    window.goToOtherServer = goToOtherServer;
     window.hideSystemNoticeModal = hideSystemNoticeModal;
 
     function submitQrPassword() {
@@ -4598,17 +4769,26 @@ window.onload = () => runWhenI18nReady(() => {
 
     function ShowEmojiGroup() {
         document.querySelector('#emoji_layer').style.display = gameStarted ? 'flex' : 'none';
+        document.querySelector('#taunt_layer').style.display =
+            gameStarted && window.pqTaunts.enabled ? 'flex' : 'none';
     }
 
     // Local feedback for a sent emoji. The message itself still goes out through the
     // untouched PlayEmoji(); this only draws the glyph flying up the screen. The glyph
     // is a literal from the markup and is written with textContent, and every node
     // removes itself after the animation.
-    function pqFloatEmoji(glyph) {
+    function pqFloatEmoji(glyph, iconSrc) {
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         var el = document.createElement('span');
         el.className = 'pq-floater';
-        el.textContent = glyph;
+        if (iconSrc) {
+            var img = document.createElement('img');
+            img.src = iconSrc;
+            img.alt = '';
+            el.appendChild(img);
+        } else {
+            el.textContent = glyph;
+        }
         el.style.setProperty('--x', (24 + Math.round(Math.random() * 40)) + 'px');
         document.body.appendChild(el);
         setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1700);

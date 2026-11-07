@@ -1,0 +1,64 @@
+name: Capture upstream bundle
+
+# Maintainer tool, not part of the site build. The sandbox that maintains this fork
+# cannot reach partyquiz.club, but an Actions runner can: this mirrors the live
+# client into `_upstream/` and parks it on the `upstream-capture` branch so the
+# differences can be reviewed (and merged) from a normal checkout.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    # A mirror that has not finished in ten minutes is stuck on a dead object, not slow:
+    # fail fast instead of burning an hour of runner time.
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Mirror the live client
+        timeout-minutes: 8
+        run: python3 scripts/fetch-upstream.py --out _upstream
+
+      - name: Index
+        run: |
+          python3 - <<'PY'
+          import json
+          m = json.load(open('_upstream/manifest.json', encoding='utf-8'))
+          files = m['files']
+          ok = {k: v for k, v in files.items() if not v.get('skipped')}
+          print(f"fetched_at={m['fetched_at']} ok={len(ok)}/{len(files)}")
+          for path, meta in sorted(files.items()):
+              print(f"{meta.get('status')}\t{meta.get('size', 0):>8}\t{meta.get('sha256', '-')[:12]}\t{path}")
+          PY
+
+      - name: Upload mirror
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream
+          path: _upstream
+          retention-days: 14
+
+      - name: Park the mirror on a branch
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd _upstream
+          git init -q -b upstream-capture
+          git config user.name "pqrevamped-bot"
+          git config user.email "bot@users.noreply.github.com"
+          printf '_upstream mirror of https://partyquiz.club, captured %s\n' \
+            "$(python3 -c 'import json;print(json.load(open("manifest.json"))["fetched_at"])')" > CAPTURED.txt
+          git add -A
+          git commit -q -m "upstream mirror $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # A fresh repo has no origin. The checkout's credentials do not apply to it,
+          # which is why the first attempt failed at this exact line.
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push -f origin upstream-capture
