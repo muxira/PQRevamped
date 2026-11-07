@@ -1,0 +1,221 @@
+/* Design tokens. Light theme "studio" is the default, dark theme "night" follows the OS
+   unless html[data-pq-theme] pins an explicit choice. Geometry is the same in both themes on
+   purpose: the hard offset shadow is the brand, so night keeps it and only recolours it.
+   --pq-spot is the studio lamp: one warm pool of light from above the fold. Panels and fields
+   are opaque in both — the night theme's translucent surfaces let whatever screen was
+   underneath read straight through an error popup or a modal. */
+
+:root,
+html[data-pq-theme="studio"] {
+    --pq-bg: #f1ebf8;
+    --pq-spot: radial-gradient(125% 68% at 50% -12%, rgba(255, 233, 186, .9), rgba(255, 233, 186, 0) 62%);
+    --pq-ink: #1d1235;
+    --pq-muted: #655a80;
+    --pq-primary: #7b3fe4;
+    --pq-on-accent: #ffffff;
+    --pq-soft: rgba(123, 63, 228, .16);
+    --pq-success: #127a4b;
+    --pq-success-fill: #1fa868;
+    --pq-danger-fill: #ef4343;
+    --pq-danger: #c42525;
+    --pq-gold: #f5c542;
+    --pq-panel: #ffffff;
+    --pq-border: 2.5px solid #1d1235;
+    --pq-radius: 18px;
+    --pq-shadow: 5px 5px 0 #1d1235;
+    --pq-btn-shadow: 4px 4px 0 #1d1235;
+    --pq-field: #ffffff;
+    --pq-line: #1d1235;
+    --pq-track: rgba(29, 18, 53, .1);
+    --pq-dash: rgba(29, 18, 53, .45);
+    --pq-gold-ink: #8a6300;
+    --pq-menu: #ffffff;
+    --pq-panel-solid: #ffffff;
+    --pq-buzz: #ef4343;
+    --pq-buzz-base: #a01f1f;
+    /* Wave overlay ink: white over a filled button, near-black over a white card. */
+    --pq-stripe: rgba(255, 255, 255, .22);
+    --pq-stripe-ink: rgba(29, 18, 53, .09);
+
+    --pq-fam-onboard: #7b3fe4;
+    --pq-fam-teams: #0b6e9f;
+    --pq-fam-board: #7b3fe4;
+    --pq-fam-buzz: #c42525;
+    --pq-fam-answer: #7b3fe4;
+    --pq-fam-judge: #127a4b;
+    --pq-fam-bid: #8f6400;
+    --pq-fam-pick: #b04a14;
+    --pq-fam-ackwait: #655a80;
+    --pq-fam-results: #7b3fe4;
+    --pq-fam-gameover: #c42525;
+
+    --pq-accent: var(--pq-primary);
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not([data-pq-theme]) {
+        --pq-bg: #140f28;
+        --pq-spot: radial-gradient(125% 68% at 50% -12%, rgba(185, 140, 255, .26), rgba(185, 140, 255, 0) 62%);
+        --pq-ink: #f4f0ff;
+        --pq-muted: #9c92bd;
+        --pq-primary: #b98cff;
+        --pq-on-accent: #1a0f2e;
+        --pq-soft: rgba(185, 140, 255, .18);
+        --pq-success: #2fd08a;
+    --pq-success-fill: #2fd08a;
+    --pq-danger-fill: #ff5765;
+        --pq-danger: #ff5765;
+        --pq-gold: #f5c542;
+        --pq-panel: #2a2049;
+        --pq-border: 2px solid #4c3c7d;
+        --pq-radius: 18px;
+        --pq-shadow: 5px 5px 0 rgba(185, 140, 255, .3);
+        --pq-btn-shadow: 4px 4px 0 rgba(9, 5, 21, .8);
+        --pq-field: #2f2450;
+        --pq-line: rgba(169, 124, 255, .3);
+        --pq-track: rgba(255, 255, 255, .08);
+        --pq-dash: rgba(169, 124, 255, .5);
+        --pq-gold-ink: #f5c542;
+        --pq-menu: #2a2049;
+        --pq-panel-solid: #2a2049;
+        --pq-buzz: #ff5765;
+    --pq-buzz-base: #8a1f2c;
+        --pq-stripe: rgba(255, 255, 255, .16);
+        --pq-stripe-ink: rgba(244, 240, 255, .1);
+
+        --pq-fam-onboard: #b98cff;
+        --pq-fam-teams: #3fc0f0;
+        --pq-fam-board: #b98cff;
+        --pq-fam-buzz: #ff5765;
+        --pq-fam-answer: #b98cff;
+        --pq-fam-judge: #2fd08a;
+        --pq-fam-bid: #f5c542;
+        --pq-fam-pick: #ff8a4c;
+        --pq-fam-ackwait: #9c92bd;
+        --pq-fam-results: #b98cff;
+        --pq-fam-gameover: #ff5765;
+
+        --pq-accent: var(--pq-primary);
+    }
+}
+
+html[data-pq-theme="night"] {
+    --pq-bg: #140f28;
+    --pq-spot: radial-gradient(125% 68% at 50% -12%, rgba(185, 140, 255, .26), rgba(185, 140, 255, 0) 62%);
+    --pq-ink: #f4f0ff;
+    --pq-muted: #9c92bd;
+    --pq-primary: #b98cff;
+    --pq-on-accent: #1a0f2e;
+    --pq-soft: rgba(185, 140, 255, .18);
+    --pq-success: #2fd08a;
+    --pq-success-fill: #2fd08a;
+    --pq-danger-fill: #ff5765;
+    --pq-danger: #ff5765;
+    --pq-gold: #f5c542;
+    --pq-panel: #2a2049;
+    --pq-border: 2px solid #4c3c7d;
+    --pq-radius: 18px;
+    --pq-shadow: 5px 5px 0 rgba(185, 140, 255, .3);
+    --pq-btn-shadow: 4px 4px 0 rgba(9, 5, 21, .8);
+    --pq-field: #2f2450;
+    --pq-line: rgba(169, 124, 255, .3);
+    --pq-track: rgba(255, 255, 255, .08);
+    --pq-dash: rgba(169, 124, 255, .5);
+    --pq-gold-ink: #f5c542;
+    --pq-menu: #2a2049;
+    --pq-panel-solid: #2a2049;
+    --pq-buzz: #ff5765;
+    --pq-buzz-base: #8a1f2c;
+    --pq-stripe: rgba(255, 255, 255, .16);
+    --pq-stripe-ink: rgba(244, 240, 255, .1);
+
+    --pq-fam-onboard: #b98cff;
+    --pq-fam-teams: #3fc0f0;
+    --pq-fam-board: #b98cff;
+    --pq-fam-buzz: #ff5765;
+    --pq-fam-answer: #b98cff;
+    --pq-fam-judge: #2fd08a;
+    --pq-fam-bid: #f5c542;
+    --pq-fam-pick: #ff8a4c;
+    --pq-fam-ackwait: #9c92bd;
+    --pq-fam-results: #b98cff;
+    --pq-fam-gameover: #ff5765;
+
+    --pq-accent: var(--pq-primary);
+}
+
+/* Accent per screen family. Theme-independent: the families themselves are themed above. */
+
+body[data-pq-screen="onboard"]  { --pq-accent: var(--pq-fam-onboard); }
+body[data-pq-screen="teams"]    { --pq-accent: var(--pq-fam-teams); }
+body[data-pq-screen="board"]    { --pq-accent: var(--pq-fam-board); }
+body[data-pq-screen="buzz"]     { --pq-accent: var(--pq-fam-buzz); }
+body[data-pq-screen="answer"]   { --pq-accent: var(--pq-fam-answer); }
+body[data-pq-screen="judge"]    { --pq-accent: var(--pq-fam-judge); }
+body[data-pq-screen="bid"]      { --pq-accent: var(--pq-fam-bid); }
+body[data-pq-screen="pick"]     { --pq-accent: var(--pq-fam-pick); }
+body[data-pq-screen="ackwait"]  { --pq-accent: var(--pq-fam-ackwait); }
+body[data-pq-screen="results"]  { --pq-accent: var(--pq-fam-results); }
+body[data-pq-screen="gameover"] { --pq-accent: var(--pq-fam-gameover); }
+
+/* Party Quiz Sans, self-hosted, the same faces the Unity host uses. Both weights are real
+   files, so no bold is synthesised. The legacy family name "partyquiz" and the design-bundle
+   name "Play" are kept as aliases so no other stylesheet has to change. Latin + Cyrillic only;
+   Arabic and CJK fall through to system-ui, as they did before. */
+
+@font-face {
+    font-family: "partyquiz";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("../../../assets/fonts/party-quiz-sans-400.woff2") format("woff2"),
+         url("../../../assets/fonts/party-quiz-sans-400.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "partyquiz";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("../../../assets/fonts/party-quiz-sans-700.woff2") format("woff2"),
+         url("../../../assets/fonts/party-quiz-sans-700.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Play";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("../../../assets/fonts/party-quiz-sans-400.woff2") format("woff2"),
+         url("../../../assets/fonts/party-quiz-sans-400.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Play";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("../../../assets/fonts/party-quiz-sans-700.woff2") format("woff2"),
+         url("../../../assets/fonts/party-quiz-sans-700.ttf") format("truetype");
+}
+
+html {
+    color-scheme: light dark;
+}
+
+/* One real spring, sampled from a mass-spring solution into linear(). Everything that pops
+   uses it, so the whole client has a single sense of weight. */
+:root {
+    --pq-spring: linear(0, .009, .035 4.3%, .141, .281 12.4%, .723 21.9%, .938, 1.017, 1.077,
+        1.121, 1.149 36.1%, 1.153, 1.145, 1.126, 1.099 48.5%, 1.03, .999, .977, .965 60.9%,
+        .968, .981, .996, 1.007 75.5%, 1.011, 1.008, 1.003, 1);
+}
+
+body.partyquiz {
+    background-color: var(--pq-bg);
+    background-image: var(--pq-spot);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: var(--pq-ink);
+    font-family: "partyquiz", Play, system-ui, sans-serif;
+}

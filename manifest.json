@@ -1,0 +1,513 @@
+{
+  "base": "https://partyquiz.club",
+  "fetched_at": "2026-11-07T17:05:54Z",
+  "skipped_media": [],
+  "files": {
+    "/assets/arrow_left_above.png": {
+      "status": 200,
+      "size": 7262,
+      "sha256": "c1afc64ee8881a69dc073f52e05f8901a43a506f5b9311451e21bb528c2a077c",
+      "content_type": "image/png"
+    },
+    "/assets/custom_avatar_background.png": {
+      "status": 200,
+      "size": 20714,
+      "sha256": "4f774db0dc8dffae688aaf117071213462a4a64dd9e871a52c3ac5c9c383493c",
+      "content_type": "image/png"
+    },
+    "/assets/fonts/party-quiz-sans-400.ttf": {
+      "status": 200,
+      "size": 76376,
+      "sha256": "5c2042044178768e18b02997f2694102eb00bd5e6a6d2550aab6d105a30f4884",
+      "content_type": "application/octet-stream"
+    },
+    "/assets/fonts/party-quiz-sans-400.woff2": {
+      "status": 200,
+      "size": 23572,
+      "sha256": "58f932a77fcad50ce2e3020e9cda51f5c9e16d540c77732abb81424ad033c7f2",
+      "content_type": "application/font-woff"
+    },
+    "/assets/fonts/party-quiz-sans-700.ttf": {
+      "status": 200,
+      "size": 76160,
+      "sha256": "a4e72359823bfd6cd9c6aef0b75a4daaef68538b8b80e81e7f0b37d9b3448a80",
+      "content_type": "application/octet-stream"
+    },
+    "/assets/fonts/party-quiz-sans-700.woff2": {
+      "status": 200,
+      "size": 23396,
+      "sha256": "93d909c50ea0f4c12ca979d0e8b9c484403e341f90bfa793f9300aabba83dd1e",
+      "content_type": "application/font-woff"
+    },
+    "/assets/party_quiz_logo_wordmark.png": {
+      "status": 200,
+      "size": 71545,
+      "sha256": "49255b952be7a4bae5d0bdf330662a08c5093998bdc083540e794fcf27727cf5",
+      "content_type": "image/png"
+    },
+    "/assets/spritesheets/img-sd.png": {
+      "status": 200,
+      "size": 31003,
+      "sha256": "150c690c48890cb3d569ace01e512b8fa44f375d1ffca6312fc3e0c6954fa1e6",
+      "content_type": "image/png"
+    },
+    "/assets/spritesheets/img-usd.png": {
+      "status": 200,
+      "size": 9327,
+      "sha256": "2d5a39e83cead4e1df9c52d9efcbf62d955e2e4c86d7c9d3ece83971de26ecf7",
+      "content_type": "image/png"
+    },
+    "/assets/taunts/bruh.png": {
+      "status": 200,
+      "size": 8974,
+      "sha256": "bee81a2f8e7b00a1ef323c2a94de50150721028ceb654eeb7b4f49ebe362a898",
+      "content_type": "image/png"
+    },
+    "/assets/taunts/crickets.png": {
+      "status": 200,
+      "size": 8439,
+      "sha256": "efb5e55c864cee32cc08402f09c6d27bed305e2f6c774e81f3654a6f31f9570f",
+      "content_type": "image/png"
+    },
+    "/assets/taunts/metal_pipe.png": {
+      "status": 200,
+      "size": 6427,
+      "sha256": "eb3424c20023551dd8abdefc52430ef5f6f0c0b8f1ded03e521be3be8ce8e163",
+      "content_type": "image/png"
+    },
+    "/assets/taunts/rimshot.png": {
+      "status": 200,
+      "size": 10573,
+      "sha256": "56fec994ecd05a42a16a2adae52992cd0c5af693ddbbb363fdbaaa30968abde8",
+      "content_type": "image/png"
+    },
+    "/assets/taunts/sad_trombone.png": {
+      "status": 200,
+      "size": 7975,
+      "sha256": "6509a80c2d514b3c9aad4348425d23eabd6370c75c0f74a7de8dc17d561186df",
+      "content_type": "image/png"
+    },
+    "/assets/taunts/sound.png": {
+      "status": 200,
+      "size": 2987,
+      "sha256": "fc4a78d35b6cf30e131d9590823ee5778a0c01a8761f933b305352862f4af037",
+      "content_type": "image/png"
+    },
+    "/assets/taunts/vine_boom.png": {
+      "status": 200,
+      "size": 12745,
+      "sha256": "6ad53e1e6ee262d068b8861b341c01f33d2333dae697b0b45009aaba21a0d415",
+      "content_type": "image/png"
+    },
+    "/assets/video-camera.png": {
+      "status": 200,
+      "size": 11959,
+      "sha256": "37a6d3c2a64d59bd828e8cb45b22f7d59eb6a0e0f81531edd7cbd358a6ffffbe",
+      "content_type": "image/png"
+    },
+    "/avatars/Casual.png": {
+      "status": 200,
+      "size": 29925,
+      "sha256": "3ce0e542de12576de489c56da1f5acb84bebc9194c36c2e0e333c28ce640eb1c",
+      "content_type": "image/png"
+    },
+    "/avatars/CasualGirl.png": {
+      "status": 200,
+      "size": 30549,
+      "sha256": "ebc970c3fc5c2c7360038fb3459522cd4321dc215083cb014a4faef187ffb5a6",
+      "content_type": "image/png"
+    },
+    "/avatars/Chef.png": {
+      "status": 200,
+      "size": 26778,
+      "sha256": "cc48619d1fcbfa6012813b3dbad848c65da2bae3ebed03c68443ba19059fdefe",
+      "content_type": "image/png"
+    },
+    "/avatars/Cow.png": {
+      "status": 200,
+      "size": 20283,
+      "sha256": "afb31414695564207304f6e2941db62089eb5397955f8379c508a76b66fb599f",
+      "content_type": "image/png"
+    },
+    "/avatars/Cowboy.png": {
+      "status": 200,
+      "size": 29182,
+      "sha256": "c7562de911f8d55ff0cb3b3c82cda8d7a740e5c6147dfe733cc27f4acbdbe8b3",
+      "content_type": "image/png"
+    },
+    "/avatars/Cowgirl.png": {
+      "status": 200,
+      "size": 30774,
+      "sha256": "13bc3eaf0be0868e03b4acf3d54157ede5f3872b522886604418819ae8f7c08f",
+      "content_type": "image/png"
+    },
+    "/avatars/Gentleman.png": {
+      "status": 200,
+      "size": 29440,
+      "sha256": "5c076208f25d3068a0da00855ede1fd4cf72994ce21261dd1d35c700997cc152",
+      "content_type": "image/png"
+    },
+    "/avatars/Goblin.png": {
+      "status": 200,
+      "size": 28519,
+      "sha256": "d7ae7362c114076293082a0152a1d9470b0ead69dcdcd5f7bb5626b2503266db",
+      "content_type": "image/png"
+    },
+    "/avatars/GoldenKnight.png": {
+      "status": 200,
+      "size": 27770,
+      "sha256": "492ec722fec452c1944196e11969040849ec2d6eb8962a050bc98aa82db53e2d",
+      "content_type": "image/png"
+    },
+    "/avatars/Kimono.png": {
+      "status": 200,
+      "size": 35070,
+      "sha256": "988ada43529754347b8e1eadddd52febb3abfc7f1aafd835e49e04602a75c59d",
+      "content_type": "image/png"
+    },
+    "/avatars/Knight.png": {
+      "status": 200,
+      "size": 30370,
+      "sha256": "055b816b22a4f25b464222a47cd527f4e708d2fe7a8f20191be4201b9a62a3f6",
+      "content_type": "image/png"
+    },
+    "/avatars/Pug.png": {
+      "status": 200,
+      "size": 21394,
+      "sha256": "525507a61d5f52c32dcda4cafe1ece1c8ac4885e34f03c51228175e7bfbcc147",
+      "content_type": "image/png"
+    },
+    "/avatars/Punk.png": {
+      "status": 200,
+      "size": 22358,
+      "sha256": "f711261580c71cc4231745efa7ea6c601ff85f5af682e55f00da4b4675b85925",
+      "content_type": "image/png"
+    },
+    "/avatars/Viking.png": {
+      "status": 200,
+      "size": 27677,
+      "sha256": "f78baba9335238865ebe353f771294c8f7a13611aec263188af17349d679e571",
+      "content_type": "image/png"
+    },
+    "/avatars/Witch.png": {
+      "status": 200,
+      "size": 23803,
+      "sha256": "f9c937487dffadfa1dc8a8600a51407e388073a8aa15022be192814d5784c144",
+      "content_type": "image/png"
+    },
+    "/avatars/Wizard.png": {
+      "status": 200,
+      "size": 25608,
+      "sha256": "1add4f670894128ec57505c7ecbfd3b8488ef9bf126054fb4d1e1c06d3f1bc61",
+      "content_type": "image/png"
+    },
+    "/avatars/Worker.png": {
+      "status": 200,
+      "size": 27872,
+      "sha256": "66b68c9d3e8d775fc79e7467773ca1782717f7dc846276511a3211609136e03c",
+      "content_type": "image/png"
+    },
+    "/avatars/Zombie.png": {
+      "status": 200,
+      "size": 23758,
+      "sha256": "9c76da534607263b528bc27db3751e77f226f1b91e590b78d86890da212ff3ec",
+      "content_type": "image/png"
+    },
+    "/browserconfig.xml": {
+      "status": 200,
+      "skipped": true,
+      "content_type": "text/html"
+    },
+    "/core/assets/custom_avatar_background.png": {
+      "status": 200,
+      "size": 15681,
+      "sha256": "af8de86d99f456bf172df314ae6738cc666eae8efede4a8a74a1a640cbdf2269",
+      "content_type": "text/html"
+    },
+    "/core/templates/css/index.css": {
+      "status": 200,
+      "size": 19896,
+      "sha256": "9a455fa580c8168f2ab8028ceaa3ef3760a0b345926977e36a9666a786753ae8",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/input.css": {
+      "status": 200,
+      "size": 2356,
+      "sha256": "2ed50293c1818f7f14b5c00b16c8a5dec32b90d753256b5841d2e38b2a67ec7e",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/mobile-ux.css": {
+      "status": 200,
+      "size": 1148,
+      "sha256": "9514fcbb87438e2eb5dbe04f282198691fe8a3d98e596a73a365a7b0ecfc3bef",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/normalize.css": {
+      "status": 200,
+      "size": 2935,
+      "sha256": "be677b9e549c56872c4b1738ed988224f51035faa8a3841914b1d7cfe956f8e1",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/popup.css": {
+      "status": 200,
+      "size": 7401,
+      "sha256": "9ccc185ae91e86f30d45a0a02f165c33d74a5bab2e4771014d53d828e403843a",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/pq-bonus.css": {
+      "status": 200,
+      "size": 13724,
+      "sha256": "9ff4733983d02df08d4646dbdf7b3e9587f5dc8841bf99f86b61aa441fa7f318",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/pq-components.css": {
+      "status": 200,
+      "size": 10273,
+      "sha256": "f599c98117f90459ab9998cbf19a642c2821b4e80885825dc7103d6b71876e55",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/pq-screens.css": {
+      "status": 200,
+      "size": 69509,
+      "sha256": "c20704928fc8a9cb6c6217d3db30a57fbedf7ac9499d00684a355ce2ce8b0ca9",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/pq-tokens.css": {
+      "status": 200,
+      "size": 8123,
+      "sha256": "8cb2234adb93a26b3cbd0142c216a8761ce12b1a24ecfff0486e4a621e18facf",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/pwa.css": {
+      "status": 200,
+      "size": 600,
+      "sha256": "dec6ca5c4b8a11fbb24ae9da251dc7cae2132b470e6e17d680bfeee097eeddfd",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/reset.css": {
+      "status": 200,
+      "size": 1482,
+      "sha256": "b144fc3e4be16e8d9f74668c0c63ab8fc355f9982c5d0bfaf37b67b7956c02fb",
+      "content_type": "text/css"
+    },
+    "/core/templates/css/styles.css": {
+      "status": 200,
+      "size": 27223,
+      "sha256": "77d4a3937b189d36c8885a706de35236e405c477e224ef13e0a604353f0b0b01",
+      "content_type": "text/css"
+    },
+    "/core/templates/game.html": {
+      "status": 200,
+      "size": 57359,
+      "sha256": "38341202c63df4bd0f9dc565f46c6f23c6629e444c88f847972e6f80ec128247",
+      "content_type": "text/html"
+    },
+    "/core/templates/js/avatars.js": {
+      "status": 200,
+      "size": 31663,
+      "sha256": "e326c3326d1d445cb3aad7397b17f3ecc782064ca82bbf4065351d554653db92",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/avatars_list.js": {
+      "status": 200,
+      "size": 344,
+      "sha256": "da3916654ba2a6d3efe6901cf35bd23ca59fa321dd34133fa0535b431ff40c07",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/bonus-lootbox.js": {
+      "status": 200,
+      "size": 14073,
+      "sha256": "fc6342f8677ea29e29e4f551028f4561429f6cae60f8a8640aa62e612ec35d9d",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/bonus.js": {
+      "status": 200,
+      "size": 16371,
+      "sha256": "63ecab6e9496a3fcf7c106f3dacfb8c1ee310a381e08bafc6abd3601a35dbbf8",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/commands.js": {
+      "status": 200,
+      "size": 26547,
+      "sha256": "63d4d3f62821ff255b01b4e935baf68c1b7b2e65c8b6004d753c2ef5a63d6118",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/emoji.js": {
+      "status": 200,
+      "size": 3964,
+      "sha256": "ea15628108e28c5375f5f0b3cc36e93703a0cb152b93208e6fdcbad7efdc1505",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/host_avatars.js": {
+      "status": 200,
+      "size": 2189,
+      "sha256": "b5af3b2f338e43ed0d83f3a2be04e52439fd8fede93080925546c2559afb31b5",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/i18n.js": {
+      "status": 200,
+      "size": 8229,
+      "sha256": "df9167ec7cbef0d577bd254fdedbd21588c83d7c6f7759e30b73a2b2861f3277",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/jquery_min.js": {
+      "status": 200,
+      "size": 86928,
+      "sha256": "0129310fb73ea15b5732b0d1e42e6e8dc0a28bd5cbebe8628419d35e722b2427",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/main.js": {
+      "status": 200,
+      "size": 218059,
+      "sha256": "92f1a0a4fcceca59d46c2c90caa0c2fa39cdca2d90e45ce2208f89b9c9275f08",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/selection.js": {
+      "status": 200,
+      "size": 1796,
+      "sha256": "e733041f2f970289f42f6ec8ef4a1eb11034f00b12a1a3427e74c37c46dd3891",
+      "content_type": "application/javascript"
+    },
+    "/core/templates/js/utils.js": {
+      "status": 200,
+      "size": 4130,
+      "sha256": "2123c02f6bf2afeafabbe1192400b3b7b19ff028345408ca38003a486f2aa8ed",
+      "content_type": "application/javascript"
+    },
+    "/favicon.ico": {
+      "status": 200,
+      "size": 4286,
+      "sha256": "18e8d36ec52f6a222442f73f3236980f0d8d292889c79136e06d3af59b3e3de8",
+      "content_type": "image/x-icon"
+    },
+    "/js/core/templates/game.html": {
+      "status": 404,
+      "skipped": true,
+      "content_type": "text/html"
+    },
+    "/js/language_load.js": {
+      "status": 200,
+      "size": 363,
+      "sha256": "91f1c3d381835b62dc43389ccc20a5f6da306e315a3bc5f6d0560b7f504d2856",
+      "content_type": "application/javascript"
+    },
+    "/localized/arabic/lang.json": {
+      "status": 200,
+      "size": 15277,
+      "sha256": "7a5c41cc79b111329bfd1bd6456bf357126ec6a170dfbc085e69f2c18cf7bcb9",
+      "content_type": "application/json"
+    },
+    "/localized/czech/lang.json": {
+      "status": 200,
+      "size": 12635,
+      "sha256": "7204ee0b4848ba928e2ed8bdfdabe9be79ac5a77d3bfb210e2347222c80df527",
+      "content_type": "application/json"
+    },
+    "/localized/english/lang.json": {
+      "status": 200,
+      "size": 11964,
+      "sha256": "db9dca38bcda4571fe211decdadd839bc9bdcce7142aaa97e9e4098efd4d1601",
+      "content_type": "application/json"
+    },
+    "/localized/french/lang.json": {
+      "status": 200,
+      "size": 13070,
+      "sha256": "bc59b324d53fa730143becf00296a9c087c39f2d78d774278b14957c28ea87f5",
+      "content_type": "application/json"
+    },
+    "/localized/german/lang.json": {
+      "status": 200,
+      "size": 12980,
+      "sha256": "5bb1a2781f78489f83e53b8b1896e9fd531e5eaa7c8d9baa26bf82c14c6bc73f",
+      "content_type": "application/json"
+    },
+    "/localized/italian/lang.json": {
+      "status": 200,
+      "size": 12801,
+      "sha256": "546a1c8ff6b4082b0cd9dcd14610cd574094129383e39c706108beb61877f661",
+      "content_type": "application/json"
+    },
+    "/localized/japanese/lang.json": {
+      "status": 200,
+      "size": 14377,
+      "sha256": "8b071c8d66a9868fb31741ab3ce553da91b40812c701056f3c81a292cbbfd845",
+      "content_type": "application/json"
+    },
+    "/localized/kazakh/lang.json": {
+      "status": 200,
+      "size": 17120,
+      "sha256": "39057860565bf9a334e33c68891fbfe091e4946d753300ee261a49bb95521a19",
+      "content_type": "application/json"
+    },
+    "/localized/korean/lang.json": {
+      "status": 200,
+      "size": 13572,
+      "sha256": "8d47ec55cc5f678247349558abd2a78b802702ab0aca4dc358a2663cdc0e54b1",
+      "content_type": "application/json"
+    },
+    "/localized/polish/lang.json": {
+      "status": 200,
+      "size": 12594,
+      "sha256": "1c6e1ab5fdbbd3e51714769022e6d4cef5f18cc417ae306e36e6be8eb15a8228",
+      "content_type": "application/json"
+    },
+    "/localized/portuguese/lang.json": {
+      "status": 200,
+      "size": 12754,
+      "sha256": "29c690b355ab88f7ea7aa434348115e0fa342082b1f3f5aa3e20e7b015d51fc9",
+      "content_type": "application/json"
+    },
+    "/localized/russian/lang.json": {
+      "status": 200,
+      "size": 16352,
+      "sha256": "602a3ab4e81d83974194ed660f0a52dfd09b0832d82046437361fa342b2119c3",
+      "content_type": "application/json"
+    },
+    "/localized/simplifiedchinese/lang.json": {
+      "status": 200,
+      "size": 11643,
+      "sha256": "e1ba2e9a3e3736eae30044eedbdb42c33c9b2c8916a4a48591adba1be3a619e0",
+      "content_type": "application/json"
+    },
+    "/localized/spanish/lang.json": {
+      "status": 200,
+      "size": 12884,
+      "sha256": "65cab77ee52b883604820cf904182bf85f00942755a817987449fe8127eb1329",
+      "content_type": "application/json"
+    },
+    "/localized/spanishlatinamerica/lang.json": {
+      "status": 200,
+      "size": 12859,
+      "sha256": "95e7602fa726127fb1d19376df501cf679ea3394c98a63e31c44745dffae58ce",
+      "content_type": "application/json"
+    },
+    "/localized/swedish/lang.json": {
+      "status": 200,
+      "size": 12300,
+      "sha256": "43d48b6abdc1ea2730ed5e0d5b91605256d4d335380da62b187c8d1fb36d2df4",
+      "content_type": "application/json"
+    },
+    "/localized/turkish/lang.json": {
+      "status": 200,
+      "size": 12281,
+      "sha256": "16bf66ced22b01282a1c70de07619a80e4aad0780804588058897e4a2b2f33ac",
+      "content_type": "application/json"
+    },
+    "/localized/ukrainian/lang.json": {
+      "status": 200,
+      "size": 16935,
+      "sha256": "0e9a719db01e0cc5d3254189e4bd3df921c45aa70387c3965c5564118bff7558",
+      "content_type": "application/json"
+    },
+    "/manifest.json": {
+      "status": 400,
+      "skipped": true,
+      "content_type": ""
+    },
+    "/manifest.webmanifest": {
+      "status": 400,
+      "skipped": true,
+      "content_type": ""
+    }
+  }
+}
