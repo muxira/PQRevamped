@@ -87,7 +87,8 @@ function loadCustomAvatarMask() {
 }
 
 function InitAvatars() {
-    ensureCustomAvatarInList();
+    window.avatarsInitialized = true;
+    rebuildAvatarList(false);
     initCustomAvatarUIOnce();
     preloadAvatarImages();
     currentAvatarIndex = 0;
@@ -99,18 +100,39 @@ function InitAvatars() {
 function preloadAvatarImages() {
     if (!Array.isArray(avatars)) return;
     avatars.forEach(function (file) {
-        if (!file || file === CUSTOM_AVATAR_ID) return;
+        if (!file || file === CUSTOM_AVATAR_ID || (window.isHostAvatarId && window.isHostAvatarId(file))) return;
         var img = new Image();
         img.src = '../../avatars/' + file;
     });
 }
 
+// The list is rebuilt whenever the host publishes its avatar set (1.7.1328 lets a host
+// upload their own), so everything that walks it goes through here rather than the
+// generated array.
+function rebuildAvatarList(render) {
+    const cur = avatars[currentAvatarIndex];
+    const base = (window.PQ_AVATARS && Array.isArray(window.PQ_AVATARS)) ? window.PQ_AVATARS : [];
+    avatars = base.filter(function (f) { return !(window.isDefaultAvatarDisabled && window.isDefaultAvatarDisabled(f)); });
+    if (window.hostAvatars) window.hostAvatars.entries.forEach(function (e) { if (!avatars.includes(e.Id)) avatars.push(e.Id); });
+    ensureCustomAvatarInList();
+    const i = avatars.indexOf(cur);
+    currentAvatarIndex = i >= 0 ? i : 0;
+    if (render && window.avatarsInitialized && avatars.length) updateCarousel(false);
+}
+window.rebuildAvatarList = rebuildAvatarList;
+
+window.refreshHostAvatarImages = function () {
+    if (window.avatarsInitialized && avatars.length) updateCarousel(false);
+};
+
 function PrevAvatar() {
+    if (!avatars.length) return;
     currentAvatarIndex = (currentAvatarIndex - 1 + avatars.length) % avatars.length;
     updateCarousel(true);
 }
 
 function NextAvatar() {
+    if (!avatars.length) return;
     currentAvatarIndex = (currentAvatarIndex + 1) % avatars.length;
     updateCarousel(true);
 }
@@ -140,6 +162,12 @@ function setImg(id, file) {
         const thumb = window.customAvatar && window.customAvatar.thumbnailDataUrl;
         const raw = window.customAvatar && window.customAvatar.dataUrl;
         applySrc(img, thumb || raw || CUSTOM_AVATAR_PLACEHOLDER_SRC);
+        return;
+    }
+
+    // Host-uploaded avatars arrive as hashes, not files: their bytes come separately.
+    if (window.isHostAvatarId && window.isHostAvatarId(file)) {
+        applySrc(img, window.hostAvatarSrc(file) || CUSTOM_AVATAR_PLACEHOLDER_SRC);
         return;
     }
 

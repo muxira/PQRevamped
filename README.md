@@ -12,7 +12,7 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/muxira/PQRevamped/ci.yml?branch=main&label=checks&logo=github)](https://github.com/muxira/PQRevamped/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/muxira/PQRevamped?color=blue)](LICENSE)
-[![Last upstream sync](https://img.shields.io/badge/upstream_sync-2026--10--20-informational?logo=cloud&logoColor=white)](CHANGELOG.md)
+[![Last upstream sync](https://img.shields.io/badge/upstream_sync-2026--11--07-informational?logo=cloud&logoColor=white)](CHANGELOG.md)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 <sub>English · <a href="README.ru.md">Русский</a></sub>
@@ -167,7 +167,7 @@ The companion is used while holding a drink in the other hand, so the phone is t
 
 ## 📦 Upstream parity
 
-Synced with the live client on **2026-10-20**. Everything the official companion does is here, including the newer systems:
+Synced with the live client on **2026-11-07** (client 1.7.1328). Everything the official companion does is here, including the newer systems:
 
 | Upstream feature | Status |
 |---|---|
@@ -178,6 +178,12 @@ Synced with the live client on **2026-10-20**. Everything the official companion
 | **Returning players** — profile inheritance prompt and approval flow | ✅ |
 | **Fast-forward** — hold to speed up, deputy fast-forward | ✅ |
 | **Manage players** — kick, ± points with a step input | ✅ |
+| **Sound reactions** — six taunts from the bottom bar, with the server's cooldown | ✅ `emoji.js`, `commands.js` |
+| **Pass** — decline a question instead of buzzing | ✅ |
+| **Host avatars** — the host can upload a custom avatar set for the whole table | ✅ `host_avatars.js` |
+| **End-of-game statistics** — "View stats" / "Continue" steps on the applause screen | ✅ |
+| **Server switch** — "this game is on the other server" prompt for `.club` ↔ `.ru` | ✅ |
+| Pack text with line breaks, stream, faster host sequences | ✅ |
 | Themes (`studio` / `night`), reconnect screen, system notices | ✅ |
 | 18 locale dictionaries, self-hosted `party-quiz-sans` fonts | ✅ |
 
@@ -193,14 +199,13 @@ Known upstream quirks this fork changes on purpose: the socket host (see [URL pa
 ├── manifest.webmanifest           # PWA metadata
 ├── sw.js                          # offline shell (network-first pages, SWR assets)
 ├── core/
-│   ├── assets/                    # canvas-safe copies used by the client
 │   └── templates/
 │       ├── game.html              # the companion
 │       ├── css/                   # upstream 12 stylesheets + pq-revamped.css
-│       └── js/                    # upstream 10 scripts + revamped.js + custom_avatar_3d.js
-├── assets/                        # logo, fonts (woff2+ttf), sprites, icons, Body.obj
-├── avatars/                       # 26 stock avatar illustrations
-├── localized/<locale>/lang.json   # 18 dictionaries, 296 keys each
+│       └── js/                    # upstream 11 scripts + revamped.js + custom_avatar_3d.js
+├── assets/                        # logo, fonts, taunt art, icons, mask, Body.obj, vendored three
+├── avatars/                       # 18 stock avatar illustrations
+├── localized/<locale>/lang.json   # 18 dictionaries, 308 keys each
 ├── docs/screenshots/              # README previews, drawn by scripts/render-previews.py
 ├── scripts/                       # preview · check · i18n sync · upstream fetch · previews
 └── .github/workflows/             # CI (checks) + Pages (deploy gate)

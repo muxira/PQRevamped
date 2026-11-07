@@ -5,9 +5,6 @@ name: Capture upstream bundle
 # client into `_upstream/` and parks it on the `upstream-capture` branch so the
 # differences can be reviewed (and merged) from a normal checkout.
 on:
-  push:
-    branches: [arena/14b1025b-pqrevamped]
-    paths: ['.github/workflows/capture-upstream.yml']
   workflow_dispatch:
 
 permissions:

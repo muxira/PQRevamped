@@ -3,9 +3,60 @@
 All notable changes to this fork. Upstream changes are described in terms of what a
 player or a maintainer notices, not as a file-by-file dump.
 
-The short version: `2.0.0` re-syncs the whole client with the live site and rebuilds the
-fork-owned layer on top of it; `1.x` was the first port, which shipped the 2D-only editor
-plus a 3D preview that had to be rewritten for phones.
+The short version: `2.1.0` follows the 1.7.1328 update (sound reactions, passing, host
+avatars, end-of-game statistics, the server switcher); `2.0.0` re-synced the whole client
+with the live site and rebuilt the fork-owned layer on top of it; `1.x` was the first
+port, which shipped the 2D-only editor plus a 3D preview that had to be rewritten for
+phones.
+
+---
+
+## 2.1.0 — 2026-11-07
+
+Synced with `partyquiz.club` as it was served on 2026-11-07 (client **1.7.1328**,
+snapshot captured with `scripts/fetch-upstream.py` — 84 files).
+
+### Upstream features now included
+
+- **Avatar customization** — the editor grew a proper 2D/3D preview and the stock set is
+  now 18 game-styled avatars (`Casual.png`, `Knight.png`, …) instead of the old
+  `*_Male` / `*_Female` pairs, which were removed from the server.
+- **Pass** — a player may decline a question instead of buzzing; the button disappears
+  once the buzzer is pressed or the question is spent.
+- **Sound reactions** — six taunts (`SadTrombone`, `VineBoom`, `MetalPipe`, `Bruh`,
+  `Crickets`, `Rimshot`) in a new bottom-bar layer with the server's cooldown, plus
+  `assets/taunts/*.png` art and `window.pqSetTaunts`.
+- **Host avatars** — `host_avatars.js` and the `HostAvatars` / `HostAvatarImage` /
+  `RequestHostAvatarImages` messages: a host can publish a custom avatar set for the
+  table, and defaults can be disabled per game.
+- **End-of-game statistics** — `StatisticsStep` drives a new `STATISTICS` screen with a
+  "View stats" / "Continue" button; the applause screen also carries it.
+- **Server switch** — "game not found" is probed against the other matchmaker
+  (`.club` ↔ `.ru`) and offers to continue there.
+- **Pack text** — `
+` in pack questions and answers now renders as a real line break
+  (`packText()`), the reason answers could look cut off.
+- **Host fast-forward** — the host gets the speed-up button for its own sequences too.
+- **Back buttons** — a shared `.pq-back-icon` mask replaces the red "back" pills.
+- Cosmetic: score strip is one line (`Your score: 0`), `Hint` powerup spellings, applause
+  buttons use the family colours, five-across question board.
+
+### Kept from this fork, re-applied on top of 1.7.1328
+
+- Settings sheet (18 languages, theme, haptics, keep-awake), no-reload language switch,
+  leave confirmation, session resume with *Try again*, the game-over leaderboard on the
+  applause screen, avatar placeholders that never leave a hole, the rewritten 3D Try-On
+  with vendored Three.js, and the mobile layer (safe-area, `dvh`, visual viewport).
+
+### Fixed while syncing
+
+- The 2D silhouette mask (`assets/custom_avatar_background.png`) and the settings-sheet
+  toggle that scrolled itself, both from the 2.0.1 follow-up.
+- `sound_rimshot` was missing from upstream's English dictionary even though its markup
+  asks for it; the fork ships the key (and 18 translations) so the sixth sound is
+  labelled instead of showing a raw `{{sound_rimshot}}`.
+- `scripts/fetch-upstream.py` mirrors in parallel and skips runtime audio, so a capture
+  takes a minute instead of an hour.
 
 ---
 

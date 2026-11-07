@@ -18,6 +18,10 @@ function TryJoinGameWithId(gameId, password) {
 }
 
 function sendJoinRequest(gameId, password) {
+    // Remembered for the "that game lives on the other server" probe, and the uploaded
+    // custom-avatar hash belongs to the previous game's session, not this one.
+    window.lastJoinGameId = gameId;
+    if (window.customAvatar) window.customAvatar._uploadedHash = null;
     let joinGameRequest = JSON.stringify({
         'Join': {
             'name': gameId,
@@ -53,6 +57,24 @@ function PlayClap() {
         void emoji.offsetWidth;
         emoji.classList.add('clap-pulse');
     }
+}
+
+window.pqTaunts = { enabled: false, cooldownMs: 0, readyAt: 0 };
+
+// Sound reactions are a game-wide broadcast: one local cooldown keeps a bored thumb from
+// turning the whole table into a foghorn.
+function PlayTaunt(tauntType) {
+    var now = performance.now();
+    if (now < window.pqTaunts.readyAt) return;
+
+    var waitMs = Math.max(window.pqTaunts.cooldownMs, REACTION_MIN_INTERVAL_MS);
+    window.pqTaunts.readyAt = now + waitMs;
+    SendMessage({'PlayTaunt': tauntType});
+
+    var layer = document.getElementById('taunt_layer');
+    if (!layer) return;
+    layer.classList.add('taunts-cooling');
+    setTimeout(function () { layer.classList.remove('taunts-cooling'); }, waitMs);
 }
 
 function LeaveGame() {
@@ -297,6 +319,10 @@ function showToast(message, duration) {
     }, duration || 2500);
 }
 
+function ConfirmStartGame() {
+    pqConfirm(t('start_game_confirm'), CallAllHere);
+}
+
 function CallAllHere() {
     SendMessage({
         'AllHere':
@@ -308,6 +334,16 @@ function CallAllHere() {
 
 function PlayEmoji(emojiType) {
     SendReaction({'PlayEmoji': emojiType});
+}
+
+function StatisticsNext() {
+    if (window.pqStatisticsStep == null)
+        return;
+
+    SendMessage({'StatisticsNext': String(window.pqStatisticsStep)});
+
+    window.pqStatisticsStep = null;
+    document.getElementById('statistics_next_button').hidden = true;
 }
 
 function CallNextRound() {
@@ -404,6 +440,13 @@ function RevealingCluesGuessMade(guess) {
     }
 
     SendMessage({'RevealingCluesGuessMade': guess});
+}
+
+// Passing hands the question back to the table without leaving the screen: the local
+// state says "tried", and the server tells everyone else.
+function PassQuestion() {
+    goTo('CAN_ANSWER', { triedToAnswer: true });
+    SendMessage({'PassQuestion': 'true'});
 }
 
 function RevealingCluesPlayerPass() {
@@ -733,6 +776,10 @@ function RefreshData() {
 
 // Wire envelope matches the host DTOs (PartyQuiz.Network.CreateTeam/JoinTeam/LeaveTeam/SubmitSuggestion):
 // presence of the field selects the handler; Platform is a case-sensitive "Browser".
+
+function RequestHostAvatarImages(hashes) {
+    SendMessage({ 'RequestHostAvatarImages': { 'Hashes': hashes } });
+}
 
 function CreateTeam(teamName, avatar, customAvatar) {
     SendMessage({

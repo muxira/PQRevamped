@@ -80,11 +80,13 @@ body.partyquiz header.pq-header .refresh-button:active {
 }
 
 /* The whole strip is hidden for the quiz host, who has no score of their own. */
+/* 1.7.1328 puts the label beside the number: the strip is one line tall on a phone. */
 .pq-score-strip__own:not([hidden]) {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: baseline;
+    gap: 8px;
     line-height: 1;
 }
 
@@ -586,6 +588,23 @@ body.partyquiz .pq-sub { margin: 0; }
     line-height: 1.4;
 }
 
+/* "Almost, but not quite": the player's answer goes back into the field, and this banner
+   says why the screen came back instead of declaring the answer wrong. */
+#you_answer_group .clarify-hint:not([hidden]) {
+    display: block;
+    padding: 12px 16px;
+    border-radius: var(--pq-radius);
+    background: var(--pq-fam-buzz);
+    color: var(--pq-on-accent);
+    font-size: 18px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    text-align: center;
+    line-height: 1.2;
+    animation: pq-pop .25s cubic-bezier(.2, .9, .25, 1) both, pq-appeal-btn-pulse 1.2s ease-in-out .25s infinite, pq-appeal-halo 1.2s ease-out .25s infinite;
+}
+
 #player_answer_input { font-size: 17px; font-weight: 700; padding: 15px; }
 
 #player_answer_input_button { width: 100%; }
@@ -681,6 +700,12 @@ body.partyquiz .button.answer-decision-incorrect {
     font-weight: 700;
     color: var(--pq-success);
 }
+
+/* Pack answers and questions can span lines (packText() turns "\n" into a real break). */
+#right_answer,
+#final_round_answer,
+#revealing_clues_right_answer,
+#title { white-space: pre-line; }
 
 /* Round 5, same complaint as the fact boxes and the same treatment, stated rather than
    inherited: every line on the regular-round judge card is a <label> flex item, so both
@@ -1518,34 +1543,44 @@ img.pq-avatar { border: none; }
 
    The seven ids belong to emoji.js, which binds them at load time. */
 
-/* Bottom bar: camera FAB | control game | emoji FAB. Fixed columns, so a hidden item
-   does not shift the others. */
+/* Bottom bar: camera FAB | control game | sounds FAB | emoji FAB. The middle column takes
+   what the FABs leave, so the host's four items fit a phone and a hidden FAB frees its
+   space instead of leaving a hole. */
 
 .pq-bottom-bar {
     position: fixed;
     inset-inline: max(14px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-right));
     inset-block-end: max(16px, env(safe-area-inset-bottom));
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     align-items: end;
     gap: 10px;
     z-index: 20;
     pointer-events: none;
 }
 
-.pq-bottom-bar > .camera_control { grid-column: 1; justify-self: start; pointer-events: auto; }
-.pq-bottom-bar > #manage_players_button { grid-column: 2; pointer-events: auto; }
-.pq-bottom-bar > #emoji_layer { grid-column: 3; justify-self: end; }
+.pq-bottom-bar > #wishlist_link { grid-column: 1 / -1; grid-row: 1; pointer-events: auto; }
+.pq-bottom-bar > .camera_control { grid-column: 1; grid-row: 2; justify-self: start; pointer-events: auto; }
+.pq-bottom-bar > #manage_players_button { grid-column: 2; grid-row: 2; justify-self: center; max-width: 100%; pointer-events: auto; }
+.pq-bottom-bar > #taunt_layer { grid-column: 3; grid-row: 2; }
+.pq-bottom-bar > #emoji_layer { grid-column: 4; grid-row: 2; }
+
+/* One width for the clap button and the buttons that sit with it: wishlist, "I'm right",
+   "Continue". */
+body.partyquiz .button.pq-wide-button { width: min(100%, 300px); margin-inline: auto; }
 
 body.partyquiz #manage_players_button.button {
     height: 56px;
-    padding: 0 20px;
+    padding: 0 12px;
     box-sizing: border-box;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     border-radius: 28px;
 }
 
-overlay#emoji_layer {
+overlay#emoji_layer,
+overlay#taunt_layer {
     position: relative;
     display: flex;
     flex-direction: column-reverse;
@@ -1564,7 +1599,8 @@ overlay#emoji_layer {
    some Android builds. Per-glyph fallback picks the app font for the ✕ and the system
    emoji font for the six faces. */
 
-body.partyquiz #emoji_layer .emojis-block-button {
+body.partyquiz #emoji_layer .emojis-block-button,
+body.partyquiz #taunt_layer .emojis-block-button {
     pointer-events: auto;
     width: 52px;
     height: 52px;
@@ -1586,6 +1622,7 @@ body.partyquiz #emoji_layer .emojis-block-button {
 /* (2,1,1) — beats the rule above (1,2,1) whatever the order. */
 
 body.partyquiz #emoji_layer #controls,
+body.partyquiz #taunt_layer #taunts_toggle,
 body.partyquiz #button_main.button {
     width: 56px;
     height: 56px;
@@ -1598,6 +1635,32 @@ body.partyquiz #button_main.button {
 }
 
 body.partyquiz #emoji_layer #controls { font-size: 24px; }
+
+/* The sounds FAB paints its own glyph as a mask of the taunt speaker art, so the button
+   can switch between "open the soundboard" and "close it" without touching the DOM. */
+body.partyquiz #taunt_layer #taunts_toggle::after {
+    content: "";
+    background: currentColor;
+    -webkit-mask: url("../../../assets/taunts/sound.png") center / 30px no-repeat;
+    mask: url("../../../assets/taunts/sound.png") center / 30px no-repeat;
+    margin: 0;
+    position: static;
+    display: grid;
+    place-items: center;
+    inline-size: 30px;
+    block-size: 30px;
+    font-size: 27px;
+    line-height: 1;
+}
+
+body.partyquiz #taunt_layer.taunts-open #taunts_toggle::after {
+    content: "✕";
+    background: none;
+    -webkit-mask: none;
+    mask: none;
+    font-size: 24px;
+    font-weight: 700;
+}
 
 /* The toggle carries no markup glyph, so the state can swap it without touching the DOM:
    a face while the stack is closed, a cross while it is open.
@@ -1635,6 +1698,14 @@ body.partyquiz #emoji_layer.emoji-open #controls::after {
 
 #emoji_layer:not(.emoji-open) > .emojis-block-button:not(#controls) { display: none; }
 
+body.partyquiz #taunt_layer:not(.taunts-open) > .taunt-button { display: none; }
+
+#taunt_layer.taunts-open > .taunt-button { animation: pq-pop .22s cubic-bezier(.2, .9, .25, 1); }
+
+body.partyquiz #taunt_layer .taunt-button { flex: none; max-height: none; }
+#taunt_layer .taunt-button img { width: 32px; height: 32px; pointer-events: none; }
+body.partyquiz #taunt_layer.taunts-cooling .taunt-button { opacity: .4; pointer-events: none; }
+
 /* Open: the design's pq-pop, deliberately with NO fill mode. `both` would hold the
    keyframe's closing `transform: scale(1)` forever and permanently outrank the :active
    rule below, so a tap would stop reading as a press the moment the pop finished. The
@@ -1646,7 +1717,8 @@ body.partyquiz #emoji_layer.emoji-open #controls::after {
     animation: pq-pop .22s cubic-bezier(.2, .9, .25, 1);
 }
 
-body.partyquiz #emoji_layer .emojis-block-button:active { transform: scale(.9); }
+body.partyquiz #emoji_layer .emojis-block-button:active,
+body.partyquiz #taunt_layer .emojis-block-button:active { transform: scale(.9); }
 body.partyquiz #emoji_layer #controls:active { transform: scale(.92); }
 
 /* A tapped emoji flies up the screen. The node is created by pqFloatEmoji() on the body,
@@ -1663,6 +1735,7 @@ body.partyquiz #emoji_layer #controls:active { transform: scale(.92); }
     z-index: 30;
     animation: pq-float 1.6s ease-out forwards;
 }
+.pq-floater img { display: block; width: 34px; height: 34px; }
 
 /* Host camera stack (design 357-373): labelled chips above a round FAB. The chips are
    the <b> elements ShowCameraButton() creates with class
@@ -1778,7 +1851,7 @@ body.partyquiz .appeal-float[hidden] { display: none; }
 .pq-appeal-flash { position: fixed; inset: 0; pointer-events: none; background: var(--pq-fam-buzz); opacity: 0; z-index: 55; animation: pq-appeal-flash 450ms ease-out 1 forwards; }
 @keyframes pq-appeal-flash { 0% { opacity: 0; } 30% { opacity: .5; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
-    .appeal-banner, .appeal-float, .appeal-status--upheld, .appeal-timer.is-pulsing .appeal-timer-fill, .pq-appeal-flash { animation: none; }
+    .appeal-banner, .appeal-float, .clarify-hint, .appeal-status--upheld, .appeal-timer.is-pulsing .appeal-timer-fill, .pq-appeal-flash { animation: none; }
     .pq-appeal-flash { display: none; }
 }
 
@@ -1795,7 +1868,6 @@ body[data-pq-fit] header.pq-header icon { height: 30px; }
 body[data-pq-fit] .pq-theme-toggle,
 body[data-pq-fit] header.pq-header .refresh-button { width: 36px; height: 36px; }
 body[data-pq-fit] #pq_score_strip:not([hidden]) { margin-block-start: 6px; padding: 5px 14px; }
-body[data-pq-fit] .pq-score-strip__own:not([hidden]) { flex-direction: row; align-items: baseline; gap: 8px; }
 body[data-pq-fit] .pq-score-strip__value { font-size: 18px; }
 body[data-pq-fit] .topic-block { margin-block-start: 4px; }
 body[data-pq-fit] .topic-block #title { font-size: 21px; }

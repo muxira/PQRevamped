@@ -146,6 +146,17 @@ body.partyquiz .info-block-input::placeholder { color: var(--pq-muted); font-wei
 [dir="rtl"] .role-card-arrow svg,
 [dir="rtl"] .qr-password-actions .button svg { transform: scaleX(-1); }
 
+/* The back arrow is a mask, not an <img>: it takes the colour of whatever it sits in,
+   and the whole thing flips on its own in RTL. */
+.pq-back-icon {
+    display: inline-block; flex: none;
+    width: 1.1em; height: 1.1em;
+    background: currentColor;
+    -webkit-mask: url("../../../assets/arrow_left_above.png") center / contain no-repeat;
+    mask: url("../../../assets/arrow_left_above.png") center / contain no-repeat;
+}
+[dir="rtl"] .pq-back-icon { transform: scaleX(-1); }
+
 /* Corner nudges: the close button hangs outward past its panel corner. */
 [dir="rtl"] .popup-close { transform: translate(-30%, -30%); }
 

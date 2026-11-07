@@ -12,7 +12,7 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/muxira/PQRevamped/ci.yml?branch=main&label=checks&logo=github)](https://github.com/muxira/PQRevamped/actions/workflows/ci.yml)
 [![Лицензия](https://img.shields.io/github/license/muxira/PQRevamped?color=blue)](LICENSE)
-[![Синхронизация](https://img.shields.io/badge/upstream-2026--10--20-informational?logo=cloud&logoColor=white)](CHANGELOG.md)
+[![Синхронизация](https://img.shields.io/badge/upstream-2026--11--07-informational?logo=cloud&logoColor=white)](CHANGELOG.md)
 
 <sub><a href="README.md">English</a> · Русский</sub>
 
@@ -154,7 +154,7 @@ texture.flipY    = true                 // ось V Unity; перевернит�
 
 ## 📦 Соответствие апстриму
 
-Синхронизировано с живым клиентом **20.10.2026**. Всё, что умеет официальный компаньон, есть и здесь, включая новые системы:
+Синхронизировано с живым клиентом **07.11.2026** (клиент 1.7.1328). Всё, что умеет официальный компаньон, есть и здесь, включая новые системы:
 
 | Возможность апстрима | Статус |
 |---|---|
@@ -165,6 +165,12 @@ texture.flipY    = true                 // ось V Unity; перевернит�
 | **Возвращение игроков** — наследование профиля и подтверждение | ✅ |
 | **Перемотка** — удержание, режим зама | ✅ |
 | **Управление игроками** — кик, ± очки с шагом | ✅ |
+| **Звуковые реакции** — шесть кнопок в нижней панели с кулдауном сервера | ✅ `emoji.js`, `commands.js` |
+| **Пас** — отказаться от вопроса, не нажимая кнопку ответа | ✅ |
+| **Аватары ведущего** — свой набор аватаров на всю игру | ✅ `host_avatars.js` |
+| **Статистика в финале** — шаги «Смотреть статистику» / «Продолжить» | ✅ |
+| **Смена сервера** — подсказка «игра на другом сервере» для `.club` ↔ `.ru` | ✅ |
+| Переносы строк в тексте паков, стрим, ускоренные хостовые сцены | ✅ |
 | Темы (`studio` / `night`), реконнект, системные уведомления | ✅ |
 | 18 словарей, свои шрифты `party-quiz-sans` | ✅ |
 
@@ -180,14 +186,13 @@ texture.flipY    = true                 // ось V Unity; перевернит�
 ├── manifest.webmanifest           # метаданные PWA
 ├── sw.js                          # офлайн-оболочка
 ├── core/
-│   ├── assets/                    # копии, безопасные для canvas
 │   └── templates/
 │       ├── game.html              # сам компаньон
 │       ├── css/                   # 12 стилей апстрима + pq-revamped.css
-│       └── js/                    # 10 скриптов апстрима + revamped.js + custom_avatar_3d.js
-├── assets/                        # логотип, шрифты (woff2+ttf), спрайты, иконки, Body.obj
-├── avatars/                       # 26 стоковых аватаров
-├── localized/<locale>/lang.json   # 18 словарей по 296 ключей
+│       └── js/                    # 11 скриптов апстрима + revamped.js + custom_avatar_3d.js
+├── assets/                        # логотип, шрифты, звуки реакций, иконки, маска, Body.obj, three
+├── avatars/                       # 18 стоковых аватаров
+├── localized/<locale>/lang.json   # 18 словарей по 308 ключей
 ├── docs/screenshots/              # превью для README, рисуются scripts/render-previews.py
 ├── scripts/                       # preview · check · sync-i18n · fetch-upstream · превью
 └── .github/workflows/             # CI (проверки) + Pages (деплой с гейтом)

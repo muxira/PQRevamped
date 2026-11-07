@@ -442,6 +442,18 @@ body.partyquiz .button.row sprite {
     min-height: 50vh;
 }
 
+/* Passing: the answer screen grows a second button, and both push to the edges so the
+   finger does not land on "Pass" while reaching for "Answer". */
+.pq-pass-button {
+    align-self: stretch;
+    width: auto;
+    margin-bottom: auto;
+}
+
+.pq-pass-button:not([hidden]) ~ .pq-buzz-shell {
+    margin-bottom: auto;
+}
+
 .pq-buzz-shell {
     position: relative;
     display: grid;
