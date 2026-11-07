@@ -16,6 +16,9 @@ permissions:
 jobs:
   capture:
     runs-on: ubuntu-latest
+    # A mirror that has not finished in ten minutes is stuck on a dead object, not slow:
+    # fail fast instead of burning an hour of runner time.
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
 
@@ -24,6 +27,7 @@ jobs:
           python-version: "3.12"
 
       - name: Mirror the live client
+        timeout-minutes: 8
         run: python3 scripts/fetch-upstream.py --out _upstream
 
       - name: Index
