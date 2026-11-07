@@ -50,6 +50,8 @@ jobs:
           retention-days: 14
 
       - name: Park the mirror on a branch
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd _upstream
           git init -q -b upstream-capture
@@ -59,4 +61,7 @@ jobs:
             "$(python3 -c 'import json;print(json.load(open("manifest.json"))["fetched_at"])')" > CAPTURED.txt
           git add -A
           git commit -q -m "upstream mirror $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # A fresh repo has no origin. The checkout's credentials do not apply to it,
+          # which is why the first attempt failed at this exact line.
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push -f origin upstream-capture
